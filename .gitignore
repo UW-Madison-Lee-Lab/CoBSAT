@@ -46,3 +46,7 @@ submit_gpu.sh
 
 environment.py
 run.sh
+
+token.json
+credentials.json
+token_drive_v3.pickle
