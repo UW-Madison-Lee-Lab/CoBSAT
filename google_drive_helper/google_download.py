@@ -13,11 +13,16 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
 
 def drive_download(
-    files = [{'id': "1kjsebdHAVTcqPhnU_owLky8gLhbDPvxr", 'path': 'test.jpg'}],
+    files = [{'id': "1kjsebdHAVTcqPhnU_owLky8gLhbDPvxr", 'name': 'test.jpg'}],
 ):
     for file in tqdm(files):
-        file_id, file_path = file['id'], file['path']
+        file_id, file_path = file['id'], file['name']
         file_path = f"{root_dir}/results/{file_path}"
+
+        header = os.path.dirname(file_path)
+        if not os.path.exists(header):
+            os.makedirs(header)
+
         request = service.files().get_media(fileId=file_id)
         fh = io.BytesIO()
         downloader = MediaIoBaseDownload(fd=fh, request=request)
