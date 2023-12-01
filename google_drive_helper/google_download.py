@@ -16,24 +16,32 @@ def drive_download(
     files = [{'id': "1kjsebdHAVTcqPhnU_owLky8gLhbDPvxr", 'name': 'test.jpg'}],
 ):
     for file in tqdm(files):
-        file_id, file_path = file['id'], file['name']
-        file_path = f"{root_dir}/results/{file_path}"
-
-        header = os.path.dirname(file_path)
-        if not os.path.exists(header):
-            os.makedirs(header)
-
-        request = service.files().get_media(fileId=file_id)
-        fh = io.BytesIO()
-        downloader = MediaIoBaseDownload(fd=fh, request=request)
         done = False
-        while done is False:
-            status, done = downloader.next_chunk()
-            print("Download %d%%." % int(status.progress() * 100))
-        fh.seek(0)
-        with open(file_path, "wb") as f:
-            f.write(fh.read())
-            f.close()
+        while not done:
+            try:
+                file_id, file_path = file['id'], file['name']
+                file_path = f"{root_dir}/results/{file_path}"
+
+                if os.path.exists(file_path):
+                    done = True
+                    break
+
+                header = os.path.dirname(file_path)
+                if not os.path.exists(header):
+                    os.makedirs(header)
+
+                request = service.files().get_media(fileId=file_id)
+                fh = io.BytesIO()
+                downloader = MediaIoBaseDownload(fd=fh, request=request)
+                fh.seek(0)
+                with open(file_path, "wb") as f:
+                    f.write(fh.read())
+                    f.close()
+                done = True
+            except:
+                print("Unexpected error:", sys.exc_info()[0])
+                print(f"Error downloading file: {file_path}. Retrying...")
+            
 
 def list_dir(
     directory_id = '1UwQv5bJdL9LJOQyNWXyfdx6CyDM94z9v',
@@ -62,7 +70,9 @@ def list_dir(
     ).execute()
     files = file_results.get('files', [])
 
-    all_files.extend(files)
+    for file in files:
+        file['name'] = directory_name + '/' + file['name']
+        all_files.append(file)
 
     return all_files
 
