@@ -1,4 +1,4 @@
-import os, io, sys
+import os, io, sys, argparse
 from Google import Create_Service
 from googleapiclient.http import MediaIoBaseDownload
 from tqdm import tqdm
@@ -76,12 +76,13 @@ def list_dir(
 
     return all_files
 
-def main():
+def main(
     dirs = [
         {'id': '1NERWpRJHjmcuQ-mIHhsmCPRuA7XNutuN', 'name': 'emu_results'},
         {'id': '1qthlfg6wiIoi6sq0lVaBvg407z10h__J', 'name': 'gill_results'},
         {'id': '1bTvMU5HOprhAWAW-wNZmaN5hTmRFZiSu', 'name': 'seed_results'}
     ]
+):
 
     for dir in dirs:
         print('Starting to download files from', dir['name'])
@@ -89,4 +90,14 @@ def main():
         drive_download(all_files)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Download files from Google Drive')
+    parser.add_argument('--id', type=str, default=None, help='ID of the file to download')
+    parser.add_argument('--name', type=str, default=None, help='Name of the file to download')
+    args = parser.parse_args()
+    
+    main({
+        'id': args.id,
+        'name': args.name
+    })
+    
+    
