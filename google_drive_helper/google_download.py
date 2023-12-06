@@ -14,13 +14,14 @@ service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
 
 def drive_download(
     files = [{'id': "1kjsebdHAVTcqPhnU_owLky8gLhbDPvxr", 'name': 'test.jpg'}],
+    download_folder = 'results',
 ):
     for file in tqdm(files):
         done = False
         while not done:
             try:
                 file_id, file_path = file['id'], file['name']
-                file_path = f"{root_dir}/results/{file_path}"
+                file_path = os.path.join(root_dir, download_folder, file_path)
 
                 if os.path.exists(file_path):
                     done = True
@@ -100,26 +101,31 @@ def main(
         {'id': '1NERWpRJHjmcuQ-mIHhsmCPRuA7XNutuN', 'name': 'emu_results'},
         {'id': '1qthlfg6wiIoi6sq0lVaBvg407z10h__J', 'name': 'gill_results'},
         {'id': '1bTvMU5HOprhAWAW-wNZmaN5hTmRFZiSu', 'name': 'seed_results'}
-    ]
+    ],
+    download_folder = 'results',
 ):
 
     for dir in dirs:
         print('Starting to download files from', dir['name'])
         all_files = list_dir(dir['id'], dir['name'])
-        drive_download(all_files)
+        drive_download(all_files, download_folder=download_folder)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Download files from Google Drive')
     parser.add_argument('--id', type=str, default=None, help='ID of the file to download')
     parser.add_argument('--name', type=str, default=None, help='Name of the file to download')
+    parser.add_argument('--download_folder', type=str, default='results', help='Folder to download files to')
     args = parser.parse_args()
     
     if args.id is None or args.name is None:
-        main()
+        main(download_folder=args.download_folder)
     else:
-        main([{
-            'id': args.id,
-            'name': args.name
-        }])
+        main(
+            [{
+                'id': args.id,
+                'name': args.name
+            }],
+            download_folder=args.download_folder,
+        )
     
     
