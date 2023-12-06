@@ -33,6 +33,11 @@ def drive_download(
                 request = service.files().get_media(fileId=file_id)
                 fh = io.BytesIO()
                 downloader = MediaIoBaseDownload(fd=fh, request=request)
+                done = False
+                
+                while not done:
+                    _, done = downloader.next_chunk()
+                
                 fh.seek(0)
                 with open(file_path, "wb") as f:
                     f.write(fh.read())
@@ -48,31 +53,42 @@ def list_dir(
     directory_name = 'emu_results',
 ):
     all_files = []
+    page_token = None
 
     # List all folders in the specified directory
-    folder_results = service.files().list(
-        q=f"'{directory_id}' in parents and mimeType='application/vnd.google-apps.folder'",
-        fields='nextPageToken, files(id, name)'
-    ).execute()
-    folders = folder_results.get('files', [])
+    while True:
+        folder_results = service.files().list(
+            q=f"'{directory_id}' in parents and mimeType='application/vnd.google-apps.folder'",
+            fields='nextPageToken, files(id, name)',
+            pageToken=page_token,
+        ).execute()
+        folders = folder_results.get('files', [])
 
-    for folder in folders:
-        print(f"Processing folder: {folder['name']}")
-        file_folder_results = list_dir(folder['id'], folder['name'])
-        for file in file_folder_results:
+        for folder in folders:
+            print(f"Processing folder: {folder['name']}")
+            file_folder_results = list_dir(folder['id'], folder['name'])
+            for file in file_folder_results:
+                file['name'] = directory_name + '/' + file['name']
+                all_files.append(file)
+
+        page_token = folder_results.get('nextPageToken', None)
+        if page_token is None: break            
+
+    # list all files in the specified directory
+    while True:
+        file_results = service.files().list(
+            q=f"'{directory_id}' in parents and mimeType!='application/vnd.google-apps.folder'",
+            fields='nextPageToken, files(id, name)',
+            pageToken=page_token,
+        ).execute()
+        files = file_results.get('files', [])
+
+        for file in files:
             file['name'] = directory_name + '/' + file['name']
             all_files.append(file)
 
-    # list all files in the specified directory
-    file_results = service.files().list(
-        q=f"'{directory_id}' in parents and mimeType!='application/vnd.google-apps.folder'",
-        fields='nextPageToken, files(id, name)'
-    ).execute()
-    files = file_results.get('files', [])
-
-    for file in files:
-        file['name'] = directory_name + '/' + file['name']
-        all_files.append(file)
+        page_token = file_results.get('nextPageToken', None)
+        if page_token is None: break
 
     return all_files
 
@@ -95,9 +111,12 @@ if __name__ == "__main__":
     parser.add_argument('--name', type=str, default=None, help='Name of the file to download')
     args = parser.parse_args()
     
-    main({
-        'id': args.id,
-        'name': args.name
-    })
+    if args.id is None or args.name is None:
+        main()
+    else:
+        main([{
+            'id': args.id,
+            'name': args.name
+        }])
     
     
