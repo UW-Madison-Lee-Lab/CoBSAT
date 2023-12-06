@@ -43,7 +43,10 @@ def drive_download(
                     f.write(fh.read())
                     f.close()
                 done = True
-            except:
+            except KeyboardInterrupt:
+                print("Keyboard interrupt detected. Exiting...")
+                sys.exit(0)
+            except Exception:
                 print("Unexpected error:", sys.exc_info()[0])
                 print(f"Error downloading file: {file_path}. Retrying...")
             
