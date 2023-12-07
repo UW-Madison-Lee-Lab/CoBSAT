@@ -1,7 +1,8 @@
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
-import torch, os, json, argparse, sys
+import torch, os, json, argparse, sys, random
 import numpy as np
+from tqdm import tqdm
 
 model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
@@ -12,6 +13,7 @@ from configs import task_dataframe
 sys.path.append(f"{root_dir}/google_drive_helper")
 from google_upload import drive_upload
 google_folder = '1OrDj-2dcy4-QV0MRdHalBFA8GASnXDD2'
+google_detail_folder = '1OvHcYugDiB8DK0eIkftNAtx_WVgQtcmu'
 
 def get_logits(model,text_embeds,image_embeds):
     logit_scale = model.logit_scale.exp()
@@ -27,10 +29,24 @@ def evaluation(image_file,text_list):
     _,logits_per_image = get_logits(model,outputs.text_embeds,outputs.image_embeds)
     return logits_per_image[0].detach().cpu().numpy()
 
-def get_path(mllm, shot, theta, theta_space = 'animal', x_space = 'action'):
-    return f"{root_dir}/results/{mllm}_results/shot_{shot}_m/{x_space}_{theta_space}/{x_space}_{theta}"
+def summary(
+    data_id,
+    mllms, 
+    shots, 
+    misleading = 0,
+    overwrite = 1,
+):
+    random.seed(123)
+    # Set `numpy` pseudo-random generator at a fixed value
+    np.random.seed(123)
+    # Set `torch` pseudo-random generator at a fixed value
+    torch.manual_seed(123)
 
-def summary(task_name, mllms, shots, theta_list, x_list, overwrite = 1):
+    task_name = task_dataframe[data_id]['task_name']
+    x_space = task_dataframe[data_id]['x_space']
+    theta_space = task_dataframe[data_id]['theta_space']
+    x_list = task_dataframe[data_id]['x_list']
+    theta_list = task_dataframe[data_id]['theta_list']
     folder = f"{root_dir}/results/clip_evaluation"
     for mllm in mllms:
         for shot in shots:
@@ -42,7 +58,8 @@ def summary(task_name, mllms, shots, theta_list, x_list, overwrite = 1):
             number_per_task = 0
             samples_mean = []
             for theta in theta_list: # one function
-                cur_path = get_path(mllm, shot, theta)
+                misleading_flag = '_m' if misleading else ''
+                cur_path = f"{root_dir}/results/{mllm}_results/shot_{shot}{misleading_flag}/{x_space}_{theta_space}/{x_space}_{theta}"
                 score_per_object = 0
                 strict_score_per_object = 0
                 similarity_per_object = 0
@@ -50,7 +67,8 @@ def summary(task_name, mllms, shots, theta_list, x_list, overwrite = 1):
                 similarity2_per_object = 0
                 number_per_object = 0
                 samples = []
-                for filename in os.listdir(cur_path):
+                all_generated_files = os.listdir(cur_path)
+                for filename in tqdm(all_generated_files):
                     if filename.endswith(".jpg") or filename.endswith(".png"):
                         image_file = os.path.join(cur_path, filename)
                         file_name = os.path.splitext(filename)[0]
@@ -90,7 +108,6 @@ def summary(task_name, mllms, shots, theta_list, x_list, overwrite = 1):
                             "similarity1": similarity1,
                             "similarity2": similarity2
                         }
-                        print('[', number_per_object, ']', sample)
                         samples.append(sample)
                         score_per_object += score
                         strict_score_per_object += strict_score
@@ -99,16 +116,14 @@ def summary(task_name, mllms, shots, theta_list, x_list, overwrite = 1):
                         similarity2_per_object += similarity2
                         number_per_object += 1
                 sample_mean = {
-                        "name": theta,
-                        "score": score_per_object/number_per_object,
-                        "strict_score": strict_score_per_object/number_per_object,
-                        "similarity": similarity_per_object/number_per_object,
-                        "similarity1": similarity1_per_object/number_per_object,
-                        "similarity2": similarity2_per_object/number_per_object,
-                        "number": number_per_object
+                    "name": theta,
+                    "score": score_per_object/number_per_object,
+                    "strict_score": strict_score_per_object/number_per_object,
+                    "similarity": similarity_per_object/number_per_object,
+                    "similarity1": similarity1_per_object/number_per_object,
+                    "similarity2": similarity2_per_object/number_per_object,
+                    "number": number_per_object
                 }
-                print(sample_mean)
-                print('--------------------------------')
                 samples_mean.append(sample_mean)
                 samples.append(sample_mean)
                 score_per_task += score_per_object
@@ -117,16 +132,16 @@ def summary(task_name, mllms, shots, theta_list, x_list, overwrite = 1):
                 similarity1_per_task += similarity1_per_object
                 similarity2_per_task += similarity2_per_object
                 number_per_task += number_per_object
-                json_file = f"{folder}/detail/{task_name}_{mllm}_{shot}shot_{theta}({(similarity_per_object/number_per_object):.2f})({(similarity1_per_object/number_per_object):.2f})({(similarity2_per_object/number_per_object):.2f})({(score_per_object/number_per_object):.2f})({(strict_score_per_object/number_per_object):.2f}).json"
+                json_file = f"{folder}/detail/[{data_id}]{task_name}_{mllm}_{shot}shot_{theta}({(similarity_per_object/number_per_object):.2f})({(similarity1_per_object/number_per_object):.2f})({(similarity2_per_object/number_per_object):.2f})({(score_per_object/number_per_object):.2f})({(strict_score_per_object/number_per_object):.2f}).json"
                 with open(json_file, 'w') as f:
                     json.dump(samples, f, indent=4)
-                    drive_upload([{
-                            'mime_type': 'application/json',
-                            'path': json_file
-                        }], 
-                        upload_folder=google_folder,
-                        overwrite=overwrite,
-                    )
+                drive_upload([{
+                        'mime_type': 'application/json',
+                        'path': json_file
+                    }], 
+                    upload_folder=google_detail_folder,
+                    overwrite=overwrite,
+                )
             sample_mean = {
                     "name": task_name,
                     "score": score_per_task/number_per_task,
@@ -137,16 +152,16 @@ def summary(task_name, mllms, shots, theta_list, x_list, overwrite = 1):
                     "number": number_per_task
             }
             samples_mean.append(sample_mean)
-            json_file = f"{folder}/{task_name}_{mllm}_{shot}shot_mean({(similarity_per_task/number_per_task):.2f})({(similarity1_per_task/number_per_task):.2f})({(similarity2_per_task/number_per_task):.2f})({(score_per_task/number_per_task):.2f})({(strict_score_per_task/number_per_task):.2f}).json"
+            json_file = f"{folder}/[{data_id}]{task_name}_{mllm}_{shot}shot_mean({(similarity_per_task/number_per_task):.2f})({(similarity1_per_task/number_per_task):.2f})({(similarity2_per_task/number_per_task):.2f})({(score_per_task/number_per_task):.2f})({(strict_score_per_task/number_per_task):.2f}).json"
             with open(json_file, 'w') as f:
                 json.dump(samples_mean, f, indent=4)
-                drive_upload([{
-                        'mime_type': 'application/json',
-                        'path': json_file
-                    }], 
-                    upload_folder=google_folder,
-                    overwrite=overwrite,
-                )
+            drive_upload([{
+                    'mime_type': 'application/json',
+                    'path': json_file
+                }], 
+                upload_folder=google_folder,
+                overwrite=overwrite,
+            )
 
 
 if __name__ == '__main__':
@@ -154,7 +169,8 @@ if __name__ == '__main__':
     parser.add_argument('--data_id', type=int, default=1, help='data id', choices = list(range(1,11)))
     parser.add_argument('--mllms', type=str, nargs='+', default=['emu', 'gill'], help='mllms')
     parser.add_argument('--shots', type=int, nargs='+', default=[1, 2], help='shots')
-    parser.add_argument('--overwrite', type=int, default=1, help='whether to overwrite the original results in google drive')
+    parser.add_argument('--misleading', type=int, default=0, help='whether to use misleading data', choices = [0,1])
+    parser.add_argument('--overwrite', type=int, default=1, help='whether to overwrite the original results in google drive', choices = [0,1])
 
     args = parser.parse_args()
 
@@ -165,9 +181,9 @@ if __name__ == '__main__':
         print(f"| {key}: {value}")
 
     summary(
-        task_name = task_dataframe[args.data_id]['task_name'],
-        mllms = args.mllms,
-        shots = args.shots,
-        theta_list = task_dataframe[args.data_id]['theta_list'],
-        x_list = task_dataframe[args.data_id]['x_list'],
+        data_id = args.data_id,
+        mllms = args.mllms, 
+        shots = args.shots, 
+        misleading = args.misleading,
+        overwrite = args.overwrite,
     )

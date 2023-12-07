@@ -64,8 +64,8 @@ task_dataframe = pd.DataFrame({
         'x_list': ['cat', 'dog', 'pig', 'lion', 'bird', 'monkey', 'man', 'woman'],
         'theta_list': ['wink', 'run', 'sing', 'fly', 'sit', 'drink', 'sleep', 'eat'],
         'task_name': 'animaltoactionanimal',
-    }
-    10: {
+    },
+    9: {
         'task_type': 'background_object',
         'x_space': 'background',
         'theta_space': 'object',

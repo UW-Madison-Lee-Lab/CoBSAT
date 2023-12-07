@@ -1,7 +1,6 @@
 import os, sys
 from Google import Create_Service
 from googleapiclient.http import MediaFileUpload
-from tqdm import tqdm
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -18,7 +17,7 @@ def drive_upload(
     overwrite = 1,
 ):
     file_ids = []
-    for file in tqdm(files):
+    for file in files:
         done = False
         file['name'] = os.path.basename(file['path'])
 
