@@ -28,14 +28,16 @@ def drive_upload(
             response = service.files().list(
                 q=query, 
                 spaces='drive', 
-                fields='files(id, name)'
+                fields='files(id, name, trashed)'
             ).execute()
             # delete the files with the same name and choose one file to overwrite
-            for old_file in response.get('files', []):
+            old_files = response.get('files', [])
+            for old_file in old_files:
                 if old_file_id:
-                    service.files().delete(fileId=old_file.get('id')).execute()
+                    response = service.files().delete(fileId=old_file.get('id')).execute()
                 else:
-                    old_file_id = old_file.get('id')
+                    if not old_file.get('trashed', False): # Check if 'trashed' is False
+                        old_file_id = old_file.get('id')
 
         while not done:
             try:
@@ -55,12 +57,14 @@ def drive_upload(
                         media_body=media,
                         fields='id'
                     ).execute()
+                    print(f"File {file['name']} updated successfully, file id {response.get('id')}.")
                 else:
                     response = service.files().create(
                         body=file_metadata,
                         media_body=media,
                         fields='id'
                     ).execute()
+                    print(f"File {file['name']} uploaded successfully, file id {response.get('id')}.")
                 file_ids.append(response.get('id'))
                 done = True
             except KeyboardInterrupt:
