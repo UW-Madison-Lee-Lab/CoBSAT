@@ -199,3 +199,27 @@ def summary(
                     upload_folder=google_folder,
                     overwrite=overwrite,
                 )
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='CLIP evaluation')
+    parser.add_argument('--data_ids', type=int, nargs='+', default=[1, 2], help='data id', choices = list(range(1,11)))
+    parser.add_argument('--mllms', type=str, nargs='+', default=['emu', 'gill'], help='mllms')
+    parser.add_argument('--shots', type=int, nargs='+', default=[1, 2], help='shots')
+    parser.add_argument('--misleading', type=int, default=0, help='whether to use misleading data', choices = [0,1])
+    parser.add_argument('--overwrite', type=int, default=1, help='whether to overwrite the original results in google drive', choices = [0,1])
+
+    args = parser.parse_args()
+
+    # print experiment configuration
+    args_dict = vars(args)
+    print('Experiment Setting:')
+    for key, value in args_dict.items():
+        print(f"| {key}: {value}")
+
+    summary(
+        data_ids = args.data_ids,
+        mllms = args.mllms, 
+        shots = args.shots, 
+        misleading = args.misleading,
+        overwrite = args.overwrite,
+    )
