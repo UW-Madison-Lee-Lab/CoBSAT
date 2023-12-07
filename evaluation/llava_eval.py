@@ -5,8 +5,24 @@ from llava.model.builder import load_pretrained_model
 from llava.eval.run_llava import eval_model
 from llava.utils import disable_torch_init
 
+# Configure the file saving
+root_dir = os.path.dirname(os.getcwd())
+
+sys.path.append(root_dir)
+from configs import task_dataframe
+sys.path.append(f"{root_dir}/google_drive_helper")
+from google_upload import drive_upload
+
+def save_json(data, path):
+    folder = os.path.dirname(path)
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    with open(path, 'w') as f:
+        json.dump(data, f, indent=4)
+
 # Configure LlaVA
-model_path = "./llava-v1.5-13b/"
+model_path = f"{root_dir}/models/llava-v1.5-13b/"
 # model_path = "/content/drive/MyDrive/Colab Notebooks/LLaVA-main/llava-v1.5-13b/"
 model_name = "llava-v1.5-13b"
 tokenizer, llava_model, image_processor, context_len = load_pretrained_model(
@@ -23,22 +39,6 @@ llava_args = type('Args', (), {
     "max_new_tokens": 512
 })()
 disable_torch_init()
-
-# Configure the file saving
-root_dir = os.path.dirname(os.getcwd())
-
-sys.path.append(root_dir)
-from configs import task_dataframe
-sys.path.append(f"{root_dir}/google_drive_helper")
-from google_upload import drive_upload
-
-def save_json(data, path):
-    folder = os.path.dirname(path)
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-    with open(path, 'w') as f:
-        json.dump(data, f, indent=4)
 
 # Configure the LLaVA evaluation settings
 prompt_dict = {
