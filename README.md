@@ -1,5 +1,15 @@
 # Visual-ICL'
 
+### Llava evaluation
+
+```
+cd models 
+sudo apt-get update
+sudo apt-get install git-lfs
+git lfs install
+git clone https://huggingface.co/liuhaotian/llava-v1.5-13b
+```
+
 ### GPT-4V
 
 ```

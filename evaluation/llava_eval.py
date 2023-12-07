@@ -201,7 +201,7 @@ def summary(
                 )
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='CLIP evaluation')
+    parser = argparse.ArgumentParser(description='LLaVA evaluation')
     parser.add_argument('--data_ids', type=int, nargs='+', default=[1, 2], help='data id', choices = list(range(1,11)))
     parser.add_argument('--mllms', type=str, nargs='+', default=['emu', 'gill'], help='mllms')
     parser.add_argument('--shots', type=int, nargs='+', default=[1, 2], help='shots')
