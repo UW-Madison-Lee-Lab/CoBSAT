@@ -137,7 +137,7 @@ for shot in args.shot:
                     theta = theta_list[shot+1]
 
                     input_tokens = tokenizer.bos_token  + s_token
-                    save_path = folder_path + theta + "_"
+                    save_path = folder_path + str(len(glob.glob(folder_path + '/*.jpg'))) + "_" + theta + "_"
                     print("========")
                     print(theta)
                     print("--------")
