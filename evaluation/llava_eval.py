@@ -135,7 +135,7 @@ def summary(
                                     score += 0.5
                             else:
                                 print('out1 error:', out1)
-                                with open('./LLaVA_evaluation/error.txt', 'a') as f:
+                                with open(f'{folder}/error.txt', 'a') as f:
                                     f.write('out1 error:' + out1 + '(' + filename + ')' + '\n')
                             second_number = re.search(r'\d', out2)
                             if second_number:
@@ -144,7 +144,7 @@ def summary(
                                     score += 0.5
                             else:
                                 print('out2 error:', out2)
-                                with open('./LLaVA_evaluation/error.txt', 'a') as f:
+                                with open(f'{folder}/error.txt', 'a') as f:
                                     f.write('out2 error:' + out2 + '(' + filename + ')' + '\n')
                             if score >= 1:
                                 strict_score += 1
