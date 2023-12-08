@@ -11,6 +11,11 @@ import transformers
 from PIL import Image
 from torchvision.transforms.functional import InterpolationMode
 
+import random
+import glob
+import argparse
+import numpy as np
+
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
 BOI_TOKEN = '<img>'
@@ -96,64 +101,66 @@ sep = "\n"
 
 #############################
 
-import random
-import glob
-import argparse
+if __name__ == '__main__':
 
-parser = argparse.ArgumentParser(description='seed_llama')
-parser.add_argument('--shot', type=int, nargs='+', default=[1, 2, 4])
-parser.add_argument('--misleading', type=bool, default=[False, True])
-parser.add_argument('--max_file_count', type=int, default=1)
+    parser = argparse.ArgumentParser(description='seed_llama')
+    parser.add_argument('--shot', type=int, nargs='+', default=[1, 2, 4])
+    parser.add_argument('--misleading', type=bool, default=[False, True])
+    parser.add_argument('--max_file_count', type=int, default=1)
 
-args = parser.parse_args()
-
-max_file_count = args.max_file_count
+    args = parser.parse_args()
 
 
+    # set seed for all experiments
+    random.seed(123)
+    np.random.seed(123)
+    torch.manual_seed(123)
 
-dataset_1_list = [['black','blue','green','pink','purple','red','white','yellow'], ['one','two','three','four','five','six'], ['cartoon','cubism','oil','origami','sketch','watercolor'],['drink','eat','fly','run','sing','sit','sleep','wink'],['beach','classroom','forest','gym','library','office','park','street']]
-space_1_list = ["color", "count", "style", "action", "background"]
-dataset_2_list = [['bag','box','building','car','chair','cup','flower','leaf'],['apple','cat','chair','cup','dog','lion','person','shampoo'], ['apple','car','cat','chair','dog','flower','house','man'],['bird','cat','dog','lion','man','monkey','pig','woman'],['car','cat','chair','dog','man','monkey','robot','woman']]
-space_2_list = ["object", "object", "object","animal", "object"]
+    max_file_count = args.max_file_count
 
-task_type = ["odd", "even"]
+    dataset_1_list = [['black','blue','green','pink','purple','red','white','yellow'], ['one','two','three','four','five','six'], ['cartoon','cubism','oil','origami','sketch','watercolor'],['drink','eat','fly','run','sing','sit','sleep','wink'],['beach','classroom','forest','gym','library','office','park','street']]
+    space_1_list = ["color", "count", "style", "action", "background"]
+    dataset_2_list = [['bag','box','building','car','chair','cup','flower','leaf'],['apple','cat','chair','cup','dog','lion','person','shampoo'], ['apple','car','cat','chair','dog','flower','house','man'],['bird','cat','dog','lion','man','monkey','pig','woman'],['car','cat','chair','dog','man','monkey','robot','woman']]
+    space_2_list = ["object", "object", "object","animal", "object"]
 
-for shot in args.shot:
-    for misleading in args.misleading:
-        base_path = "results/shot_" + str(shot) if misleading == False else "results/shot_" + str(shot) + "_m"
-        for t, (dataset_1, space_1, dataset_2, space_2) in enumerate(zip(dataset_1_list, space_1_list, dataset_2_list, space_2_list)):
-            for task in task_type:
-                folder_path = base_path + "/task_" + str(2 * t + 1) + "/" if task == "odd" else base_path + "/task_" + str(2 * t + 2) + "/"
-                if not os.path.exists(folder_path):
-                    os.makedirs(folder_path)
+    task_type = ["odd", "even"]
 
-                x_list = dataset_1 if task == "odd" else dataset_2 
-                theta_list = dataset_2 if task == "odd" else dataset_1
+    for shot in args.shot:
+        for misleading in args.misleading:
+            base_path = "results/shot_" + str(shot) if misleading == False else "results/shot_" + str(shot) + "_m"
+            for t, (dataset_1, space_1, dataset_2, space_2) in enumerate(zip(dataset_1_list, space_1_list, dataset_2_list, space_2_list)):
+                for task in task_type:
+                    folder_path = base_path + "/task_" + str(2 * t + 1) + "/" if task == "odd" else base_path + "/task_" + str(2 * t + 2) + "/"
+                    if not os.path.exists(folder_path):
+                        os.makedirs(folder_path)
 
-                while len(glob.glob(folder_path + '/*.jpg')) < max_file_count:
-                    random.shuffle(x_list)
-                    random.shuffle(theta_list)
-                    x_m_list = x_list if misleading == False else [x + " " + theta for x, theta in zip(x_list, theta_list)]
-                    theta = theta_list[shot+1]
+                    x_list = dataset_1 if task == "odd" else dataset_2 
+                    theta_list = dataset_2 if task == "odd" else dataset_1
 
-                    input_tokens = tokenizer.bos_token  + s_token
-                    save_path = folder_path + str(len(glob.glob(folder_path + '/*.jpg'))) + "_" + theta + "_"
-                    print("========")
-                    print(theta)
-                    print("--------")
-                    for i in range(shot+1):
-                        image_path_i = "examples/" + space_1 + "_" + theta + "/" + x_list[i] + "_" + theta + ".jpg" if task == "odd" else "examples/" + space_1 + "_" + x_list[i] + "/" + theta + "_" + x_list[i] + ".jpg"
-                        image_i = Image.open(image_path_i).convert('RGB')
-                        image_tensor_i = transform(image_i).to(device)
-                        img_ids_i = tokenizer.encode_image(image_torch=image_tensor_i)
-                        img_ids_i = img_ids_i.view(-1).cpu().numpy()
-                        img_tokens_i = BOI_TOKEN + ''.join([IMG_TOKEN.format(item)
-                                                        for item in img_ids_i]) + EOI_TOKEN
-                        input_tokens = input_tokens + x_m_list[i] + ": " if i == shot else input_tokens + x_m_list[i] +  ": " + img_tokens_i
-                        print(x_m_list[i])
-                        save_path = save_path + "_" + x_list[i]
-                    print("========")
-                    input_tokens = input_tokens + e_token + sep
-                    save_path = save_path + ".jpg"
-                    generate_ids = generate(tokenizer, input_tokens, generation_config, model)        
-                    decode_image_text(generate_ids, tokenizer, save_path)
+                    while len(glob.glob(folder_path + '/*.jpg')) < max_file_count:
+                        random.shuffle(x_list)
+                        random.shuffle(theta_list)
+                        x_m_list = x_list if misleading == False else [x + " " + theta for x, theta in zip(x_list, theta_list)]
+                        theta = theta_list[shot+1]
+
+                        input_tokens = tokenizer.bos_token  + s_token
+                        save_path = folder_path + str(len(glob.glob(folder_path + '/*.jpg'))) + "_" + theta + "_"
+                        print("========")
+                        print(theta)
+                        print("--------")
+                        for i in range(shot+1):
+                            image_path_i = "examples/" + space_1 + "_" + theta + "/" + x_list[i] + "_" + theta + ".jpg" if task == "odd" else "examples/" + space_1 + "_" + x_list[i] + "/" + theta + "_" + x_list[i] + ".jpg"
+                            image_i = Image.open(image_path_i).convert('RGB')
+                            image_tensor_i = transform(image_i).to(device)
+                            img_ids_i = tokenizer.encode_image(image_torch=image_tensor_i)
+                            img_ids_i = img_ids_i.view(-1).cpu().numpy()
+                            img_tokens_i = BOI_TOKEN + ''.join([IMG_TOKEN.format(item)
+                                                            for item in img_ids_i]) + EOI_TOKEN
+                            input_tokens = input_tokens + x_m_list[i] + ": " if i == shot else input_tokens + x_m_list[i] +  ": " + img_tokens_i
+                            print(x_m_list[i])
+                            save_path = save_path + "_" + x_list[i]
+                        print("========")
+                        input_tokens = input_tokens + e_token + sep
+                        save_path = save_path + ".jpg"
+                        generate_ids = generate(tokenizer, input_tokens, generation_config, model)        
+                        decode_image_text(generate_ids, tokenizer, save_path)
