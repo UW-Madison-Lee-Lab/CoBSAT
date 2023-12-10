@@ -85,6 +85,7 @@ def call_gpt(
     max_tokens = 300,
     image_output_size: Literal["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"] = "1024x1024",
     image_output_quality:  Literal['hd', 'standard'] = 'standard',
+    seed = 123,
 ):
     
     if len(text_inputs) != (len(image_inputs)+1):
@@ -108,6 +109,7 @@ def call_gpt(
         'model':"gpt-4-vision-preview",
         'messages':messages,
         'max_tokens':max_tokens,
+        'seed': seed,
     }
     
     gpt4v_start = time()
