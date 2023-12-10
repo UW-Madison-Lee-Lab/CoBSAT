@@ -2,8 +2,8 @@ from openai import OpenAI
 import os, base64, requests
 from typing import Literal
 from time import time
+from environment import OPENAI_API_KEY
 
-OPENAI_API_KEY = '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'
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 client = OpenAI()
 

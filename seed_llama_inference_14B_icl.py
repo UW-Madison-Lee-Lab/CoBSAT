@@ -5,11 +5,7 @@ import os
 import torch
 
 from omegaconf import OmegaConf
-import json
-from typing import Optional
-import transformers
 from PIL import Image
-from torchvision.transforms.functional import InterpolationMode
 
 import random
 import glob
@@ -106,7 +102,7 @@ parser.add_argument('--shot', type=int, nargs='+', default=[1, 2, 4])
 parser.add_argument('--misleading', type=bool, default=[False, True])
 parser.add_argument('--max_file_count', type=int, default=1)
 parser.add_argument('--seed', type=int, default=123)
-
+\
 args = parser.parse_args()
 
 

@@ -51,10 +51,16 @@ def get_prompt(
 ):    
     contents = []
     if prompt_index == 1:
-        text_description = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. "
+        text_description = "I will provide you with a few examples with text and images. Complete the example with the description of the next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. "
         contents.append(process_text(text_description))
     elif prompt_index == 2:
-        text_description = "I will provide you a few examples with text and image. Generate the clear description of the next image based on the pattern from previous examples. Your output will be directly used as input for DALL-E model."
+        text_description = "I will provide you with a few examples with text and images. Generate a clear description of the next image based on the pattern from previous examples. Your output will be directly used as input for the DALL-E model."
+        contents.append(process_text(text_description))
+    elif prompt_index == 3:
+        text_description = "Given initial text and image examples, continue by providing a description for the next image in the sequence. Focus solely on the image description without adding any additional comments or explanations. "
+        contents.append(process_text(text_description))
+    elif prompt_index == 4:
+        text_description = "After the initial text and images are presented, advance to detail the next image in the sequence, concentrating solely on the image’s content and avoiding any additional information or context. "
         contents.append(process_text(text_description))
     
     for i in range(len(text_inputs)):
