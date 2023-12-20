@@ -1,6 +1,6 @@
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
-import torch, os, json, argparse, sys, random
+import torch, os, argparse, sys, random
 import numpy as np
 from tqdm import tqdm
 
@@ -10,16 +10,9 @@ root_dir = os.path.dirname(os.getcwd())
 
 sys.path.append(root_dir)
 from configs import task_dataframe
-sys.path.append(f"{root_dir}/google_drive_helper")
-from google_upload import drive_upload
+from google_drive_helper.google_upload import drive_upload
+from helper import save_json
 
-def save_json(data, path):
-    folder = os.path.dirname(path)
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-    with open(path, 'w') as f:
-        json.dump(data, f, indent=4)
 
 def get_logits(model,text_embeds,image_embeds):
     logit_scale = model.logit_scale.exp()

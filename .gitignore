@@ -38,6 +38,7 @@ figures/
 **/results
 **/models
 **/seed_llama
+**/logs
 
 
 **/submit_cpu.sh
