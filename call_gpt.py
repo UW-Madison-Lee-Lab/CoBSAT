@@ -207,7 +207,7 @@ def call_gpt3_completion(
     
     response = client.completions.create(
         model="gpt-3.5-turbo-instruct",
-        prompt=f"Q: Does the image description \"{image_description}\" describe {ground_truth_description}? Please answer yes or no without any other texts. A: ",
+        prompt=f"Q: {request} Please answer yes or no without any other texts. A: ",
         seed = seed,
     )
     return response.choices[0].text
