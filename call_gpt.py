@@ -42,7 +42,7 @@ def process_text(text_input):
     
     return text_content
 
-def get_prompt(
+def prompt_image_eval(
     text_inputs, 
     image_inputs,
     prompt_index, 
@@ -77,7 +77,7 @@ def get_prompt(
     return messages
         
 
-def call_gpt(
+def call_gpt4v(
     text_inputs = ["Red", "Green", "Yellow"],
     mode: Literal['url', 'path'] = 'url',
     image_inputs = [
@@ -101,7 +101,7 @@ def call_gpt(
 
     output_dict = {}
 
-    messages = get_prompt(
+    messages = prompt_image_eval(
         text_inputs, 
         image_inputs, 
         prompt_index, 
@@ -156,3 +156,58 @@ def call_gpt(
         output_dict['dalle_time'] = dalle_end - dalle_start
     
     return output_dict
+
+def prompt_text_eval(
+    prompt_idx,
+    image_description,
+    ground_truth_description,
+):
+    if prompt_idx == 1:
+        request = f"Does the image description \"{image_description}\" describe {ground_truth_description}? Please answer yes or no without any other texts."
+    elif prompt_idx == 2:
+        request = f"Is it correct to say that \"{image_description}\" describes {ground_truth_description}? Please answer yes or no without any other texts."
+    else:
+        raise ValueError("The prompt must be either 1 or 2.")
+    return request
+
+def call_gpt3_chat(
+    image_description,
+    ground_truth_description,
+    prompt_idx = 1, 
+    seed = 123,
+):
+    request = prompt_text_eval(
+        prompt_idx,
+        image_description,
+        ground_truth_description,
+    )
+    
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant that only answer yes or no."},
+            {"role": "user", "content": request},
+        ],
+        seed = seed,
+    )
+    return response.choices[0].message.content
+
+def call_gpt3_completion(
+    image_description,
+    ground_truth_description,
+    prompt_idx = 1, 
+    seed = 123,
+):
+
+    request = prompt_text_eval(
+        prompt_idx,
+        image_description,
+        ground_truth_description,
+    )
+    
+    response = client.completions.create(
+        model="gpt-3.5-turbo-instruct",
+        prompt=f"Q: Does the image description \"{image_description}\" describe {ground_truth_description}? Please answer yes or no without any other texts. A: ",
+        seed = seed,
+    )
+    return response.choices[0].text

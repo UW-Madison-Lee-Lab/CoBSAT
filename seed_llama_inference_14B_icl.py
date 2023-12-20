@@ -11,6 +11,7 @@ import random
 import glob
 import argparse
 import numpy as np
+from transformers import set_seed
 
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
@@ -79,7 +80,7 @@ transform_cfg_path = 'configs/transform/clip_transform.yaml'
 transform_cfg = OmegaConf.load(transform_cfg_path)
 transform = hydra.utils.instantiate(transform_cfg)
 
-model_cfg = OmegaConf.load('configs/llm/seed_llama_14b.yaml')
+model_cfg = OmegaConf.load('configs/llm/seed_llama_8b.yaml')
 model = hydra.utils.instantiate(model_cfg, torch_dtype=torch.float16)
 model = model.eval().to(device)
 
@@ -102,7 +103,7 @@ parser.add_argument('--shot', type=int, nargs='+', default=[1, 2, 4])
 parser.add_argument('--misleading', type=bool, default=[False, True])
 parser.add_argument('--max_file_count', type=int, default=1)
 parser.add_argument('--seed', type=int, default=123)
-\
+
 args = parser.parse_args()
 
 
@@ -114,6 +115,7 @@ torch.cuda.manual_seed_all(args.seed)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 torch.backends.cudnn.enabled = False
+set_seed(args.seed)
 
 max_file_count = args.max_file_count
 

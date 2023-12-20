@@ -37,6 +37,7 @@ figures/
 **/.ipynb_checkpoints/
 **/results
 **/models
+**/seed_llama
 
 
 **/submit_cpu.sh
