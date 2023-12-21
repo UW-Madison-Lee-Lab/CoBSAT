@@ -154,13 +154,13 @@ def summary(
                         overwrite=overwrite,
                     )
                 sample_mean = {
-                        "name": task_name,
-                        "score": score_per_task/number_per_task,
-                        "strict_score": strict_score_per_task/number_per_task,
-                        "similarity": similarity_per_task/number_per_task,
-                        "similarity1": similarity1_per_task/number_per_task,
-                        "similarity2": similarity2_per_task/number_per_task,
-                        "number": number_per_task
+                    "name": task_name,
+                    "score": score_per_task/number_per_task,
+                    "strict_score": strict_score_per_task/number_per_task,
+                    "similarity": similarity_per_task/number_per_task,
+                    "similarity1": similarity1_per_task/number_per_task,
+                    "similarity2": similarity2_per_task/number_per_task,
+                    "number": number_per_task
                 }
                 samples_mean.append(sample_mean)
                 json_file = f"{folder}/[{data_id}]{task_name}_{mllm}_{shot}shot_mean({(similarity_per_task/number_per_task):.2f})({(similarity1_per_task/number_per_task):.2f})({(similarity2_per_task/number_per_task):.2f})({(score_per_task/number_per_task):.2f})({(strict_score_per_task/number_per_task):.2f}).json"

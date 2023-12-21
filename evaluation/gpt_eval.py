@@ -140,7 +140,7 @@ def summary(
                     print(f"| ------ theta: {theta}")
                     misleading_flag = '_m' if misleading else ''
                     # Wonjun: Please update the path for getting the textual output
-                    cur_path = f"{root_dir}/results/{mllm}_results/shot_{shot}{misleading_flag}/{x_space}_{theta_space}/{x_space}_{theta}"
+                    cur_path = f"{root_dir}/results/{mllm}_results/text_gen/shot_{shot}{misleading_flag}/{x_space}_{theta_space}/{x_space}_{theta}"
                     samples = []
                     all_generated_files = os.listdir(cur_path)
                 
@@ -173,7 +173,7 @@ def summary(
                             
                             # storing the error cases
                             if isinstance(corr[mode], str):
-                                log_path = f"{folder}/log/{data_id}_{task_name}_{mllm}_{shot}shot_{theta}_error.json"
+                                log_path = f"{folder}/log/text_gen/{data_id}_{task_name}_{mllm}_{shot}shot_{theta}_gpt_eval_error.json"
                                 error_message = {
                                     'filename': filename,
                                     'text_output': text_output,
