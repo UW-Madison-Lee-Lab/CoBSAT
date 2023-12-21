@@ -1,9 +1,9 @@
 import os, io, sys, argparse
-from Google import Create_Service
+root_dir = os.path.dirname(os.getcwd())
+sys.path.insert(1, root_dir)
+from google_drive_helper.Google import Create_Service
 from googleapiclient.http import MediaIoBaseDownload
 from tqdm import tqdm
-
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CLIENT_SECRET_FILE = f'{root_dir}/credentials.json'
 API_NAME = "drive"

@@ -44,60 +44,70 @@ def get_ground_truth(
         'chair': 'chairs',
     }
     
-    ground_truth_dict = {
-        1: {
+    if data_id == 1:
+        ground_truth_dict = {
             'overall': f'{x} {theta}',
             'textual': f"{x} object",
             'visual': f"a {theta}", # TODO: test
-        },
-        2: {
+        }
+    elif data_id == 2:
+        ground_truth_dict = {
             'overall': f'{theta} {x}',
             'textual': f"a {x}",
             'visual': f"{theta} object", # TODO: test
-        },
-        3: {
+        }
+    elif data_id == 3:
+        ground_truth_dict = {
             'overall': f"{x} {theta}" if x == 'one' else f"{x} {plural_dict[theta]}",
             'textual': f"{x} objects",
             'visual': f"{plural_dict[theta]}", 
-        },
-        4: {
+        }
+    elif data_id == 4:
+        ground_truth_dict = {
             'overall': f"{theta} {x}" if theta == 'one' else f"{theta} {plural_dict[x]}s",
             'textual': f"{x}/{plural_dict[x]}",
             'visual': f"{theta} objects",
-        },
-        5: {
+        }
+    elif data_id == 5:
+        ground_truth_dict = {
             'overall': f"{x} painting of {theta}" if x != 'oil painting' else f"{x} of {theta}",
             'textual': f"{x} painting" if x != 'oil painting' else f"{x}",
             'visual': f"painting of {theta}",
-        },        
-        6: {
+        }
+    elif data_id == 6:
+        ground_truth_dict = {
             'overall': f"{theta} painting of {x}" if theta != 'oil painting' else f"{theta} of {x}",
             'textual': f"painting of {x}",
             'visual': f"{theta} painting" if theta != 'oil painting' else f"{theta}",
-        },
-        7: {
-            'overall': f"{theta} is {x}ing",
+        }
+    elif data_id == 7:
+        ground_truth_dict = {
+            'overall': f"{theta} that is {x}ing",
             'textual': f"an animal/human that is {x}ing",
             'visual': f"{theta}",
-        },
-        8: {
-            'overall': f"{x} is {theta}ing",
+        }
+    elif data_id == 8:
+        ground_truth_dict = {
+            'overall': f"{x} that is {theta}ing",
             'textual': f"{x}",
             'visual': f"an animal/human that is {theta}ing",
-        },
-        9: {
+        }
+    elif data_id == 9:
+        ground_truth_dict = {
             'overall': f"{x} on/in {theta}",
             'textual': f"{x}",
             'visual': f"{theta}",
-        },
-        10: {
+        }
+    elif data_id == 10:
+        ground_truth_dict = {
             'overall': f"{theta} on/in {x}",
             'textual': f"{x}",
             'visual': f"{theta}",
-        },
-    }
+        }
+    else:
+        raise ValueError("The data_id must be between 1 and 10.")
     
-    return ground_truth_dict[data_id][mode]
+    return ground_truth_dict[mode]
 
 def summary(
     data_ids,
@@ -150,15 +160,16 @@ def summary(
                         
                         corr = {}
                         for mode in ['overall', 'textual', 'visual']:
+                            ground_truth = get_ground_truth(
+                                x,
+                                theta,
+                                data_id,
+                                mode = type_mode,
+                            ),
                             type_mode = cast(Literal['overall', 'textual', 'visual'], mode)
                             corr[mode] = evaluate_one_output(
                                 text_output,
-                                get_ground_truth(
-                                    x,
-                                    theta,
-                                    data_id,
-                                    mode = type_mode,
-                                ),
+                                ground_truth,
                             )
                             corr_tot[mode] += corr[mode]
                         sample = {
@@ -170,6 +181,8 @@ def summary(
                             'mllm': mllm,
                             'filename': filename,
                             'misleading': misleading,
+                            'ground_truth': ground_truth,
+                            'text_output': text_output,
                             **corr,
                         }
                         samples.append(sample)
