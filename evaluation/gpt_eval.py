@@ -24,9 +24,8 @@ def evaluate_one_output(
     elif 'no' in response.lower():
         return 0
     else:
-        raise ValueError("The response must be either yes or no.")
-    ## TODO: log errors
-    
+        return response
+        
 def get_ground_truth(
     x,
     theta,
@@ -48,18 +47,18 @@ def get_ground_truth(
         ground_truth_dict = {
             'overall': f'{x} {theta}',
             'textual': f"{x} object",
-            'visual': f"a {theta}", # TODO: test
+            'visual': f"a {theta}",
         }
     elif data_id == 2:
         ground_truth_dict = {
             'overall': f'{theta} {x}',
             'textual': f"a {x}",
-            'visual': f"{theta} object", # TODO: test
+            'visual': f"{theta} object",
         }
     elif data_id == 3:
         ground_truth_dict = {
             'overall': f"{x} {theta}" if x == 'one' else f"{x} {plural_dict[theta]}",
-            'textual': f"{x} objects",
+            'textual': f"{x} objects" if x!= 'one' else f"{x} object",
             'visual': f"{plural_dict[theta]}", 
         }
     elif data_id == 4:
@@ -136,13 +135,12 @@ def summary(
             print(f'| - mllm: {mllm}')
             for shot in shots:
                 print(f"| --- shot {shot}")
-                xxx
+                samples_mean = []
                 for theta in theta_list:
                     print(f"| ------ theta: {theta}")
                     misleading_flag = '_m' if misleading else ''
                     # Wonjun: Please update the path for getting the textual output
                     cur_path = f"{root_dir}/results/{mllm}_results/shot_{shot}{misleading_flag}/{x_space}_{theta_space}/{x_space}_{theta}"
-                    xx
                     samples = []
                     all_generated_files = os.listdir(cur_path)
                 
@@ -170,8 +168,22 @@ def summary(
                             corr[mode] = evaluate_one_output(
                                 text_output,
                                 ground_truth,
+                                prompt_idx, 
                             )
+                            
+                            # storing the error cases
+                            if isinstance(corr[mode], str):
+                                log_path = f"{folder}/log/{data_id}_{task_name}_{mllm}_{shot}shot_{theta}_error.json"
+                                error_message = {
+                                    'filename': filename,
+                                    'text_output': text_output,
+                                    'ground_truth': ground_truth,
+                                    'mode': mode,
+                                }
+                                save_json(error_message, log_path)
+                                
                             corr_tot[mode] += corr[mode]
+                            
                         sample = {
                             'x': x,
                             'theta': theta,
@@ -186,6 +198,7 @@ def summary(
                             **corr,
                         }
                         samples.append(sample)
+                        
                     json_file = f"{folder}/detail/[{data_id}]{task_name}_{mllm}_{shot}shot_{theta}.json"
                     save_json(samples, json_file)
                     drive_upload([{
@@ -195,10 +208,9 @@ def summary(
                         upload_folder=google_detail_folder,
                         overwrite=overwrite,
                     )
-                sample_mean = {
                     
-                }
-                samples_mean.append(sample_mean)
+                    sample_mean = {corr_tot[mode]/len(all_generated_files) for mode in ['overall', 'textual', 'visual']}
+                    samples_mean.append(sample_mean)
                 json_file = f"{folder}/[{data_id}]{task_name}_{mllm}_{shot}shot_mean.json"
                 save_json(samples_mean, json_file)
                 drive_upload([{
