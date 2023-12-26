@@ -20,36 +20,13 @@ def inference(
         os.makedirs(folder_path)
     x_list = task_dataframe[task_id]["x_list"]
     theta_list = task_dataframe[task_id]["theta_list"]
-
-<<<<<<< HEAD
+    
     count= 0
     while count < max_file_count:
         random.shuffle(x_list)
         random.shuffle(theta_list)
         x_m_list = [x + " " + theta for x, theta in zip(x_list, theta_list)] if misleading else x_list
         theta = theta_list[shot+1]
-=======
-            text_inputs, image_inputs = [], []
-            save_path = f"{folder_path}/{count}_{theta}_"
-            print("========")
-            print(theta)
-            print("--------")
-            for i in range(shot+1):
-                if task_id % 2 == 1:
-                    image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type'].replace('_', ' ')}/{x_list[i]} {theta}"
-                else:
-                    image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type'].replace('_', ' ')}/{theta} {x_list[i]}"
-                for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
-                    image_path_i = f"{image_path_prefix}.{file_type}"
-                    if os.path.exists(image_path_i):
-                        break
-                text_inputs.append(x_m_list[i])
-                if i < shot:
-                    image_inputs.append(image_path_i)
-                print(x_m_list[i])
-                save_path = save_path + "_" + x_list[i]
-            print("========")
->>>>>>> 71b3ca1d2b3ad9609781ffcce3ebc6d3b6811707
 
         text_inputs, image_inputs = [], []
         save_path = f"{folder_path}/{count}_{theta}_"
@@ -61,7 +38,7 @@ def inference(
                 image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type'].replace('_', ' ')}/{x_list[i]} {theta}"
             else:
                 image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type'].replace('_', ' ')}/{theta} {x_list[i]}"
-            for file_type in ['jpg', 'png', 'jpeg', 'webp']:
+            for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
                 image_path_i = f"{image_path_prefix}.{file_type}"
                 if os.path.exists(image_path_i):
                     break
