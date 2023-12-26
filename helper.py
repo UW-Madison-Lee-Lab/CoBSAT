@@ -52,7 +52,6 @@ def find_image(
     x, 
     theta, 
 ):
-    image_path_i = None
     find = False
     
     image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type']}/{x}_{theta}"
@@ -69,6 +68,11 @@ def find_image(
         for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
             image_path_i = f"{image_path_prefix}.{file_type}"
             if os.path.exists(image_path_i):
+                find = True
                 break
-        
-    return image_path_i
+            
+    if not find: 
+        print(image_path_prefix)
+        return None 
+    else:
+        return image_path_i

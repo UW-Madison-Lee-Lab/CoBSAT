@@ -22,7 +22,7 @@ def inference(
     x_list = task_dataframe[task_id]["x_list"]
     theta_list = task_dataframe[task_id]["theta_list"]
     
-    count= 0
+    count = 0
     while count < max_file_count:
         random.shuffle(x_list)
         random.shuffle(theta_list)
@@ -45,12 +45,14 @@ def inference(
                 )
                 
                 if image_path_i is None:
-                    error_message = f"{image_path_i} not found!\n"
+                    error_message = f"{task_id} {x_list[i]} {theta} not found!\n"
                     print(error_message)
                     write_log(log_path, error_message)
+                    break
                 image_inputs.append(image_path_i)
             print(x_m_list[i])
             save_path = save_path + "_" + x_list[i]
+        if image_path_i is None: continue
         print("========")
 
         save_path = save_path + ".json"
