@@ -14,6 +14,13 @@ def read_json(path):
     with open(path) as f:
         data = json.load(f)
     return data
+
+def write_log(log_path, text):
+    folder = os.path.dirname(log_path)
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    with open(log_path, 'a') as f:
+        f.write(text)
         
 def set_seed(seed):
     np.random.seed(seed)
@@ -46,25 +53,22 @@ def find_image(
     theta, 
 ):
     image_path_i = None
+    find = False
     
-    try:
-        image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type']}/{x} {theta}"
-            
-        for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
-            image_path_i = f"{image_path_prefix}.{file_type}"
-            if os.path.exists(image_path_i):
-                break
-    except FileNotFoundError:
-        image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type']}/{theta} {x}"
+    image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type']}/{x}_{theta}"
+        
+    for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
+        image_path_i = f"{image_path_prefix}.{file_type}"
+        if os.path.exists(image_path_i):
+            find = True
+            break
+        
+    if not find:
+        image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type']}/{theta}_{x}"
 
         for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
             image_path_i = f"{image_path_prefix}.{file_type}"
             if os.path.exists(image_path_i):
                 break
-    except KeyboardInterrupt:
-        exit()
-    except Exception as e:
-        print(e)
-        print(f"Error: {task_id} {x}, {theta}")
         
     return image_path_i

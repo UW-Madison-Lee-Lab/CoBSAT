@@ -2,7 +2,7 @@ import os, argparse, random, glob
 from load_model import load_model
 from configs import google_folder_id, task_dataframe
 root_dir = os.path.dirname(os.path.abspath(__file__))
-from helper import save_json, find_image
+from helper import save_json, find_image, write_log
 
 def inference(
     model,
@@ -10,10 +10,11 @@ def inference(
     shot,
     misleading,
     task_id,
+    overwrite,
 ):
     misleading_flag = "_m" if misleading else ""
+    log_path = f"{root_dir}/logs/text_inference/{task_id}/{model}/shot_{shot}{misleading_flag}.log"
     base_path = f"{root_dir}/results/exps/{model}_prompt2/shot_{shot}{misleading_flag}"
-    
     
     folder_path = f"{base_path}/task_{task_id}"
     if not os.path.exists(folder_path):
@@ -35,17 +36,28 @@ def inference(
         print("--------")
         for i in range(shot+1):
             text_inputs.append(x_m_list[i])
-            image_path_i = find_image(
-                root_dir, 
-                task_id, 
-                x_list[i], 
-                theta, 
-            )
             if i < shot:
+                image_path_i = find_image(
+                    root_dir, 
+                    task_id, 
+                    x_list[i], 
+                    theta, 
+                )
+                
+                if image_path_i is None:
+                    error_message = f"{image_path_i} not found!\n"
+                    print(error_message)
+                    write_log(log_path, error_message)
                 image_inputs.append(image_path_i)
             print(x_m_list[i])
             save_path = save_path + "_" + x_list[i]
         print("========")
+
+        save_path = save_path + ".json"
+        # skip if file exists
+        if not overwrite and os.path.exists(save_path):
+            count = count + 1
+            continue
 
         if count < len(glob.glob(folder_path + '/*.json')):
             #print("exist")
@@ -68,20 +80,19 @@ def inference(
                 print(e)
                 print('Retrying...')
         
-        save_path = save_path + ".json"
         print(out["description"])
-
         save_json(out, save_path)
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate image descriptions')
     parser.add_argument('--shot', type=int, nargs='+', default=[1, 2, 4])
-    parser.add_argument('--misleading', type=int, nargs='+', default=[0,1])
+    parser.add_argument('--misleading', type=int, nargs='+', default=[0,1], choices=[0,1])
     parser.add_argument('--model', type=str, default="qwen")
     parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--task_id', type=int, nargs='+', default=range(1,11))
+    parser.add_argument('--overwrite', type=int, default=0, choices=[0,1])
 
     args = parser.parse_args()
 
@@ -101,4 +112,5 @@ if '__main__' == __name__:
                     shot,
                     misleading,
                     task_id,
+                    args.overwrite
                 )
