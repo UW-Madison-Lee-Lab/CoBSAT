@@ -1,6 +1,6 @@
 import os, argparse, random, glob
 from load_model import load_model
-from configs import google_folder_id
+from configs import google_folder_id, task_dataframe
 root_dir = os.path.dirname(os.path.abspath(__file__))
 from helper import save_json, find_image
 
