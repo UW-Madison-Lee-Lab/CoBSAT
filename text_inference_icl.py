@@ -1,8 +1,8 @@
 import os, argparse, random, glob
 from load_model import load_model
-from configs import task_dataframe, google_folder_id
+from configs import google_folder_id
 root_dir = os.path.dirname(os.path.abspath(__file__))
-from helper import save_json
+from helper import save_json, find_image
 
 def inference(
     model,
@@ -34,15 +34,13 @@ def inference(
         print(theta)
         print("--------")
         for i in range(shot+1):
-            if task_id % 2 == 1:
-                image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type'].replace('_', ' ')}/{x_list[i]} {theta}"
-            else:
-                image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type'].replace('_', ' ')}/{theta} {x_list[i]}"
-            for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
-                image_path_i = f"{image_path_prefix}.{file_type}"
-                if os.path.exists(image_path_i):
-                    break
             text_inputs.append(x_m_list[i])
+            image_path_i = find_image(
+                root_dir, 
+                task_id, 
+                x_list[i], 
+                theta, 
+            )
             if i < shot:
                 image_inputs.append(image_path_i)
             print(x_m_list[i])
@@ -83,7 +81,7 @@ if '__main__' == __name__:
     parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)
     parser.add_argument('--device', type=str, default='cuda')
-    parser.add_argument('--task_id', type=str, nargs='+', default=range(1,11))
+    parser.add_argument('--task_id', type=int, nargs='+', default=range(1,11))
 
     args = parser.parse_args()
 

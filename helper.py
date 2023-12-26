@@ -1,5 +1,6 @@
 import os, json, numpy as np, random, torch
 from PIL import Image
+from configs import task_dataframe
 
 def save_json(data, path):
     folder = os.path.dirname(path)
@@ -24,7 +25,7 @@ def set_seed(seed):
     torch.backends.cudnn.enabled = False
     
 def get_image(name):
-    extensions = ['jpg', 'webp', 'jpeg', 'png']
+    extensions = ['jpg', 'webp', 'jpeg', 'png', 'JPG', 'Jpeg']
     found_image = None
     for ext in extensions:
         try:
@@ -37,3 +38,33 @@ def get_image(name):
     if found_image is None:
         print(f"No valid image found for {name} !")
     return found_image
+
+def find_image(
+    root_dir, 
+    task_id, 
+    x, 
+    theta, 
+):
+    image_path_i = None
+    
+    try:
+        image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type']}/{x} {theta}"
+            
+        for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
+            image_path_i = f"{image_path_prefix}.{file_type}"
+            if os.path.exists(image_path_i):
+                break
+    except FileNotFoundError:
+        image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type']}/{theta} {x}"
+
+        for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
+            image_path_i = f"{image_path_prefix}.{file_type}"
+            if os.path.exists(image_path_i):
+                break
+    except KeyboardInterrupt:
+        exit()
+    except Exception as e:
+        print(e)
+        print(f"Error: {task_id} {x}, {theta}")
+        
+    return image_path_i
