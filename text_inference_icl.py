@@ -69,7 +69,8 @@ def inference(
             #print("equal")
             count = count + 1
         
-        while True:
+        retry = 0
+        while retry <= 10:
             try:
                 out = call_model({
                     'text_inputs': text_inputs, 
@@ -79,8 +80,12 @@ def inference(
             except KeyboardInterrupt:
                 exit()
             except Exception as e:
+                retry += 1
                 print(e)
                 print('Retrying...')
+                
+        if retry > 10:
+            out = {'description': 'ERROR'}
         
         print(out["description"])
         save_json(out, save_path)
