@@ -16,5 +16,6 @@ def load_model(model, device = 'cuda'):
             except Exception as e:
                 print(e)
                 continue
-        
+    else:
+        raise ValueError(f"Model {model} not found.")
     

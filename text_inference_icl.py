@@ -57,7 +57,10 @@ def inference(
             
             while True:
                 try:
-                    out = call_model(text_inputs=text_inputs, image_inputs=image_inputs)
+                    out = call_model({
+                        'text_inputs': text_inputs, 
+                        'image_inputs': image_inputs,
+                    })
                     break
                 except KeyboardInterrupt:
                     exit()
