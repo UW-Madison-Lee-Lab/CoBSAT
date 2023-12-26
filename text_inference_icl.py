@@ -8,6 +8,7 @@ def inference(
     model,
     call_model,
     shot,
+    misleading,
 ):
     misleading_flag = "_m" if misleading else ""
     base_path = f"{root_dir}/results/exps/{model}_prompt2/shot_{shot}{misleading_flag}"
@@ -23,7 +24,7 @@ def inference(
         while count < max_file_count:
             random.shuffle(x_list)
             random.shuffle(theta_list)
-            x_m_list = x_list if misleading == False else [x + " " + theta for x, theta in zip(x_list, theta_list)]
+            x_m_list = [x + " " + theta for x, theta in zip(x_list, theta_list)] if misleading else x_list
             theta = theta_list[shot+1]
 
             text_inputs, image_inputs = [], []
@@ -76,7 +77,7 @@ def inference(
 if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate image descriptions')
     parser.add_argument('--shot', type=int, nargs='+', default=[1, 2, 4])
-    parser.add_argument('--misleading', type=bool, nargs='+', default=[False, True])
+    parser.add_argument('--misleading', type=int, nargs='+', default=[0,1])
     parser.add_argument('--model', type=str, default="qwen")
     parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)
@@ -89,9 +90,12 @@ if '__main__' == __name__:
     call_model = load_model(args.model, args.device)
 
     for shot in args.shot:
+        print(f"| shot: {shot}")
         for misleading in args.misleading:
+            print(f"| ---- misleading: {misleading}")
             inference(
                 args.model,
                 call_model,
                 shot,
+                misleading,
             )
