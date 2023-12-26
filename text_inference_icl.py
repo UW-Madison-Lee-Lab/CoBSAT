@@ -36,7 +36,7 @@ def inference(
                     image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type'].replace('_', ' ')}/{x_list[i]} {theta}"
                 else:
                     image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type'].replace('_', ' ')}/{theta} {x_list[i]}"
-                for file_type in ['jpg', 'png', 'jpeg', 'webp']:
+                for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
                     image_path_i = f"{image_path_prefix}.{file_type}"
                     if os.path.exists(image_path_i):
                         break
