@@ -1,6 +1,6 @@
 import pandas as pd
 
-task_dataframe = pd.DataFrame({
+task_dataframe = {
     1: {
         'task_type': 'color_object',
         'x_space': 'color',
@@ -81,7 +81,7 @@ task_dataframe = pd.DataFrame({
         'theta_list': ['beach', 'street', 'park', 'forest', 'office', 'classroom', 'gym', 'library'],
         'task_name': 'objecttobackgroundobject',
     }
-})
+}
 
 google_folder_id = {
     'llava_evaluation_m': '1i21WRLal2Bsi_2QIQdc1Vd427up7g8N6',
