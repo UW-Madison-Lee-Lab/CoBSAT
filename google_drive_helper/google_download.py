@@ -4,6 +4,7 @@ sys.path.insert(1, root_dir)
 from google_drive_helper.Google import Create_Service
 from googleapiclient.http import MediaIoBaseDownload
 from tqdm import tqdm
+from configs import google_folder_id
 
 CLIENT_SECRET_FILE = f'{root_dir}/credentials.json'
 API_NAME = "drive"
@@ -55,14 +56,18 @@ def drive_download(
 def list_dir(
     directory_id = '1UwQv5bJdL9LJOQyNWXyfdx6CyDM94z9v',
     directory_name = 'emu_results',
+    user_email = None,
 ):
     all_files = []
     page_token = None
 
     # List all folders in the specified directory
     while True:
+        query = f"'{directory_id}' in parents and mimeType='application/vnd.google-apps.folder'"
+        if user_email is not None:
+            query += f" and '{user_email}' in owners"
         folder_results = service.files().list(
-            q=f"'{directory_id}' in parents and mimeType='application/vnd.google-apps.folder'",
+            q=query,
             fields='nextPageToken, files(id, name)',
             pageToken=page_token,
         ).execute()
@@ -103,29 +108,34 @@ def main(
         {'id': '1bTvMU5HOprhAWAW-wNZmaN5hTmRFZiSu', 'name': 'seed_results'}
     ],
     download_folder = 'results',
+    user_email = None,
 ):
 
     for dir in dirs:
         print('Starting to download files from', dir['name'])
-        all_files = list_dir(dir['id'], dir['name'])
+        all_files = list_dir(
+            dir['id'], 
+            dir['name'],
+            user_email=user_email,
+        )
         drive_download(all_files, download_folder=download_folder)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Download files from Google Drive')
-    parser.add_argument('--id', type=str, default=None, help='ID of the file to download')
     parser.add_argument('--name', type=str, default=None, help='Name of the file to download')
     parser.add_argument('--download_folder', type=str, default='results', help='Folder to download files to')
+    parser.add_argument('--user_email', type=str, default=None, help='Email of the user to download files from')
     args = parser.parse_args()
     
-    if args.id is None or args.name is None:
+    if args.name is None:
         main(download_folder=args.download_folder)
     else:
         main(
             [{
-                'id': args.id,
+                'id': google_folder_id[args.name],
                 'name': args.name
             }],
             download_folder=args.download_folder,
         )
     
-    
+    # example command: python google_download.py --user_email 'kangwj1995@furiosa.ai' --id 1OrDj-2dcy4-QV0MRdHalBFA8GASnXDD2 --name clip_evaluation

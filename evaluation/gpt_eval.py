@@ -117,7 +117,7 @@ def summary(
 ):
     if misleading:
         google_folder = '1p6KBgFeQs1muXVg6badTQJvwitK7ayQ3'
-        google_detail_folder = '1p6KBgFeQs1muXVg6badTQJvwitK7ayQ3'
+        google_detail_folder = '1iGcGnInHx6uAwBkv91RgDIW69yi6EMSd'
         folder = f"{root_dir}/results/gpt_evaluation_m"
     else:
         google_folder = '10m4m8G-qv4s-JUEP0h7Mo0MFdnHFNGJA'

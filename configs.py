@@ -82,3 +82,19 @@ task_dataframe = pd.DataFrame({
         'task_name': 'objecttobackgroundobject',
     }
 })
+
+google_folder_id = {
+    'llava_evaluation_m': '1i21WRLal2Bsi_2QIQdc1Vd427up7g8N6',
+    'llava_evaluation_m/detail': '1i70Ulvf81Peqp_Ch6byT5sZjjj7Ws7xl',
+    'llava_evaluation': '1OffDVBzfnXA51wn-iqylxKtGCiAv3CiQ',
+    'llava_evaluation/detail': '1OfwrMRitYzRJFqjfG24762cCpP8SgnKs',
+    'clip_evaluation_m': '1i0XrxIbG8vHn8AE_J-Vo6MhoAN3S2Vfy',
+    'clip_evaluation_m/detail': '1i4Zo98LxdmjQING1gFMt_tqHCwD2HWUV',
+    'clip_evaluation': '1OrDj-2dcy4-QV0MRdHalBFA8GASnXDD2',
+    'clip_evaluation/detail': '1OvHcYugDiB8DK0eIkftNAtx_WVgQtcmu',
+    'gpt_evaluation_m': '1p6KBgFeQs1muXVg6badTQJvwitK7ayQ3',
+    'gpt_evaluation_m/detail': '1iGcGnInHx6uAwBkv91RgDIW69yi6EMSd',
+    'gpt_evaluation': '10m4m8G-qv4s-JUEP0h7Mo0MFdnHFNGJA',
+    'gpt_evaluation/detail': '1r3WTYpSqOPYyu_2MW1ilXs6IFlX5AcAQ',
+    'exps': '1fEMxOiV4xKhNpVDSTiJCwvobROv9BiNb',
+}
