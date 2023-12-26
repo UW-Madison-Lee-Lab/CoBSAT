@@ -79,12 +79,12 @@ def prompt_image_eval(
 
 def call_gpt4v(
     text_inputs = ["Red", "Green", "Yellow"],
-    mode: Literal['url', 'path'] = 'url',
+    mode: Literal['url', 'path'] = 'path',
     image_inputs = [
         "https://media.istockphoto.com/id/1189903200/photo/red-generic-sedan-car-isolated-on-white-background-3d-illustration.jpg?s=612x612&w=0&k=20&c=uRu3o_h5FVljLQHS9z0oyz-XjXzzXN_YkyGXwhdMrjs=",
         "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
     ],
-    use_dalle = True,
+    use_dalle = False,
     dalle_version: Literal['dall-e-2', 'dall-e-3'] = 'dall-e-3',
     image_input_detail: Literal['low', 'high'] = 'low',
     prompt_index = 1,
