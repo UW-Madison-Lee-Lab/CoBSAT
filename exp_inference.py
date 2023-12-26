@@ -1,53 +1,28 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-from PIL import Image
-import torch
-from tqdm import notebook
+import argparse, glob
+from helper import *
 
 from gill import models
 from gill import utils
 
+
 # Download the model checkpoint and embeddings to checkpoints/gill_opt/
-model_dir = 'checkpoints/gill_opt/'
+model_dir = 'models/gill'
 model = models.load_gill(model_dir)
 model.sd_pipe.safety_checker = None
 
 g_cuda = torch.Generator(device='cuda')#.manual_seed(1337)
 
 def get_result(prompt, name):
-  return_outputs = model.generate_for_images_and_texts(
-      prompt, num_words=2, ret_scale_factor=100.0, generator=g_cuda)
+    return_outputs = model.generate_for_images_and_texts(
+        prompt, num_words=2, ret_scale_factor=100.0, generator=g_cuda)
 
-  if return_outputs[1]['decision'][0] == 'gen':
-      im = return_outputs[1]['gen'][0][0]
-      im.save(name)
-  else:
-      im = return_outputs[1]['ret'][0][0].resize((512, 512))
-      im.save(name)
-      print('Error!!!')
-
-
-def get_image(name):
-  extensions = ['jpg', 'webp', 'jpeg', 'png']
-  found_image = None
-  for ext in extensions:
-      try:
-          image_path = name+f'.{ext}'
-          found_image = Image.open(image_path).convert('RGB')
-          break
-      except FileNotFoundError:
-          continue
-
-  if found_image is None:
-      print(f"No valid image found for {name} !")
-  return found_image
-
-
-
-import argparse
-import random
-import glob
+    if return_outputs[1]['decision'][0] == 'gen':
+        im = return_outputs[1]['gen'][0][0]
+        im.save(name)
+    else:
+        im = return_outputs[1]['ret'][0][0].resize((512, 512))
+        im.save(name)
+        print('Error!!!')
 
 
 parser = argparse.ArgumentParser(description='seed_llama')
@@ -59,16 +34,7 @@ parser.add_argument('--seed', type=int, default=123)
 
 args = parser.parse_args()
 
-
-np.random.seed(args.seed)
-random.seed(args.seed)
-torch.manual_seed(args.seed)
-torch.cuda.manual_seed_all(args.seed)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-torch.backends.cudnn.enabled = False
-
-
+set_seed(args.seed)
 
 max_file_count = args.max_file_count
 

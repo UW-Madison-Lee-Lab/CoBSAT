@@ -1,7 +1,21 @@
 # Visual-ICL'
 
 ```
-pip install tqdm pandas numpy random matplotlib scipy dashscope transformers
+pip install -r requirements.txt
+
+```
+
+# gill
+```
+mkdir models
+cd models
+mkdir gill
+cd gill 
+wget https://github.com/kohjingyu/gill/raw/main/checkpoints/gill_opt/decision_model.pth.tar
+wget https://github.com/kohjingyu/gill/raw/main/checkpoints/gill_opt/pretrained_ckpt.pth.tar
+wget https://huggingface.co/spaces/jykoh/gill/raw/main/gill/layers.py
+wget https://huggingface.co/spaces/jykoh/gill/raw/main/gill/models.py
+wget https://huggingface.co/spaces/jykoh/gill/raw/main/gill/utils.py
 ```
 
 ### google drive api
@@ -18,6 +32,8 @@ python google_download.py --user_email 'kangwj1995@furiosa.ai' --name clip_evalu
 python google_download.py --user_email 'kangwj1995@furiosa.ai' --name clip_evaluation
 python google_download.py --user_email 'kangwj1995@furiosa.ai' --name exps
 python google_download.py --name datasets --download_folder '.'
+python google_download.py --name llava_evaluation_m/detail
+python google_download.py --name llava_evaluation/detail
 ```
 
 ### Llava evaluation
