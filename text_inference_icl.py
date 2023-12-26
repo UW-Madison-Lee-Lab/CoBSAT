@@ -5,11 +5,12 @@ root_dir = os.path.dirname(os.path.abspath(__file__))
 from helper import save_json
 
 def inference(
+    model,
     call_model,
     shot,
 ):
     misleading_flag = "_m" if misleading else ""
-    base_path = f"{root_dir}/results/shot_{shot}{misleading_flag}"
+    base_path = f"{root_dir}/results/exps/{model}_prompt2/shot_{shot}{misleading_flag}"
     
     for task_id in task_dataframe:
         folder_path = f"{base_path}/task_{task_id}"
@@ -76,16 +77,18 @@ if '__main__' == __name__:
     parser.add_argument('--model', type=str, default="qwen")
     parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)
+    parser.add_argument('--device', type=str, default='cuda')
 
     args = parser.parse_args()
 
     random.seed(args.seed)
     max_file_count = args.max_file_count
-    call_model = load_model(args.model)
+    call_model = load_model(args.model, args.device)
 
     for shot in args.shot:
         for misleading in args.misleading:
             inference(
+                args.model,
                 call_model,
                 shot,
             )
