@@ -1,7 +1,12 @@
 # Visual-ICL'
 
+```
+pip install tqdm pandas numpy random matplotlib scipy dashscope transformers
+```
+
 ### google drive api
 ```
+cd google_drive_helper
 pip install google_auth_oauthlib
 pip install --upgrade google-api-python-client
 # add credentials.json to project_root
@@ -11,6 +16,8 @@ python google_download.py --user_email 'kangwj1995@furiosa.ai' --name llava_eval
 python google_download.py --user_email 'kangwj1995@furiosa.ai' --name llava_evaluation
 python google_download.py --user_email 'kangwj1995@furiosa.ai' --name clip_evaluation_m
 python google_download.py --user_email 'kangwj1995@furiosa.ai' --name clip_evaluation
+python google_download.py --user_email 'kangwj1995@furiosa.ai' --name exps
+python google_download.py --name datasets --download_folder '.'
 ```
 
 ### Llava evaluation
