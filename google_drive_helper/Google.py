@@ -1,5 +1,4 @@
-import pickle
-import os
+import pickle, os, random
 from google_auth_oauthlib.flow import Flow, InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
@@ -36,6 +35,7 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
                 except OSError:
                     # randomly generate a valid port number
                     port = random.randint(1024, 65535)
+                    print(f'Using port {port}!')
 
         with open(pickle_file, 'wb') as token:
             pickle.dump(cred, token)
