@@ -9,6 +9,11 @@ def save_json(data, path):
     with open(path, 'w') as f:
         json.dump(data, f, indent=4)
         
+def read_json(path):
+    with open(path) as f:
+        data = json.load(f)
+    return data
+        
 def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
