@@ -136,6 +136,7 @@ if __name__ == "__main__":
                 'name': args.name
             }],
             download_folder=args.download_folder,
+            user_email=args.user_email,
         )
     
     # example command: python google_download.py --user_email 'kangwj1995@furiosa.ai' --id 1OrDj-2dcy4-QV0MRdHalBFA8GASnXDD2 --name clip_evaluation
