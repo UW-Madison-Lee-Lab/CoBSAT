@@ -5,6 +5,7 @@ sys.path.append(root_dir)
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.generation import GenerationConfig
 from helper import set_seed 
+from time import time
 
 def load_qwen(device = 'cuda'):
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
@@ -32,7 +33,12 @@ def call_qwen(
         if i < len(text_inputs) - 1:
             messages.append({'image': image_inputs[i]})
     
+    output_dict = {}
+    qwen_start = time()
     query = tokenizer.from_list_format(messages)
-    response, history = model.chat(tokenizer, query=query, history=None)
-    return response
+    output_dict['description'], output_dict['history'] = model.chat(tokenizer, query=query, history=None)
+    qwen_end = time()
+    output_dict['time'] = qwen_end - qwen_start
+    
+    return output_dict
     
