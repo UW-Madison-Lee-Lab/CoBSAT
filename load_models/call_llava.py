@@ -1,22 +1,28 @@
-import torch, os, json, argparse, sys, random, re
-import numpy as np
-from tqdm import tqdm
+import os, sys
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
+from helper import set_seed
+sys.path.append(f"{root_dir}/models/llava")
 from llava.model.builder import load_pretrained_model
 from llava.eval.run_llava import eval_model
+from llava.mm_utils import get_model_name_from_path
 from llava.utils import disable_torch_init
 from time import time
 
-root_dir = os.path.dirname(os.getcwd())
 
 def load_llava(device = 'cuda'):
     # Configure LlaVA
-    model_path = f"{root_dir}/evaluation/llava-v1.5-13b/"
+    # model_path = f"{root_dir}/models/llava-v1.5-13b/"
+    model_path = "liuhaotian/llava-v1.5-13b"
 
-    model_name = "llava-v1.5-13b"
     tokenizer, llava_model, image_processor, context_len = load_pretrained_model(
-        model_path, None, model_name
+        model_path=model_path,
+        model_base=None,
+        model_name=get_model_name_from_path(model_path),
+        device = device,
     )
     print('LlaVA model loaded.')
+
     llava_args = type('Args', (), {
         "conv_mode": None,
         "sep": ",",
@@ -28,7 +34,7 @@ def load_llava(device = 'cuda'):
     })()
     disable_torch_init()
 
-    return tokenizer, llava_model, image_processor, context_len, llava_args
+    return tokenizer, llava_model, image_processor, context_len, llava_args 
 
 def call_llava(
     tokenizer,
@@ -42,6 +48,7 @@ def call_llava(
         "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
     ],
     seed = 123,
+    device = 'cuda'
 ):
 
     set_seed(seed)
@@ -53,18 +60,19 @@ def call_llava(
         if i < len(text_inputs) - 1:
             prompt = prompt + "<image-placeholder>"
 
-    print(prompt)
     output_dict = {}
     llava_start = time()
-    output_dict['description'] = eval_model(prompt, image_inputs, tokenizer, llava_model, image_processor, context_len, llava_args)
+    output_dict['description'] = eval_model(
+        prompt, 
+        image_inputs, 
+        tokenizer, 
+        llava_model, 
+        image_processor, 
+        context_len, 
+        llava_args, 
+        device = device,
+    )
     llava_end = time()
     output_dict['time'] = llava_end - llava_start
 
     return output_dict
-
-
-"""
-tokenizer, llava_model, image_processor, context_len, llava_args = load_llava(device = 'cuda')
-out= call_llava(tokenizer, llava_model, image_processor, context_len, llava_args)
-print(out)
-"""
