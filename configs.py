@@ -44,7 +44,7 @@ task_dataframe = {
     6: {
         'task_type': 'style_object',
         'x_space': 'object',
-        'theta_style': 'style',
+        'theta_space': 'style',
         'x_list':  ['man', 'cat', 'flower', 'apple', 'dog', 'house', 'car', 'chair'],
         'theta_list': ['cartoon', 'oil', 'sketch', 'cubism', 'watercolor', 'origami'],
         'task_name': 'objecttostyleobject',
@@ -97,5 +97,5 @@ google_folder_id = {
     'gpt_evaluation': '10m4m8G-qv4s-JUEP0h7Mo0MFdnHFNGJA',
     'gpt_evaluation/detail': '1r3WTYpSqOPYyu_2MW1ilXs6IFlX5AcAQ',
     'exps': '1fEMxOiV4xKhNpVDSTiJCwvobROv9BiNb',
-    'datasets': '1axduotTrikpcjF-SP6UxxaNgFsIoIwOQ',
+    'datasets': '1mCmuB1IPb6Ht_ZZLfPjip4DCh-cWzO9D',
 }

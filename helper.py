@@ -54,25 +54,17 @@ def find_image(
 ):
     find = False
     
-    image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type']}/{x}_{theta}"
         
-    for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
-        image_path_i = f"{image_path_prefix}.{file_type}"
-        if os.path.exists(image_path_i):
-            find = True
-            break
+    if task_id % 2 == 1:
+        image_path_i = f"{root_dir}/datasets/{task_dataframe[task_id]['x_space']}_{theta}/{x}_{theta}.jpg"
+    else:
+        image_path_i = f"{root_dir}/datasets/{task_dataframe[task_id]['theta_space']}_{x}/{theta}_{x}.jpg"
         
-    if not find:
-        image_path_prefix = f"{root_dir}/datasets/{task_dataframe[task_id]['task_type']}/{theta}_{x}"
-
-        for file_type in ['jpg', 'webp', 'png', 'jpeg', 'JPG', 'Jpeg']:
-            image_path_i = f"{image_path_prefix}.{file_type}"
-            if os.path.exists(image_path_i):
-                find = True
-                break
+    if os.path.exists(image_path_i):
+        find = True
             
     if not find: 
-        print(image_path_prefix)
+        print(f"{image_path_i} not found!")
         return None 
     else:
         return image_path_i
