@@ -1,8 +1,11 @@
 import os, argparse, random, glob
 from load_model import load_model
-from configs import google_folder_id, task_dataframe
+from configs import task_dataframe
 root_dir = os.path.dirname(os.path.abspath(__file__))
 from helper import save_json, find_image, write_log
+
+from environment import TRANSFORMER_CACHE
+os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
 
 def inference(
     model,
@@ -59,12 +62,13 @@ def inference(
         # skip if file exists
         if not overwrite and os.path.exists(save_path):
             count = count + 1
+            print('skip')
             continue
 
         if count < len(glob.glob(folder_path + '/*.json')):
-            #print("exist")
+            print("exist")
             count = count + 1
-            continue
+            if not overwrite: continue
         elif count == len(glob.glob(folder_path + '/*.json')):
             #print("equal")
             count = count + 1

@@ -5,6 +5,14 @@ pip install -r requirements.txt
 
 ```
 
+## llava
+```
+cd models
+git clone https://github.com/haotian-liu/LLaVA.git
+mv LLaVA llava
+cd llava
+```
+
 # gill
 ```
 mkdir models
