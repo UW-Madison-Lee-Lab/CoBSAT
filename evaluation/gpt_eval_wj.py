@@ -177,6 +177,7 @@ def summary(
                                 'mode': mode,
                             }
                             save_json(error_message, log_path)
+                            corr[mode] = 0
                         print(corr[mode])
                         corr_tot[mode] += corr[mode]
                         
