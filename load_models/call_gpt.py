@@ -205,9 +205,21 @@ def call_gpt3_completion(
         ground_truth_description,
     )
     
-    response = client.completions.create(
-        model="gpt-3.5-turbo-instruct",
-        prompt=f"Q: {request} Please answer yes or no without any other texts. A: ",
-        seed = seed,
-    )
+    success = False
+    retry = 0
+    while not success:
+        try:
+            response = client.completions.create(
+                model="gpt-3.5-turbo-instruct",
+                prompt=f"Q: {request} Please answer yes or no without any other texts. A: ",
+                seed = seed,
+            )
+            success = True
+        except KeyboardInterrupt:
+            exit()
+        except:
+            retry += 1
+            if retry >= 5:
+                return "ERROR"
+            
     return response.choices[0].text

@@ -112,6 +112,7 @@ def summary(
     shots, 
     misleading = 0,
     overwrite = 1,
+    max_length = 100,
 ):
     if misleading:
         google_folder = google_folder_id['gpt_evaluation_m']
@@ -147,6 +148,8 @@ def summary(
                 for filename in tqdm(all_generated_files):
                     with open(f"{cur_path}/{filename}", 'r') as f:
                         text_output = json.load(f)['description']
+                        if len(text_output) >= max_length:
+                            text_output = text_output[:max_length]
                     file_name = os.path.splitext(filename)[0]
                     theta = file_name.split('_')[1]
                     x = file_name.split('_')[-1]                    
