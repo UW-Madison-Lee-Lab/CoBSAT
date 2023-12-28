@@ -1,9 +1,8 @@
-import os, sys, random, numpy as np, torch, argparse
+import os, sys, random, numpy as np, torch, argparse, json
 root_dir = os.path.dirname(os.getcwd())
 sys.path.append(root_dir)
-from call_gpt import call_gpt3_completion
-from typing import Literal, cast
-from configs import task_dataframe
+from load_models.call_gpt import call_gpt3_completion
+from configs import task_dataframe, google_folder_id
 from google_drive_helper.google_upload import drive_upload
 from tqdm import tqdm
 from helper import save_json
@@ -30,17 +29,16 @@ def get_ground_truth(
     x,
     theta,
     data_id,
-    mode: Literal['overall', 'textual', 'visual'] = 'overall', 
 ):
     plural_dict = {
-        'man': 'men',
-        'cat': 'cats',
-        'flower': 'flowers',
         'apple': 'apples',
-        'dog': 'dogs',
-        'house': 'houses',
-        'car': 'cars',
+        'cat': 'cats',
         'chair': 'chairs',
+        'cup': 'cups',
+        'dog': 'dogs',
+        'lion': 'lions',
+        'person': 'people',
+        'shampoo': 'shampoo',
     }
     
     if data_id == 1:
@@ -106,7 +104,7 @@ def get_ground_truth(
     else:
         raise ValueError("The data_id must be between 1 and 10.")
     
-    return ground_truth_dict[mode]
+    return ground_truth_dict
 
 def summary(
     data_ids,
@@ -116,101 +114,98 @@ def summary(
     overwrite = 1,
 ):
     if misleading:
-        google_folder = '1p6KBgFeQs1muXVg6badTQJvwitK7ayQ3'
-        google_detail_folder = '1iGcGnInHx6uAwBkv91RgDIW69yi6EMSd'
+        google_folder = google_folder_id['gpt_evaluation_m']
+        google_detail_folder = google_folder_id['gpt_evaluation_m/detail']
         folder = f"{root_dir}/results/gpt_evaluation_m"
     else:
-        google_folder = '10m4m8G-qv4s-JUEP0h7Mo0MFdnHFNGJA'
-        google_detail_folder = '1r3WTYpSqOPYyu_2MW1ilXs6IFlX5AcAQ'
+        google_folder = google_folder_id['gpt_evaluation']
+        google_detail_folder = google_folder_id['gpt_evaluation/detail']
         folder = f"{root_dir}/results/gpt_evaluation"
+
         
     for data_id in data_ids: 
         print(f'Processing data_id: {data_id}')
         task_name = task_dataframe[data_id]['task_name']
-        x_space = task_dataframe[data_id]['x_space']
-        theta_space = task_dataframe[data_id]['theta_space']
-        x_list = task_dataframe[data_id]['x_list']
-        theta_list = task_dataframe[data_id]['theta_list']
         for mllm in mllms:
             print(f'| - mllm: {mllm}')
             for shot in shots:
                 print(f"| --- shot {shot}")
                 samples_mean = []
-                for theta in theta_list:
-                    print(f"| ------ theta: {theta}")
-                    misleading_flag = '_m' if misleading else ''
-                    # Wonjun: Please update the path for getting the textual output
-                    cur_path = f"{root_dir}/results/{mllm}_results/text_gen/shot_{shot}{misleading_flag}/{x_space}_{theta_space}/{x_space}_{theta}"
-                    samples = []
-                    all_generated_files = os.listdir(cur_path)
+                misleading_flag = '_m' if misleading else ''
+                cur_path = f"{root_dir}/results/exps/{mllm}_prompt2/shot_{shot}{misleading_flag}/task_{data_id}"
+                samples = []
+                all_generated_files = os.listdir(cur_path)
+            
+                # set seed for all experiments
+                random.seed(123)
+                np.random.seed(123)
+                torch.manual_seed(123)
                 
-                    # set seed for all experiments
-                    random.seed(123)
-                    np.random.seed(123)
-                    torch.manual_seed(123)
-                    
-                    corr_tot = {}
-                    # Wonjun: Please update the way of getting the textual output
-                    for filename in tqdm(all_generated_files):
-                        with open(f"{cur_path}/{filename}", 'r') as f:
-                            text_output = f.read()
-                        x = filename.split('.')[0].split('_')[-1]
+                corr_tot = {}
+                for mode in ['overall', 'textual', 'visual']:
+                    corr_tot[mode] = 0
+                for filename in tqdm(all_generated_files):
+                    with open(f"{cur_path}/{filename}", 'r') as f:
+                        text_output = json.load(f)['description']
+                    file_name = os.path.splitext(filename)[0]
+                    theta = file_name.split('_')[1]
+                    x = file_name.split('_')[-1]                    
+
+                    corr = {}
+                    ground_truth_dict = get_ground_truth(x, theta, data_id)
+
+                    for mode in ['overall', 'textual', 'visual']:
+                        ground_truth = ground_truth_dict[mode]
+                        corr[mode] = evaluate_one_output(
+                            text_output,
+                            ground_truth,
+                            prompt_idx=1, 
+                        )
                         
-                        corr = {}
-                        for mode in ['overall', 'textual', 'visual']:
-                            ground_truth = get_ground_truth(
-                                x,
-                                theta,
-                                data_id,
-                                mode = type_mode,
-                            ),
-                            type_mode = cast(Literal['overall', 'textual', 'visual'], mode)
-                            corr[mode] = evaluate_one_output(
-                                text_output,
-                                ground_truth,
-                                prompt_idx, 
-                            )
-                            
-                            # storing the error cases
-                            if isinstance(corr[mode], str):
-                                log_path = f"{folder}/log/text_gen/{data_id}_{task_name}_{mllm}_{shot}shot_{theta}_gpt_eval_error.json"
-                                error_message = {
-                                    'filename': filename,
-                                    'text_output': text_output,
-                                    'ground_truth': ground_truth,
-                                    'mode': mode,
-                                }
-                                save_json(error_message, log_path)
-                                
-                            corr_tot[mode] += corr[mode]
-                            
-                        sample = {
-                            'x': x,
-                            'theta': theta,
-                            'task_name': task_name,
-                            'data_id': data_id,
-                            'shot': shot,
-                            'mllm': mllm,
-                            'filename': filename,
-                            'misleading': misleading,
-                            'ground_truth': ground_truth,
-                            'text_output': text_output,
-                            **corr,
-                        }
-                        samples.append(sample)
+                        # storing the error cases
+                        if isinstance(corr[mode], str):
+                            log_path = f"{folder}/log/text_gen/{data_id}_{task_name}_{mllm}_{shot}shot_{theta}_gpt_eval_error.json"
+                            error_message = {
+                                'filename': filename,
+                                'text_output': text_output,
+                                'ground_truth': ground_truth,
+                                'mode': mode,
+                            }
+                            save_json(error_message, log_path)
+                            corr[mode] = 0
+                        corr_tot[mode] += corr[mode]
                         
-                    json_file = f"{folder}/detail/[{data_id}]{task_name}_{mllm}_{shot}shot_{theta}.json"
-                    save_json(samples, json_file)
-                    drive_upload([{
-                            'mime_type': 'application/json',
-                            'path': json_file
-                        }], 
-                        upload_folder=google_detail_folder,
-                        overwrite=overwrite,
-                    )
-                    
-                    sample_mean = {corr_tot[mode]/len(all_generated_files) for mode in ['overall', 'textual', 'visual']}
-                    samples_mean.append(sample_mean)
+                    sample = {
+                        'x': x,
+                        'theta': theta,
+                        'task_name': task_name,
+                        'data_id': data_id,
+                        'shot': shot,
+                        'mllm': mllm,
+                        'filename': filename,
+                        'misleading': misleading,
+                        'ground_truth': ground_truth_dict,
+                        'text_output': text_output,
+                        **corr,
+                    }
+                    samples.append(sample)
+                json_file = f"{folder}/detail/[{data_id}]{task_name}_{mllm}_{shot}shot.json"
+                save_json(samples, json_file)
+                drive_upload([{
+                        'mime_type': 'application/json',
+                        'path': json_file
+                    }], 
+                    upload_folder=google_detail_folder,
+                    overwrite=overwrite,
+                )
+                
+                print(corr_tot)
+                sample_mean = {}
+                for mode in ['overall', 'textual', 'visual']:
+                    sample_mean[mode] = corr_tot[mode]/len(all_generated_files)
+                print(sample_mean)
+                samples_mean.append(sample_mean)
+                print(samples_mean)
                 json_file = f"{folder}/[{data_id}]{task_name}_{mllm}_{shot}shot_mean.json"
                 save_json(samples_mean, json_file)
                 drive_upload([{
@@ -223,12 +218,11 @@ def summary(
                 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='CLIP evaluation')
-    parser.add_argument('--data_ids', type=int, nargs='+', default=[1, 2], help='data id', choices = list(range(1,11)))
-    parser.add_argument('--mllms', type=str, nargs='+', default=['emu', 'gill'], help='mllms')
-    parser.add_argument('--shots', type=int, nargs='+', default=[1, 2], help='shots')
-    parser.add_argument('--misleading', type=int, default=0, help='whether to use misleading data', choices = [0,1])
+    parser.add_argument('--data_ids', type=int, nargs='+', default=[1,2,3,4,5,6,7,8,9,10], help='data id', choices = list(range(1,11)))
+    parser.add_argument('--mllms', type=str, nargs='+', default=['Emu', 'gill'], help='mllms')
+    parser.add_argument('--shots', type=int, nargs='+', default=[1, 2, 4], help='shots')
+    parser.add_argument('--misleading', type=int, nargs='+', default=[0,1], help='whether to use misleading data', choices = [0,1])
     parser.add_argument('--overwrite', type=int, default=1, help='whether to overwrite the original results in google drive', choices = [0,1])
-
     args = parser.parse_args()
 
     # print experiment configuration
@@ -237,12 +231,14 @@ if __name__ == '__main__':
     for key, value in args_dict.items():
         print(f"| {key}: {value}")
 
-    summary(
-        data_ids = args.data_ids,
-        mllms = args.mllms, 
-        shots = args.shots, 
-        misleading = args.misleading,
-        overwrite = args.overwrite,
-    )
+    for misleading in args.misleading:
+        print(f'========== misleading {misleading} ===========')
+        summary(
+            data_ids = args.data_ids,
+            mllms = args.mllms, 
+            shots = args.shots, 
+            misleading = misleading,
+            overwrite = args.overwrite,
+        )
                     
                     
