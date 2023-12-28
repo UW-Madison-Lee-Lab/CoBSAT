@@ -1,7 +1,8 @@
 import os, sys, random, numpy as np, torch, argparse
 root_dir = os.path.dirname(os.getcwd())
 sys.path.append(root_dir)
-from load_models.call_gpt import call_gpt3_completion
+from call_gpt import call_gpt3_completion
+from typing import Literal, cast
 from configs import task_dataframe
 from google_drive_helper.google_upload import drive_upload
 from tqdm import tqdm
@@ -160,6 +161,7 @@ def summary(
                     ground_truth_dict = get_ground_truth(x, theta, data_id)
 
                     for mode in ['overall', 'textual', 'visual']:
+                        type_mode = cast(Literal['overall', 'textual', 'visual'], mode)
                         ground_truth = ground_truth_dict[mode]
                         corr[mode] = evaluate_one_output(
                             text_output,
