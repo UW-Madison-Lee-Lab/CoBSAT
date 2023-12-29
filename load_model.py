@@ -1,3 +1,6 @@
+import os 
+root_dir = os.path.dirname(os.path.abspath(__file__))
+
 def load_model(model, device = 'cuda'):
     if model == 'gpt4v':
         from load_models.call_gpt import call_gpt4v
@@ -43,6 +46,26 @@ def load_model(model, device = 'cuda'):
                     device = device,
                     **configs,
                 )
+            except KeyboardInterrupt:
+                exit()
+            except Exception as e:
+                print(e)
+                continue
+    elif model == 'emu2':
+        from load_models.call_emu2 import load_emu2, call_emu2
+        while True:
+            try:
+                model, tokenizer = load_emu2(None)
+                call_emu2(
+                    model, 
+                    tokenizer,
+                    ['Yellow', 'White', 'Black'],
+                    [
+                        f'{root_dir}/models/Emu/Emu2/examples/dog2.jpg',
+                        f'{root_dir}/models/Emu/Emu2/examples/dog3.jpg',
+                    ],
+                )
+                return lambda configs: call_emu2(model, tokenizer, **configs)
             except KeyboardInterrupt:
                 exit()
             except Exception as e:
