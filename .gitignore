@@ -36,7 +36,6 @@ figures/
 **/datasets
 **/.ipynb_checkpoints/
 **/results
-**/models
 **/seed_llama
 **/logs
 **/archive
