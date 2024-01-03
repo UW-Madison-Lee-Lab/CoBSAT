@@ -30,7 +30,7 @@ def inference(
     
     #count = 0
     #while count < max_file_count:
-    for count in range(1000):
+    for count in range(max_file_count):
         #random.shuffle(x_list)
         #random.shuffle(theta_list)
         #x_m_list = [x + " " + theta for x, theta in zip(x_list, theta_list)] if misleading else x_list
