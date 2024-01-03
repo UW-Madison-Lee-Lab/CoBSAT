@@ -1,6 +1,8 @@
 import os, sys
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
+from environment import TRANSFORMER_CACHE
+os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
 
 from load_models.call_llava import load_llava
 from models.llava.llava.eval.run_llava import eval_model
@@ -31,6 +33,7 @@ def generate_captions(
 ):
     # recursively find all images
     for root, dirs, files in os.walk(dataset_folder_path):
+        print(f"Processing {os.path.split(root)[0]}...")
         for file in files:
             if file.endswith(".jpg"):
                 
@@ -44,6 +47,7 @@ def generate_captions(
                     continue
             
                 caption = generate_single_caption(image_path)
+                print(f"Caption for {file}: {caption}")
                 with open(caption_path, 'w') as f:
                     f.write(caption)
                     

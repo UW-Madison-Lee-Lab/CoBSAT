@@ -45,10 +45,10 @@ def call_emu2(
         f'{root_dir}/models/Emu/Emu2/examples/dog3.jpg',
     ],
     seed = 123,
+    instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. "
 ):
     set_seed(seed)
     
-    instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. "
     prompt = instruction
     for i in range(len(text_inputs)):
         prompt = prompt + text_inputs[i]

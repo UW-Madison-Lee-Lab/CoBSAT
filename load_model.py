@@ -1,10 +1,89 @@
 import os 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
-def load_model(model, device = 'cuda'):
+def load_model(
+    model, 
+    device = 'cuda',
+    instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+):
+    """
+    Load models. 
+    
+    Examples:
+    =========
+    >>> from load_models import load_model
+    >>> model = load_model('gpt4v')
+    >>> call_model({
+            'text_inputs': ["aurora", 'foggy', 'rainy'],
+            'image_inputs': [
+                "/data/yzeng58/micl/datasets/weather_pig/aurora_pig.jpg",
+                "/data/yzeng58/micl/datasets/weather_pig/foggy_pig.jpg",
+            ],
+        })
+    
+    {'description': 'a pig in a city street at night with neon lights', 'gpt4v_time': 3.1531593799591064}
+    
+    >>> model = load_model('qwen')
+    >>> call_model({
+            'text_inputs': ["aurora", 'foggy', 'rainy'],
+            'image_inputs': [
+                "/data/yzeng58/micl/datasets/weather_pig/aurora_pig.jpg",
+                "/data/yzeng58/micl/datasets/weather_pig/foggy_pig.jpg",
+            ],
+        })
+        
+    {'description': 'Picture 3:  A pig standing in the rain.',
+    'history': [("I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. auroraPicture 1: <img>/data/yzeng58/micl/datasets/weather_pig/aurora_pig.jpg</img>\nfoggyPicture 2: <img>/data/yzeng58/micl/datasets/weather_pig/foggy_pig.jpg</img>\nrainy",
+    'Picture 3:  A pig standing in the rain.')],
+    'time': 0.7774465084075928}
+        
+    >>> model = load_model('llava')
+    >>> call_model({
+            'text_inputs': ["aurora", 'foggy', 'rainy'],
+            'image_inputs': [
+                "/data/yzeng58/micl/datasets/weather_pig/aurora_pig.jpg",
+                "/data/yzeng58/micl/datasets/weather_pig/foggy_pig.jpg",
+            ],
+        })
+        
+    {'description': 'The image features a pink pig walking down a dirt road in a foggy, misty environment. The pig is the main subject of the scene, and it appears to be the only animal present. The foggy atmosphere creates a sense of mystery and tranquility, as the pig seems to be exploring the area on its own. The dirt road stretches into the distance, leading the viewer to wonder what lies beyond the fog.',
+    'time': 4.876652240753174}
+        
+    >>> model = load_model('emu2')
+    >>> call_model({
+            'text_inputs': ["aurora", 'foggy', 'rainy'],
+            'image_inputs': [
+                "/data/yzeng58/micl/datasets/weather_pig/aurora_pig.jpg",
+                "/data/yzeng58/micl/datasets/weather_pig/foggy_pig.jpg",
+            ],
+        })
+        
+    
+        
+    >>> model = load_model('gill')
+    >>> call_model({
+            'text_inputs': ["aurora", 'foggy', 'rainy'],
+            'image_inputs': [
+                "/data/yzeng58/micl/datasets/weather_pig/aurora_pig.jpg",
+                "/data/yzeng58/micl/datasets/weather_pig/foggy_pig.jpg",
+            ],
+        })
+        
+    {'description': [' [IMG0] [IMG1] [IMG2] [IMG3] [IMG4] [IMG5] [IMG6] [IMG7]',
+    {'gen': [(<PIL.Image.Image image mode=RGB size=512x512>, 0)],
+    'ret': [],
+    'decision': ['gen', [0, 1]]}],
+    'time': 1.8119871616363525}
+        
+    """
     if model == 'gpt4v':
         from load_models.call_gpt import call_gpt4v
-        return lambda configs: call_gpt4v(mode = 'path', use_dalle = False, **configs)
+        return lambda configs: call_gpt4v(
+            mode = 'path', 
+            use_dalle = False, 
+            instruction = instruction,
+            **configs,
+        )
     elif model == 'qwen':
         from load_models.call_qwen import load_qwen, call_qwen
         # sometimes there are some weird errors
@@ -12,7 +91,12 @@ def load_model(model, device = 'cuda'):
             try:
                 model, tokenizer = load_qwen(device)
                 call_qwen(model, tokenizer)
-                return lambda configs: call_qwen(model, tokenizer, **configs)
+                return lambda configs: call_qwen(
+                    model, 
+                    tokenizer, 
+                    instruction = instruction, 
+                    **configs
+                )
             except KeyboardInterrupt:
                 exit()
             except Exception as e:
@@ -44,6 +128,7 @@ def load_model(model, device = 'cuda'):
                     context_len,
                     llava_args,
                     device = device,
+                    instruction = instruction,
                     **configs,
                 )
             except KeyboardInterrupt:
@@ -65,7 +150,28 @@ def load_model(model, device = 'cuda'):
                         f'{root_dir}/models/Emu/Emu2/examples/dog3.jpg',
                     ],
                 )
-                return lambda configs: call_emu2(model, tokenizer, **configs)
+                return lambda configs: call_emu2(model, tokenizer, instruction = instruction, **configs)
+            except KeyboardInterrupt:
+                exit()
+            except Exception as e:
+                print(e)
+                continue
+    elif model == 'gill':
+        from load_models.call_gill import load_gill, call_gill
+        while True:
+            try:
+                model, g_cuda = load_gill(device=device)
+                call_gill(
+                    model, 
+                    g_cuda,
+                    text_inputs = ["Red", "Green", "Yellow"],
+                    image_inputs= [
+                        f"{root_dir}/datasets/weather_pig/aurora_pig.jpg",
+                        f"{root_dir}/datasets/weather_pig/hailstorm_pig.jpg"
+                    ],
+                    seed = 123,
+                )
+                return lambda configs: call_gill(model, g_cuda, instruction = instruction, **configs)
             except KeyboardInterrupt:
                 exit()
             except Exception as e:

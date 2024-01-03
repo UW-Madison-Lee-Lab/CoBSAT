@@ -45,23 +45,13 @@ def process_text(text_input):
 def prompt_image_eval(
     text_inputs, 
     image_inputs,
-    prompt_index, 
     mode,
     image_input_detail,
+    instruction,
 ):    
     contents = []
-    if prompt_index == 1:
-        text_description = "I will provide you with a few examples with text and images. Complete the example with the description of the next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. "
-        contents.append(process_text(text_description))
-    elif prompt_index == 2:
-        text_description = "I will provide you with a few examples with text and images. Generate a clear description of the next image based on the pattern from previous examples. Your output will be directly used as input for the DALL-E model."
-        contents.append(process_text(text_description))
-    elif prompt_index == 3:
-        text_description = "Given initial text and image examples, continue by providing a description for the next image in the sequence. Focus solely on the image description without adding any additional comments or explanations. "
-        contents.append(process_text(text_description))
-    elif prompt_index == 4:
-        text_description = "After the initial text and images are presented, advance to detail the next image in the sequence, concentrating solely on the image’s content and avoiding any additional information or context. "
-        contents.append(process_text(text_description))
+    
+    contents.append(process_text(instruction))
     
     for i in range(len(text_inputs)):
         contents.append(process_text(text_inputs[i]))
@@ -87,11 +77,11 @@ def call_gpt4v(
     use_dalle = False,
     dalle_version: Literal['dall-e-2', 'dall-e-3'] = 'dall-e-3',
     image_input_detail: Literal['low', 'high'] = 'low',
-    prompt_index = 1,
     max_tokens = 300,
     image_output_size: Literal["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"] = "1024x1024",
     image_output_quality:  Literal['hd', 'standard'] = 'standard',
     seed = 123,
+    instruction = "I will provide you with a few examples with text and images. Complete the example with the description of the next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
 ):
     
     if len(text_inputs) != (len(image_inputs)+1):
@@ -104,9 +94,9 @@ def call_gpt4v(
     messages = prompt_image_eval(
         text_inputs, 
         image_inputs, 
-        prompt_index, 
         mode,
         image_input_detail,
+        instruction,
     )
     
     # Call GPT-4V to generate text description 
