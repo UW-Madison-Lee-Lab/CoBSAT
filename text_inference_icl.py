@@ -7,6 +7,9 @@ from helper import save_json, find_image, write_log
 from environment import TRANSFORMER_CACHE
 os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
 
+with open('prompts_list.json') as f:
+    prompts_list = json.load(f)
+
 def inference(
     model,
     call_model,
@@ -25,12 +28,15 @@ def inference(
     x_list = task_dataframe[task_id]["x_list"]
     theta_list = task_dataframe[task_id]["theta_list"]
     
-    count = 0
-    while count < max_file_count:
-        random.shuffle(x_list)
-        random.shuffle(theta_list)
-        x_m_list = [x + " " + theta for x, theta in zip(x_list, theta_list)] if misleading else x_list
-        theta = theta_list[shot+1]
+    #count = 0
+    #while count < max_file_count:
+    for count in range(1000):
+        #random.shuffle(x_list)
+        #random.shuffle(theta_list)
+        #x_m_list = [x + " " + theta for x, theta in zip(x_list, theta_list)] if misleading else x_list
+        x_m_list = [x_list[x_index] + " " + theta_list[theta_index] for x_index, theta_index in zip(prompts_list[count]["x_list"], prompts_list[count]["theta_list"])] if misleading else [x_list[x_index] for x_index in prompts_list[count]["x_list"]]
+        #theta = theta_list[shot+1]
+        theta = theta_list[prompts_list[count]["theta_list"][shot+1]]
 
         text_inputs, image_inputs = [], []
         save_path = f"{folder_path}/{count}_{theta}_"
@@ -61,18 +67,18 @@ def inference(
         save_path = save_path + ".json"
         # skip if file exists
         if not overwrite and os.path.exists(save_path):
-            count = count + 1
+            #count = count + 1
             print('skip')
             continue
-
+        """
         if count < len(glob.glob(folder_path + '/*.json')):
             print("exist")
-            count = count + 1
+            #count = count + 1
             if not overwrite: continue
         elif count == len(glob.glob(folder_path + '/*.json')):
             #print("equal")
-            count = count + 1
-        
+            #count = count + 1
+        """
         retry = 0
         while retry <= 10:
             try:
