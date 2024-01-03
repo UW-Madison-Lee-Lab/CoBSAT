@@ -1,5 +1,3 @@
-import pandas as pd
-
 item_dict = {
     'color': ['yellow', 'white', 'red', 'purple', 'pink', 'orange', 'green', 'brown', 'blue', 'black'],
     'object': ['leaf', 'hat', 'cup', 'chair', 'car', 'box', 'book', 'ball', 'bag', 'apple'],
@@ -8,6 +6,7 @@ item_dict = {
     'style': ['watercolor', 'sketch', 'pixel', 'origami', 'oil', 'lego', 'icon', 'graffiti', 'futuristic', '3d'],
     'action': ['swim', 'sleep', 'sing', 'run', 'read', 'fly', 'eat', 'drink', 'cry', 'angry'],
     'background': ['beach', 'desert', 'glacier', 'volcano', 'park', 'gym', 'waterfall', 'space', 'cave', 'seafloor'],
+    'texture': ['wood', 'wicker', 'sequined', 'plastic', 'paper', 'metal', 'leather', 'lace', 'denim', 'ceramic'],
 }
 
 task_dataframe = {
@@ -80,7 +79,21 @@ task_dataframe = {
         'theta_space': 'background',
         'x_list': item_dict['animal'],
         'theta_list': item_dict['background'],
-    }
+    },
+    11: {
+        'task_type': 'texture_object',
+        'x_space': 'texture',
+        'theta_space': 'object',
+        'x_list': item_dict['texture'],
+        'theta_list': item_dict['object'],
+    },
+    12: {
+        'task_type': 'texture_object',
+        'x_space': 'object',
+        'theta_space': 'texture',
+        'x_list': item_dict['object'],
+        'theta_list': item_dict['texture'],
+    },
 }
 
 google_folder_id = {

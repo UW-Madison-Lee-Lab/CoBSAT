@@ -49,16 +49,6 @@ def load_model(
     {'description': 'The image features a pink pig walking down a dirt road in a foggy, misty environment. The pig is the main subject of the scene, and it appears to be the only animal present. The foggy atmosphere creates a sense of mystery and tranquility, as the pig seems to be exploring the area on its own. The dirt road stretches into the distance, leading the viewer to wonder what lies beyond the fog.',
     'time': 4.876652240753174}
         
-    >>> model = load_model('emu2')
-    >>> call_model({
-            'text_inputs': ["aurora", 'foggy', 'rainy'],
-            'image_inputs': [
-                "/data/yzeng58/micl/datasets/weather_pig/aurora_pig.jpg",
-                "/data/yzeng58/micl/datasets/weather_pig/foggy_pig.jpg",
-            ],
-        })
-        
-    
         
     >>> model = load_model('gill')
     >>> call_model({
