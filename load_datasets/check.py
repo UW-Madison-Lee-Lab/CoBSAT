@@ -258,8 +258,8 @@ if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate image descriptions for the dataset')
     parser.add_argument('--mode', type=str, default = 'image', help='what check to do', choices = ['image', 'caption'])
     parser.add_argument('--task_type', type=str, nargs='+', default = task_types, help='what task to check', choices = task_types)
-    parser.add_argument('--llava_device', type=str, default = 'cuda', help='what device to use')
-    parser.add_argument('--qwen_device', type=str, default = 'cuda', help='what device to use')
+    parser.add_argument('--llava_device', type=str, default = 'cuda:0', help='what device to use')
+    parser.add_argument('--qwen_device', type=str, default = 'cuda:1', help='what device to use')
     
     args = parser.parse_args()
     

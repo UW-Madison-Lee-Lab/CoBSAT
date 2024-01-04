@@ -3,7 +3,6 @@ task_types = [
     'weather_animal', 
     'style_object', 
     'action_animal', 
-    'background_animal', 
     'texture_object',
 ]
 
@@ -81,27 +80,13 @@ task_dataframe = {
         'theta_list': item_dict['action'],
     },
     9: {
-        'task_type': 'background_animal',
-        'x_space': 'background',
-        'theta_space': 'object',
-        'x_list': item_dict['background'],
-        'theta_list': item_dict['animal'],
-    },
-    10: {
-        'task_type': 'background_object',
-        'x_space': 'object',
-        'theta_space': 'background',
-        'x_list': item_dict['animal'],
-        'theta_list': item_dict['background'],
-    },
-    11: {
         'task_type': 'texture_object',
         'x_space': 'texture',
         'theta_space': 'object',
         'x_list': item_dict['texture'],
         'theta_list': item_dict['object'],
     },
-    12: {
+    10: {
         'task_type': 'texture_object',
         'x_space': 'object',
         'theta_space': 'texture',
