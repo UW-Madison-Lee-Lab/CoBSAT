@@ -58,7 +58,7 @@ def generate(tokenizer, input_tokens, generation_config, model):
 
     return generate_ids
 
-def decode_image_text(generate_ids, tokenizer):
+def decode_image_text(generate_ids, tokenizer, gen_mode):
 
     boi_list = torch.where(generate_ids == tokenizer(
         BOI_TOKEN, add_special_tokens=False).input_ids[0])[0]
@@ -68,22 +68,30 @@ def decode_image_text(generate_ids, tokenizer):
     if len(boi_list) == 0 and len(eoi_list) == 0:
         text_ids = generate_ids
         texts = tokenizer.decode(text_ids, skip_special_tokens=True)
-
-        return texts
+        images = None
 
     else:
         try:
             boi_index = boi_list[0]
             eoi_index = eoi_list[0]
+            text_ids = generate_ids[:boi_index]
+            if len(text_ids) != 0:
+                texts = tokenizer.decode(text_ids, skip_special_tokens=True)
+            else:
+                texts = "null"
+            image_ids = (generate_ids[boi_index+1:eoi_index] -
+                        image_id_shift).reshape(1, -1)
+            images = tokenizer.decode_image(image_ids)
+            images = images[0]
         except:
-            return "error"         
+            texts = "error"    
+            images = None             
 
-        text_ids = generate_ids[:boi_index]
-        if len(text_ids) != 0:
-            texts = tokenizer.decode(text_ids, skip_special_tokens=True)
-            return texts
-        else:
-            return "null"
+    if gen_mode == "text":
+        return texts
+    elif gen_mode == "image":
+        return texts, images
+
 
 def load_seed(
     device = 'cuda',
@@ -121,7 +129,11 @@ def call_seed(
 ):
     set_seed(seed)
     
-    input_tokens = tokenizer.bos_token  + s_token + instruction
+    if gen_mode == 'text':
+        input_tokens = tokenizer.bos_token  + s_token + instruction
+    else:
+        input_tokens = tokenizer.bos_token  + s_token
+    
     for i in range(len(text_inputs)):
 
         input_tokens = input_tokens + text_inputs[i] + ": "
@@ -139,15 +151,21 @@ def call_seed(
     output_dict = {}
     seed_start = time()
     if gen_mode == 'image':
-        output_dict['description'] = model.generate_for_images_and_texts(
-            prompt, num_words=2, ret_scale_factor=100.0, generator=g_cuda)
+        generate_ids = generate(tokenizer, input_tokens, generation_config, model)
+        output_dict['description'], img = decode_image_text(generate_ids, tokenizer, gen_mode)
+        seed_end = time()
+        output_dict['time'] = seed_end - seed_start
+        
+        return output_dict, img
+
     elif gen_mode == 'text':
         generate_ids = generate(tokenizer, input_tokens, generation_config, model)
-        output_dict['description'] = decode_image_text(generate_ids, tokenizer)
-    seed_end = time()
-    output_dict['time'] = seed_end - seed_start
+        output_dict['description'] = decode_image_text(generate_ids, tokenizer, gen_mode)
+        seed_end = time()
+        output_dict['time'] = seed_end - seed_start
+        
+        return output_dict
 
-    return output_dict
     
     
     
