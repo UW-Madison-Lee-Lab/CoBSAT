@@ -10,7 +10,6 @@ figures/
 **/*.out
 **/*.err
 **/*.log
-**/*.json
 **/*.yaml
 **/*.wandb
 **/*.tar
@@ -18,7 +17,6 @@ figures/
 *.out
 *.err
 *.log
-*.json
 *.yaml
 *.wandb
 *.model
