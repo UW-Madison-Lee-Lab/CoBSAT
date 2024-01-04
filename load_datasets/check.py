@@ -15,13 +15,18 @@ from configs import item_dict, task_types, item2word
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.generation import GenerationConfig
-
-llava_tokenizer, llava_model, llava_image_processor, llava_context_len, llava_args = load_llava(device='cuda:1')
-qwen_tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
-qwen_model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-VL-Chat", device_map='cuda:0', trust_remote_code=True).eval()
-qwen_model.generation_config = GenerationConfig.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
     
-def check_caption(task_type):
+def check_caption(task_type, llava_configs, qwen_configs):
+    llava_tokenizer = llava_configs['tokenizer']
+    llava_model = llava_configs['model']
+    llava_image_processor = llava_configs['image_processor']
+    llava_context_len = llava_configs['context_len']
+    llava_args = llava_configs['args']
+    llava_device = llava_configs['device']
+    
+    qwen_tokenizer = qwen_configs['tokenizer']
+    qwen_model = qwen_configs['model']
+    
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
     item_list = {
@@ -47,7 +52,7 @@ def check_caption(task_type):
                     llava_image_processor,
                     llava_context_len,
                     llava_args,
-                    device='cuda:1',
+                    device=llava_device,
                 )
                 
                 ground_truth = {}
@@ -59,7 +64,7 @@ def check_caption(task_type):
                     'obj': f"What is the main object in this image based on the description? Answer from the following options: ",
                 } 
                 
-                checks, options, response = {}, {}, {}
+                checks, options, response, true_labels = {}, {}, {}, {}
                 for mode in prompts:
                     for i, item in enumerate(item_list[mode]):
                         if item in image:
@@ -87,9 +92,9 @@ def check_caption(task_type):
                         checks[mode] = False
                         continue
                     
-                    true_label = item_list[mode].index(ground_truth[mode])+1
+                    true_labels[mode] = item_list[mode].index(ground_truth[mode])+1
                     
-                    if options[mode] == true_label: 
+                    if options[mode] == true_labels[mode]: 
                         checks[mode] = True
                     else:
                         checks[mode] = False
@@ -101,6 +106,8 @@ def check_caption(task_type):
                     'ground_truth_obj': ground_truth['obj'],
                     'response_detail': response['detail'],
                     'response_obj': response['obj'],
+                    'true_label_detail': true_labels['detail'],
+                    'true_label_obj': true_labels['obj'],
                     'answer_detail': options['detail'],
                     'answer_obj': options['obj'],
                     'check_detail': checks['detail'],
@@ -137,7 +144,14 @@ def check_caption(task_type):
     result_df.to_csv(df_path)
         
                 
-def check_image(task_type):
+def check_image(task_type, llava_configs):
+    llava_tokenizer = llava_configs['tokenizer']
+    llava_model = llava_configs['model']
+    llava_image_processor = llava_configs['image_processor']
+    llava_context_len = llava_configs['context_len']
+    llava_args = llava_configs['args']
+    llava_device = llava_configs['device']
+    
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
     item_list = {
@@ -162,7 +176,7 @@ def check_image(task_type):
                     'obj': f"What is the main object in this image? Answer from the following options: ",
                 } 
                 
-                checks, options, response = {}, {}, {}
+                checks, options, response, true_labels = {}, {}, {}, {}
                 for mode in prompts:
                     for i, item in enumerate(item_list[mode]):
                         if item in image:
@@ -178,7 +192,7 @@ def check_image(task_type):
                         llava_image_processor,
                         llava_context_len,
                         llava_args,
-                        device='cuda',
+                        device=llava_device,
                     )
                     
                     try:
@@ -192,9 +206,9 @@ def check_image(task_type):
                         checks[mode] = False
                         continue
                     
-                    true_label = item_list[mode].index(ground_truth[mode])+1
+                    true_labels[mode] = item_list[mode].index(ground_truth[mode])+1
                     
-                    if options[mode] == true_label: 
+                    if options[mode] == true_labels[mode]: 
                         checks[mode] = True
                     else:
                         checks[mode] = False
@@ -205,6 +219,8 @@ def check_image(task_type):
                     'ground_truth_obj': ground_truth['obj'],
                     'response_detail': response['detail'],
                     'response_obj': response['obj'],
+                    'true_label_detail': true_labels['detail'],
+                    'true_label_obj': true_labels['obj'],
                     'answer_detail': options['detail'],
                     'answer_obj': options['obj'],
                     'check_detail': checks['detail'],
@@ -242,16 +258,36 @@ if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate image descriptions for the dataset')
     parser.add_argument('--mode', type=str, default = 'image', help='what check to do', choices = ['image', 'caption'])
     parser.add_argument('--task_type', type=str, nargs='+', default = task_types, help='what task to check', choices = task_types)
+    parser.add_argument('--llava_device', type=str, default = 'cuda', help='what device to use')
+    parser.add_argument('--qwen_device', type=str, default = 'cuda', help='what device to use')
     
     args = parser.parse_args()
     
     set_seed(123)
+    llava_tokenizer, llava_model, llava_image_processor, llava_context_len, llava_args = load_llava(device=args.llava_device)
+    llava_configs = {
+        'tokenizer': llava_tokenizer,
+        'model': llava_model,
+        'image_processor': llava_image_processor,
+        'context_len': llava_context_len,
+        'args': llava_args,
+        'device': args.llava_device,
+    }
     
     if args.mode == 'caption':
+        qwen_tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
+        qwen_model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-VL-Chat", device_map=args.qwen_device, trust_remote_code=True).eval()
+        qwen_model.generation_config = GenerationConfig.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
+        qwen_configs = {
+            'tokenizer': qwen_tokenizer,
+            'model': qwen_model,
+            'device': args.qwen_device,
+        }
+        
         for task_type in args.task_type:
-            check_caption(task_type)
+            check_caption(task_type, llava_configs, qwen_configs)
     elif args.mode == 'image':
         for task_type in args.task_type:
-            check_image(task_type)
+            check_image(task_type, llava_configs)
         
     
