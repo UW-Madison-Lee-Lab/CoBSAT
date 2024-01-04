@@ -179,6 +179,51 @@ def load_model(
             except Exception as e:
                 print(e)
                 continue
+    elif model == 'emu':
+        from load_models.call_emu import load_emu, call_emu
+        model = load_emu(device=device)
+        call_emu(
+            model, 
+            text_inputs = ["Red", "Green", "Yellow"],
+            image_inputs= [
+                f"{root_dir}/datasets/weather_pig/aurora_pig.jpg",
+                f"{root_dir}/datasets/weather_pig/hailstorm_pig.jpg"
+            ],
+            seed = 123,
+            gen_mode = gen_mode,
+        )
+        return lambda configs: call_emu(
+            model, 
+            instruction = instruction, 
+            gen_mode = gen_mode, 
+            **configs
+        )
+        """
+        while True:
+            try:
+                model = load_emu(device=device)
+                call_emu(
+                    model, 
+                    text_inputs = ["Red", "Green", "Yellow"],
+                    image_inputs= [
+                        f"{root_dir}/datasets/weather_pig/aurora_pig.jpg",
+                        f"{root_dir}/datasets/weather_pig/hailstorm_pig.jpg"
+                    ],
+                    seed = 123,
+                    gen_mode = gen_mode,
+                )
+                return lambda configs: call_emu(
+                    model, 
+                    instruction = instruction, 
+                    gen_mode = gen_mode, 
+                    **configs
+                )
+            except KeyboardInterrupt:
+                exit()
+            except Exception as e:
+                print(e)
+                continue
+        """
     else:
         raise ValueError(f"Model {model} not found.")
 

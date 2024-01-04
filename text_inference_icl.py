@@ -72,7 +72,7 @@ if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate image descriptions')
     parser.add_argument('--shot', type=int, nargs='+', default=[1, 2, 4])
     parser.add_argument('--misleading', type=int, nargs='+', default=[0,1], choices=[0,1])
-    parser.add_argument('--model', type=str, default="qwen", choices = ['qwen', 'llava', 'gpt4v', 'emu2'])
+    parser.add_argument('--model', type=str, default="qwen", choices = ['qwen', 'llava', 'gpt4v', 'emu2', 'emu'])
     parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)
     parser.add_argument('--device', type=str, default='cuda')
