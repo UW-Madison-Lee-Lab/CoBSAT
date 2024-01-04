@@ -20,7 +20,7 @@ def inference(
     gen_mode,
 ):
     misleading_flag = "_m" if misleading else ""
-    base_path = f"{root_dir}/results/exps/{model}_prompt2/shot_{shot}{misleading_flag}" if gen_mode == "text" else f"{root_dir}/results/exps/{model}_prompt1/shot_{shot}{misleading_flag}"
+    base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}{misleading_flag}" if gen_mode == "text" else f"{root_dir}/results/exps/{model}_prompt1/shot_{shot}{misleading_flag}"
     
     folder_path = f"{base_path}/task_{task_id}"
     if not os.path.exists(folder_path):
@@ -49,24 +49,10 @@ def inference(
             print('skip')
             continue
 
-        #retry = 0
-
-        if gen_mode == "text":
-            out = call_model({
-                'text_inputs': text_inputs, 
-                'image_inputs': image_inputs,
-            })
-            save_json(out, save_path)            
-        elif gen_mode =="image":
-            out, img = call_model({
-                'text_inputs': text_inputs, 
-                'image_inputs': image_inputs,
-            })
-            save_json(out, save_path)
-            if img != None:
-                img.save(save_path.replace('.json','.jpg'))
-
-        """
+        # for avoid unexpected error and retry the same prompt at most 10 times
+        # normally it should not happen, but it happens for some models
+        # such as gpt (network issue sometimes)
+        retry = 0
         while retry <= 10:
             try:
                 out = call_model({
@@ -82,8 +68,19 @@ def inference(
                 print('Retrying...')
                 
         if retry > 10:
-            out = {'description': 'ERROR'}
-        """
+            out = {'description': 'ERROR', 'image': None, 'time': 0}
+            print('ERROR')
+            
+        if gen_mode == 'text':
+            save_json(out, save_path+'.json')
+            print('---')
+            print(out["description"])
+        elif gen_mode == 'image':
+            img = out['image']
+            if img != None: img.save(save_path.replace('.jpg'))
+            
+            out.pop('image')
+            save_json(out, save_path+'.json')
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate image descriptions')

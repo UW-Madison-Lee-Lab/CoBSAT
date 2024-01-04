@@ -1,4 +1,4 @@
-import os, json, numpy as np, random, torch
+import os, json, numpy as np, random, torch, transformers
 from PIL import Image
 from configs import task_dataframe
 
@@ -30,6 +30,7 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.enabled = False
+    transformers.set_seed(seed)
     
 def get_image(name):
     extensions = ['jpg', 'webp', 'jpeg', 'png', 'JPG', 'Jpeg']

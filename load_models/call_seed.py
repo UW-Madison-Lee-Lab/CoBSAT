@@ -1,6 +1,6 @@
 # seed: set
 
-import os, sys, json, hydra
+import os, sys, hydra
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
 sys.path.append(os.path.join(root_dir, 'models/SEED'))
@@ -11,16 +11,7 @@ from PIL import Image
 from time import time
 
 from omegaconf import OmegaConf
-from typing import Optional
-import transformers
 from PIL import Image
-from torchvision.transforms.functional import InterpolationMode
-
-
-import glob
-import numpy as np
-
-from transformers import set_seed
 
 image_placeholder = "[IMG]" + "<image>" * 32 + "[/IMG]"
 
@@ -96,18 +87,17 @@ def decode_image_text(generate_ids, tokenizer, gen_mode):
 def load_seed(
     device = 'cuda',
     seed = 123,
-):
-
-    tokenizer_cfg_path = 'models/SEED/configs/tokenizer/seed_llama_tokenizer_hf.yaml'
+):  
+    tokenizer_cfg_path = f'{root_dir}/models/SEED/configs/tokenizer/seed_llama_tokenizer_hf.yaml'
     tokenizer_cfg = OmegaConf.load(tokenizer_cfg_path)
     tokenizer = hydra.utils.instantiate(
         tokenizer_cfg, device=device, load_diffusion=True)
 
-    transform_cfg_path = 'models/SEED/configs/transform/clip_transform.yaml'
+    transform_cfg_path = f'{root_dir}/models/SEED/configs/transform/clip_transform.yaml'
     transform_cfg = OmegaConf.load(transform_cfg_path)
     transform = hydra.utils.instantiate(transform_cfg)
 
-    model_cfg = OmegaConf.load('models/SEED/configs/llm/seed_llama_14b.yaml')
+    model_cfg = OmegaConf.load(f'{root_dir}/models/SEED/configs/llm/seed_llama_14b.yaml')
     model = hydra.utils.instantiate(model_cfg, torch_dtype=torch.float16)
     model = model.eval().to(device)
 
@@ -119,8 +109,8 @@ def call_seed(
     transform,
     text_inputs = ["Red", "Green", "Yellow"],
     image_inputs = [
-        "/data/yzeng58/micl/datasets/weather_pig/aurora_pig.jpg",
-        "/data/yzeng58/micl/datasets/weather_pig/hailstorm_pig.jpg"
+        f"{root_dir}/datasets/weather_pig/aurora_pig.jpg",
+        f"{root_dir}/datasets/weather_pig/hailstorm_pig.jpg"
     ],
     seed = 123,
     gen_mode = 'text',
@@ -152,11 +142,11 @@ def call_seed(
     seed_start = time()
     if gen_mode == 'image':
         generate_ids = generate(tokenizer, input_tokens, generation_config, model)
-        output_dict['description'], img = decode_image_text(generate_ids, tokenizer, gen_mode)
+        output_dict['description'], output_dict['image'] = decode_image_text(generate_ids, tokenizer, gen_mode)
         seed_end = time()
         output_dict['time'] = seed_end - seed_start
         
-        return output_dict, img
+        return output_dict
 
     elif gen_mode == 'text':
         generate_ids = generate(tokenizer, input_tokens, generation_config, model)

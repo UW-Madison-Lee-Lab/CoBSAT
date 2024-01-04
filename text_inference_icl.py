@@ -18,7 +18,7 @@ def inference(
     overwrite,
 ):
     misleading_flag = "_m" if misleading else ""
-    base_path = f"{root_dir}/results/exps/{model}_prompt2/shot_{shot}{misleading_flag}"
+    base_path = f"{root_dir}/results/exps/{model}_text/shot_{shot}{misleading_flag}"
     
     folder_path = f"{base_path}/task_{task_id}"
     if not os.path.exists(folder_path):
