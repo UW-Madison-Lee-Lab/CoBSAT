@@ -87,7 +87,7 @@ if '__main__' == __name__:
         args.model, 
         args.device, 
         gen_mode='text',
-        instruction = "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, weather, action, style, if applicable.",
+        instruction = "? Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, weather, action, style, if applicable.",
     )
 
     for shot in args.shot:

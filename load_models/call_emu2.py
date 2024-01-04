@@ -51,12 +51,13 @@ def call_emu2(
 ):
     set_seed(seed)
     
-    prompt = instruction
+    prompt = ''
     for i in range(len(text_inputs)):
         prompt = prompt + text_inputs[i]
         if i < len(text_inputs) - 1:
             prompt = prompt + "[<IMG_PLH>]"
-            
+    prompt = prompt + instruction        
+    
     images = [Image.open(image_inputs[i]).convert('RGB') for i in range(len(image_inputs))]
     
     inputs = model.build_input_ids(

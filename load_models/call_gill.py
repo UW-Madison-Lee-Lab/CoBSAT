@@ -36,12 +36,13 @@ def call_gill(
 ):
     set_seed(seed)
     
-    prompt = [instruction]
+    prompt = []
     for i in range(len(text_inputs)):
         prompt.append(text_inputs[i])
         if i < len(text_inputs) - 1:
             image = Image.open(image_inputs[i]).convert('RGB')
             prompt.append(image)
+    prompt.append(instruction)
             
     output_dict = {}
     gill_start = time()
