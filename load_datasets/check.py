@@ -71,15 +71,26 @@ def check_caption(task_type, llava_configs, qwen_configs):
                             prompts[mode] += f"({i+1}){item2word.get(item, item)}"
                     prompts[mode] += ". Answer the number only and do not include any other texts (e.g., 1)."
                     
-                    # qwen for answering questions
-                    qwen_query = qwen_tokenizer.from_list_format([
-                        {'text': f"Given an image with description '{caption}'. {prompts[mode]}"}
-                    ])
-                    response[mode] = qwen_model.chat(
-                        qwen_tokenizer,
-                        query = qwen_query,
-                        history = None,
-                    )[0]
+                    # # qwen for answering questions
+                    # qwen_query = qwen_tokenizer.from_list_format([
+                    #     {'text': f"Given an image with description '{caption}'. {prompts[mode]}"}
+                    # ])
+                    # response[mode] = qwen_model.chat(
+                    #     qwen_tokenizer,
+                    #     query = qwen_query,
+                    #     history = None,
+                    # )[0]
+                    response[mode] = eval_model(
+                        prompts[mode],
+                        [image_path],
+                        llava_tokenizer,
+                        llava_model,
+                        llava_image_processor,
+                        llava_context_len,
+                        llava_args,
+                        device=llava_device,
+                    )
+                    
                     
                     try:
                         options[mode] = int(''.join(filter(str.isdigit, response[mode])))
