@@ -12,20 +12,14 @@ from models.llava.llava.eval.run_llava import eval_model
 import argparse, pandas as pd
 from helper import set_seed
 from configs import item_dict, task_types, item2word
-
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers.generation import GenerationConfig
     
-def check_caption(task_type, llava_configs, qwen_configs):
+def check_caption(task_type, llava_configs):
     llava_tokenizer = llava_configs['tokenizer']
     llava_model = llava_configs['model']
     llava_image_processor = llava_configs['image_processor']
     llava_context_len = llava_configs['context_len']
     llava_args = llava_configs['args']
     llava_device = llava_configs['device']
-    
-    qwen_tokenizer = qwen_configs['tokenizer']
-    qwen_model = qwen_configs['model']
     
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
@@ -71,15 +65,6 @@ def check_caption(task_type, llava_configs, qwen_configs):
                             prompts[mode] += f"({i+1}){item2word.get(item, item)}"
                     prompts[mode] += ". Answer the number only and do not include any other texts (e.g., 1)."
                     
-                    # # qwen for answering questions
-                    # qwen_query = qwen_tokenizer.from_list_format([
-                    #     {'text': f"Given an image with description '{caption}'. {prompts[mode]}"}
-                    # ])
-                    # response[mode] = qwen_model.chat(
-                    #     qwen_tokenizer,
-                    #     query = qwen_query,
-                    #     history = None,
-                    # )[0]
                     response[mode] = eval_model(
                         prompts[mode],
                         [image_path],
@@ -90,7 +75,6 @@ def check_caption(task_type, llava_configs, qwen_configs):
                         llava_args,
                         device=llava_device,
                     )
-                    
                     
                     try:
                         options[mode] = int(''.join(filter(str.isdigit, response[mode])))
@@ -269,34 +253,24 @@ if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate image descriptions for the dataset')
     parser.add_argument('--mode', type=str, default = 'image', help='what check to do', choices = ['image', 'caption'])
     parser.add_argument('--task_type', type=str, nargs='+', default = task_types, help='what task to check', choices = task_types)
-    parser.add_argument('--llava_device', type=str, default = 'cuda:0', help='what device to use')
-    parser.add_argument('--qwen_device', type=str, default = 'cuda:1', help='what device to use')
+    parser.add_argument('--device', type=str, default = 'cuda:0', help='what device to use')
     
     args = parser.parse_args()
     
     set_seed(123)
-    llava_tokenizer, llava_model, llava_image_processor, llava_context_len, llava_args = load_llava(device=args.llava_device)
+    llava_tokenizer, llava_model, llava_image_processor, llava_context_len, llava_args = load_llava(device=args.device)
     llava_configs = {
         'tokenizer': llava_tokenizer,
         'model': llava_model,
         'image_processor': llava_image_processor,
         'context_len': llava_context_len,
         'args': llava_args,
-        'device': args.llava_device,
+        'device': args.device,
     }
     
     if args.mode == 'caption':
-        qwen_tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
-        qwen_model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-VL-Chat", device_map=args.qwen_device, trust_remote_code=True).eval()
-        qwen_model.generation_config = GenerationConfig.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
-        qwen_configs = {
-            'tokenizer': qwen_tokenizer,
-            'model': qwen_model,
-            'device': args.qwen_device,
-        }
-        
         for task_type in args.task_type:
-            check_caption(task_type, llava_configs, qwen_configs)
+            check_caption(task_type, llava_configs)
     elif args.mode == 'image':
         for task_type in args.task_type:
             check_image(task_type, llava_configs)
