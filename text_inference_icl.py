@@ -83,7 +83,12 @@ if '__main__' == __name__:
 
     random.seed(args.seed)
     max_file_count = args.max_file_count
-    call_model = load_model(args.model, args.device, gen_mode='text')
+    call_model = load_model(
+        args.model, 
+        args.device, 
+        gen_mode='text',
+        instruction = "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, weather, action, style, if applicable.",
+    )
 
     for shot in args.shot:
         for misleading in args.misleading:

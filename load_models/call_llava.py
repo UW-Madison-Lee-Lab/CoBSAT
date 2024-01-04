@@ -56,11 +56,12 @@ def call_llava(
 
     set_seed(seed)
     
-    prompt = instruction
+    prompt = ''
     for i in range(len(text_inputs)):
         prompt = prompt + text_inputs[i]
         if i < len(text_inputs) - 1:
             prompt = prompt + "<image-placeholder>"
+    prompt = prompt + instruction
 
     output_dict = {}
     llava_start = time()
