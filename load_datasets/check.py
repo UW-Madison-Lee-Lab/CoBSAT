@@ -11,7 +11,7 @@ from load_models.call_llava import load_llava
 from models.llava.llava.eval.run_llava import eval_model
 import argparse, pandas as pd
 from helper import set_seed
-from configs import item_dict
+from configs import item_dict, task_types, item2word
 
 tokenizer, llava_model, image_processor, context_len, llava_args = load_llava(device='cuda')
 
@@ -57,6 +57,18 @@ def generate_captions(
                     
                 if test: break
     
+def check_caption(task_type):
+    category_space = {}
+    category_space['detail'], category_space['obj'] = task_type.split('_')
+    item_list = {
+        'obj': item_dict[category_space['obj']],
+        'detail': item_dict[category_space['detail']],
+    }
+    result_df = []
+    for obj in item_list['obj']:
+        folder_path = f"{root_dir}/results/captions/{category_space['detail']}_{obj}"
+        captions = os.listdir(folder_path)
+        
                 
 def check_image(task_type):
     category_space = {}
@@ -83,14 +95,14 @@ def check_image(task_type):
                     'obj': f"What is the main object in this image? Answer from the following options: ",
                 } 
                 
-                checks, options = {}, {}
+                checks, options, response = {}, {}, {}
                 for mode in prompts:
                     for i, item in enumerate(item_list[mode]):
                         if item in image:
-                            prompts[mode] += f"({i+1}){item}"
-                    prompts[mode] += ". Answer the number only and do not include any other texts."
+                            prompts[mode] += f"({i+1}){item2word.get(item, item)}"
+                    prompts[mode] += ". Answer the number only and do not include any other texts (e.g., 1)."
                 
-                    option = eval_model(
+                    response[mode] = eval_model(
                         prompts[mode],
                         [image_path],
                         tokenizer,
@@ -102,7 +114,7 @@ def check_image(task_type):
                     )
                     
                     try:
-                        options[mode] = int(option.strip())
+                        options[mode] = int(''.join(filter(str.isdigit, response[mode])))
                     except KeyboardInterrupt:
                         exit()
                     except Exception as e:
@@ -123,6 +135,8 @@ def check_image(task_type):
                     'image': image,
                     'ground_truth_detail': ground_truth['detail'],
                     'ground_truth_obj': ground_truth['obj'],
+                    'response_detail': response['detail'],
+                    'response_obj': response['obj'],
                     'answer_detail': options['detail'],
                     'answer_obj': options['obj'],
                     'check_detail': checks['detail'],
@@ -152,6 +166,7 @@ if '__main__' == __name__:
     parser.add_argument('--mode', type=str, default = 'image', help='what check to do', choices = ['image', 'caption'])
     parser.add_argument('--overwrite', type=int, default = 0, help='overwrite existing captions or not', choices = [0,1])
     parser.add_argument('--test', type=int, default = 0, help='whether it is a test or not', choices = [0,1])
+    parser.add_argument('--task_type', type=str, nargs='+', default = task_types, help='what task to check', choices = task_types)
     
     args = parser.parse_args()
     
@@ -164,14 +179,7 @@ if '__main__' == __name__:
             test = args.test,
         )
     elif args.mode == 'image':
-        for task_type in [
-            'color_object', 
-            'weather_animal', 
-            'style_object', 
-            'action_animal', 
-            'background_animal', 
-            'texture_object',
-        ]:
+        for task_type in args.task_type:
             check_image(task_type)
         
     

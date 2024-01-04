@@ -1,3 +1,17 @@
+task_types = [
+    'color_object', 
+    'weather_animal', 
+    'style_object', 
+    'action_animal', 
+    'background_animal', 
+    'texture_object',
+]
+
+item2word = {
+    '3d': 'three-dimensional rendering',
+    'park': 'amusement park',
+}
+
 item_dict = {
     'color': ['yellow', 'white', 'red', 'purple', 'pink', 'orange', 'green', 'brown', 'blue', 'black'],
     'object': ['leaf', 'hat', 'cup', 'chair', 'car', 'box', 'book', 'ball', 'bag', 'apple'],
