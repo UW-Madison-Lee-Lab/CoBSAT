@@ -24,7 +24,7 @@ def call_qwen(
         "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
     ],
     seed = 123,
-    instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+    instruction = "\nBased on the sequence, describe the next image clearly, including details such as the main object, color, texture, weather, action, style, if applicable. ",
 ):
     set_seed(seed)
     

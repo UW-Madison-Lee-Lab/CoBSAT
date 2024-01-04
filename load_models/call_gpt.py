@@ -51,15 +51,13 @@ def prompt_image_eval(
     image_input_detail,
     instruction,
 ):    
-    contents = []
+    contents = [instruction]
     
     for i in range(len(text_inputs)):
         contents.append(process_text(text_inputs[i]))
         
         if i < len(text_inputs) - 1:
             contents.append(process_image(image_inputs[i], mode, image_input_detail))
-                
-    contents.append(process_text(instruction))
         
     messages = [{
         "role": "user",

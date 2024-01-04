@@ -51,7 +51,7 @@ def call_llava(
     ],
     seed = 123,
     device = 'cuda',
-    instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+    instruction = "\nBased on the sequence, describe the next image clearly, including details such as the main object, color, texture, weather, action, style, if applicable. ",
 ):
 
     set_seed(seed)
