@@ -1,26 +1,84 @@
 import os
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
-from helper import set_seed
-import random
+from helper import set_seed, read_json, find_image
 from configs import task_dataframe
 
+def load_prompt(
+    num_demos,
+    misleading,
+    task_id,
+    x_idxs,
+    theta_idxs,
+    x_list,
+    theta_list,
+):
+    text_inputs, image_inputs = [], []
+    theta = theta_list[theta_idxs[num_demos+1]]
+    x_demos = []
+    
+    for demo_idx in range(num_demos+1):
+        x_idx = x_list[x_idxs[demo_idx]]
+        x_demos.append(x_idx)
+        theta_idx = theta_list[theta_idxs[demo_idx]]
+        
+        if misleading:
+            text_inputs.append(f"{x_idx} {theta_idx}")
+        else:
+            text_inputs.append(x_idx)
+            
+        if demo_idx < num_demos:
+            image_inputs.append(find_image(
+                root_dir, 
+                task_id, 
+                x_idxs[demo_idx], 
+                theta, 
+            ))
+    
+    return {
+        "text_inputs": text_inputs,
+        "image_inputs": image_inputs,
+        "x_list": x_demos,
+        'theta': theta_list[theta_idxs[num_demos+1]],
+    }
+    
+
 def load_dataset(
-    shot,
+    num_demos,
     misleading,
     task_id, 
     num_prompt = 1000,
     seed = 123,
 ):
-    set_seed(123)
-    misleading_flag = "_m" if misleading else ""
+    print("========"*3)
+    print(f'Loading the dataset for task {task_id}...')
+    print(f'| task type: {task_dataframe[task_id]["task_type"]}')
+    print(f'| x_space: {task_dataframe[task_id]["x_space"]}')
+    print(f'| theta_space: {task_dataframe[task_id]["theta_space"]}')
+    print(f'| misleading: {misleading}')
+    print(f'| num_demos: {num_demos}')
     
-    x_list = task_dataframe[task_id]["x_list"]
-    theta_list = task_dataframe[task_id]["theta_list"]
+    set_seed(seed)
     
+    prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list.json")
+    data_loader = []
     for i in range(num_prompt):
-        demo_x = random.sample(x_list, shot+1)
-        demo_theta = random.sample(theta_list, shot+1)
+        item_inputs = prompts_list[i]
+        input_dict = load_prompt(
+            num_demos,
+            misleading,
+            task_id,
+            item_inputs["x_list"],
+            item_inputs["theta_list"],
+            task_dataframe[task_id]["x_list"],
+            task_dataframe[task_id]["theta_list"],
+        )
+        input_dict['save_path'] = f"{i}_{input_dict['theta']}_{'_'.join(input_dict['x_list'])}.json"
+        data_loader.append(input_dict)
+    print('Done!')
+    print("========"*3)
+    return data_loader
         
-        x_m_list = [f"{x} {theta}" for x, theta in zip(demo_x, demo_theta)] if misleading else demo_x
-        theta = theta_list[shot+1]
+        
+        
+        

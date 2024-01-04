@@ -4,6 +4,7 @@ root_dir = os.path.dirname(os.path.abspath(__file__))
 def load_model(
     model, 
     device = 'cuda',
+    gen_mode = 'text',
     instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
 ):
     """
@@ -67,6 +68,9 @@ def load_model(
         
     """
     if model == 'gpt4v':
+        if gen_mode != 'text':
+            raise ValueError(f"gen_mode {gen_mode} not supported for gpt4v.")
+        
         from load_models.call_gpt import call_gpt4v
         return lambda configs: call_gpt4v(
             mode = 'path', 
@@ -75,6 +79,9 @@ def load_model(
             **configs,
         )
     elif model == 'qwen':
+        if gen_mode != 'text':
+            raise ValueError(f"gen_mode {gen_mode} not supported for qwen.")
+        
         from load_models.call_qwen import load_qwen, call_qwen
         # sometimes there are some weird errors
         while True:
@@ -93,6 +100,9 @@ def load_model(
                 print(e)
                 continue
     elif model == 'llava':
+        if gen_mode != 'text':
+            raise ValueError(f"gen_mode {gen_mode} not supported for llava.")
+        
         from load_models.call_llava import call_llava, load_llava
         while True:
             try:
@@ -160,8 +170,15 @@ def load_model(
                         f"{root_dir}/datasets/weather_pig/hailstorm_pig.jpg"
                     ],
                     seed = 123,
+                    gen_mode = gen_mode,
                 )
-                return lambda configs: call_gill(model, g_cuda, instruction = instruction, **configs)
+                return lambda configs: call_gill(
+                    model, 
+                    g_cuda, 
+                    instruction = instruction, 
+                    gen_mode = gen_mode, 
+                    **configs
+                )
             except KeyboardInterrupt:
                 exit()
             except Exception as e:
