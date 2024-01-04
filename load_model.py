@@ -136,7 +136,7 @@ def load_model(
         from load_models.call_emu2 import load_emu2, call_emu2
         while True:
             try:
-                model, tokenizer = load_emu2(None)
+                model, tokenizer = load_emu2(device=device, gen_mode = gen_mode)
                 call_emu2(
                     model, 
                     tokenizer,
@@ -145,8 +145,14 @@ def load_model(
                         f'{root_dir}/models/Emu/Emu2/examples/dog2.jpg',
                         f'{root_dir}/models/Emu/Emu2/examples/dog3.jpg',
                     ],
+                    gen_mode = gen_mode,
                 )
-                return lambda configs: call_emu2(model, tokenizer, **configs)
+                return lambda configs: call_emu2(
+                    model, 
+                    tokenizer, 
+                    gen_mode = gen_mode,
+                    **configs
+                )
             except KeyboardInterrupt:
                 exit()
             except Exception as e:

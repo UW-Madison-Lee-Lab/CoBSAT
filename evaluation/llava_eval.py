@@ -6,7 +6,7 @@ from llava.eval.run_llava import eval_model
 from llava.utils import disable_torch_init
 
 # Configure the file saving
-root_dir = os.path.dirname(os.getcwd())
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 sys.path.append(root_dir)
 from configs import task_dataframe
@@ -23,7 +23,6 @@ def save_json(data, path):
 
 # Configure LlaVA
 model_path = f"{root_dir}/evaluation/llava-v1.5-13b/"
-# model_path = "/content/drive/MyDrive/Colab Notebooks/LLaVA-main/llava-v1.5-13b/"
 model_name = "llava-v1.5-13b"
 tokenizer, llava_model, image_processor, context_len = load_pretrained_model(
     model_path, None, model_name
