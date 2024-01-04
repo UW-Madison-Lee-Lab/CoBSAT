@@ -1,3 +1,5 @@
+# seed: set
+
 from environment import OPENAI_API_KEY
 from openai import OpenAI
 import os, base64, requests
