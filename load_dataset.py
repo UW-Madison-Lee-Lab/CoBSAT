@@ -12,29 +12,35 @@ def load_prompt(
     theta_idxs,
     x_list,
     theta_list,
-    instruction,
 ):
-    text_inputs, image_inputs = [instruction], []
+    text_inputs, image_inputs = [], []
+    theta = theta_list[theta_idxs[num_demos+1]]
+    x_demos = []
     
-    for shot in range(num_demos+1):
-        
-        x = x_list[x_idxs[shot]]
-        theta = theta_list[theta_idxs[shot]]
+    for demo_idx in range(num_demos+1):
+        x_idx = x_list[x_idxs[demo_idx]]
+        x_demos.append(x_idx)
+        theta_idx = theta_list[theta_idxs[demo_idx]]
         
         if misleading:
-            text_inputs.append(f"{x} {theta}")
+            text_inputs.append(f"{x_idx} {theta_idx}")
         else:
-            text_inputs.append(x)
+            text_inputs.append(x_idx)
             
-        if shot < num_demos:
+        if demo_idx < num_demos:
             image_inputs.append(find_image(
                 root_dir, 
                 task_id, 
-                x_idxs[shot], 
-                theta_idxs[shot], 
+                x_idxs[demo_idx], 
+                theta, 
             ))
     
-    return text_inputs, image_inputs
+    return {
+        "text_inputs": text_inputs,
+        "image_inputs": image_inputs,
+        "x_list": x_demos,
+        'theta': theta_list[theta_idxs[num_demos+1]],
+    }
     
 
 def load_dataset(
@@ -43,7 +49,6 @@ def load_dataset(
     task_id, 
     num_prompt = 1000,
     seed = 123,
-    instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
 ):
     print("========"*3)
     print(f'Loading the dataset for task {task_id}...')
@@ -59,7 +64,7 @@ def load_dataset(
     data_loader = []
     for i in range(num_prompt):
         item_inputs = prompts_list[i]
-        text_inputs, image_inputs = load_prompt(
+        input_dict = load_prompt(
             num_demos,
             misleading,
             task_id,
@@ -67,13 +72,9 @@ def load_dataset(
             item_inputs["theta_list"],
             task_dataframe[task_id]["x_list"],
             task_dataframe[task_id]["theta_list"],
-            instruction,
         )
-        data_loader.append({
-            'x_list': 
-            "text_inputs": text_inputs,
-            "image_inputs": image_inputs,
-        })
+        input_dict['save_path'] = f"{i}_{input_dict['theta']}_{'_'.join(input_dict['x_list'])}.json"
+        data_loader.append(input_dict)
     print('Done!')
     print("========"*3)
     return data_loader

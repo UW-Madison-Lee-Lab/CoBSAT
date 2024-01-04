@@ -50,7 +50,7 @@ def find_image(
     root_dir, 
     task_id, 
     x_idx, 
-    theta_idx, 
+    theta, 
 ):
     find = False
     
@@ -61,9 +61,9 @@ def find_image(
     
     if task_dataframe[task_id]['x_space'] in ['object', 'animal']:
         item_info['obj'] = task_dataframe[task_id]['x_list'][x_idx]
-        item_info['detail'] = task_dataframe[task_id]['theta_list'][theta_idx]
+        item_info['detail'] = theta
     else:
-        item_info['obj'] = task_dataframe[task_id]['theta_list'][theta_idx]
+        item_info['obj'] = theta
         item_info['detail'] = task_dataframe[task_id]['x_list'][x_idx]
         
     
