@@ -1,6 +1,5 @@
 import os, argparse, random
 from load_model import load_model
-from configs import task_dataframe
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
 from helper import save_json, read_json

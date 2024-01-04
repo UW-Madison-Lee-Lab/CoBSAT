@@ -5,7 +5,7 @@ from helper import set_seed, read_json, find_image
 from configs import task_dataframe
 
 def load_prompt(
-    num_demos,
+    shot,
     misleading,
     task_id,
     x_idxs,
@@ -14,10 +14,10 @@ def load_prompt(
     theta_list,
 ):
     text_inputs, image_inputs = [], []
-    theta = theta_list[theta_idxs[num_demos+1]]
+    theta = theta_list[theta_idxs[shot+1]]
     x_demos = []
     
-    for demo_idx in range(num_demos+1):
+    for demo_idx in range(shot+1):
         x_idx = x_list[x_idxs[demo_idx]]
         x_demos.append(x_idx)
         theta_idx = theta_list[theta_idxs[demo_idx]]
@@ -27,7 +27,7 @@ def load_prompt(
         else:
             text_inputs.append(x_idx)
             
-        if demo_idx < num_demos:
+        if demo_idx < shot:
             image_inputs.append(find_image(
                 root_dir, 
                 task_id, 
@@ -39,12 +39,12 @@ def load_prompt(
         "text_inputs": text_inputs,
         "image_inputs": image_inputs,
         "x_list": x_demos,
-        'theta': theta_list[theta_idxs[num_demos+1]],
+        'theta': theta_list[theta_idxs[shot+1]],
     }
     
 
 def load_dataset(
-    num_demos,
+    shot,
     misleading,
     task_id, 
     num_prompt = 1000,
@@ -56,7 +56,7 @@ def load_dataset(
     print(f'| x_space: {task_dataframe[task_id]["x_space"]}')
     print(f'| theta_space: {task_dataframe[task_id]["theta_space"]}')
     print(f'| misleading: {misleading}')
-    print(f'| num_demos: {num_demos}')
+    print(f'| shot: {shot}')
     
     set_seed(seed)
     
@@ -65,7 +65,7 @@ def load_dataset(
     for i in range(num_prompt):
         item_inputs = prompts_list[i]
         input_dict = load_prompt(
-            num_demos,
+            shot,
             misleading,
             task_id,
             item_inputs["x_list"],
