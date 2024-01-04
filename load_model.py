@@ -181,7 +181,7 @@ def load_model(
                 continue
     elif model == 'emu':
         from load_models.call_emu import load_emu, call_emu
-        model = load_emu(device=device)
+        model = load_emu(device=device, gen_mode=gen_mode)
         call_emu(
             model, 
             text_inputs = ["Red", "Green", "Yellow"],

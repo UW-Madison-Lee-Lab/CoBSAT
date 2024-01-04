@@ -1,4 +1,5 @@
 import os, argparse, random
+from PIL import Image
 from load_model import load_model
 root_dir = os.path.dirname(os.path.abspath(__file__))
 

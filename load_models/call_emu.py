@@ -6,6 +6,8 @@ sys.path.append(root_dir)
 sys.path.append(os.path.join(root_dir, 'models/Emu/Emu1'))
 
 from models.modeling_emu import Emu
+from models.pipeline import EmuGenerationPipeline
+
 from utils import process_img, process_video
 
 import torch
@@ -42,43 +44,59 @@ def Emu_inference(emu_model, image_list, text_sequence, system='', instruct=True
 def load_emu(
     device = 'cuda',
     seed = 123,
+    gen_mode = 'image',
 ):
-    
-    args = type('Args', (), {
-        "instruct": True,
-        "ckpt_path": "/pvc/ceph-block-kangwj1995/wisconsin/Emu/Emu/Emu-instruct.pt", ####
-        "device": torch.device(device),
-    })()
+    if gen_mode == 'text':
+        args = type('Args', (), {
+            "instruct": True,
+            "ckpt_path": "/pvc/ceph-block-kangwj1995/wisconsin/Emu/Emu/Emu-instruct.pt", ####
+            "device": torch.device(device),
+        })()
 
-    with open(f'models/Emu/Emu1/models/Emu-14B.json', "r", encoding="utf8") as f:
-        model_cfg = json.load(f)
-    print(f"=====> model_cfg: {model_cfg}")
+        with open(f'models/Emu/Emu1/models/Emu-14B.json', "r", encoding="utf8") as f:
+            model_cfg = json.load(f)
+        print(f"=====> model_cfg: {model_cfg}")
 
-    model = Emu(**model_cfg, cast_dtype=torch.float, args=args)
+        model = Emu(**model_cfg, cast_dtype=torch.float, args=args)
 
-    if args.instruct:
-        print('Patching LoRA...')
-        from peft import LoraConfig, get_peft_model
-        lora_config = LoraConfig(
-            r=16,
-            lora_alpha=16,
-            target_modules=['q_proj', 'k_proj', 'v_proj', 'o_proj'],
-            lora_dropout=0.05,
-            bias="none",
-            task_type="CAUSAL_LM",
+        if args.instruct:
+            print('Patching LoRA...')
+            from peft import LoraConfig, get_peft_model
+            lora_config = LoraConfig(
+                r=16,
+                lora_alpha=16,
+                target_modules=['q_proj', 'k_proj', 'v_proj', 'o_proj'],
+                lora_dropout=0.05,
+                bias="none",
+                task_type="CAUSAL_LM",
+            )
+            model.decoder.lm = get_peft_model(model.decoder.lm, lora_config)
+
+        print(f"=====> loading from ckpt_path {args.ckpt_path}")
+        ckpt = torch.load(args.ckpt_path, map_location="cpu")
+        if 'module' in ckpt:
+            ckpt = ckpt['module']
+        msg = model.load_state_dict(ckpt, strict=False)
+        model.eval()
+        model.to(args.device).to(torch.bfloat16)
+        print(f"=====> get model.load_state_dict msg: {msg}")
+
+        return model
+
+    elif gen_mode == 'image':
+        args = type('Args', (), {
+            "instruct": False,
+            "ckpt_path": "/pvc/ceph-block-kangwj1995/wisconsin/Emu/Emu/pretrain", ####
+            "device": torch.device(device),
+        })()
+
+        model = EmuGenerationPipeline.from_pretrained(
+            path=args.ckpt_path,
+            args=args,
         )
-        model.decoder.lm = get_peft_model(model.decoder.lm, lora_config)
+        model = model.bfloat16().cuda()
 
-    print(f"=====> loading from ckpt_path {args.ckpt_path}")
-    ckpt = torch.load(args.ckpt_path, map_location="cpu")
-    if 'module' in ckpt:
-        ckpt = ckpt['module']
-    msg = model.load_state_dict(ckpt, strict=False)
-    model.eval()
-    model.to(args.device).to(torch.bfloat16)
-    print(f"=====> get model.load_state_dict msg: {msg}")
-
-    return model
+        return model
 
 def call_emu(
     emu_model, 
@@ -94,35 +112,57 @@ def call_emu(
 ):
     set_seed(seed)
     
-    prompt = []
-    for i in range(len(text_inputs)):
-        prompt.append(text_inputs[i])
-        if i < len(text_inputs) - 1:
-            image = process_img(img_path=image_inputs[i],device=device)
-            prompt.append(image)
-            
-    interleaved_sequence = ''
-    image_list = []
-    for item in prompt:
-        if isinstance(item, str):  # text
-            interleaved_sequence += item
-        else:  # image
-            image_list.append(item)
-            interleaved_sequence += image_placeholder
-
-    output_dict = {}
-    emu_start = time()
     if gen_mode == 'image':
-        output_dict['description'] = model.generate_for_images_and_texts(
-            prompt, num_words=2, ret_scale_factor=100.0, generator=g_cuda)
+
+        prompt = []
+        for i in range(len(text_inputs)):
+            prompt.append(text_inputs[i])
+            if i < len(text_inputs) - 1:
+                image = Image.open(image_inputs[i]).convert('RGB')
+                prompt.append(image)
+
+        output_dict = {}
+        emu_start = time()
+
+        image = emu_model(
+            prompt,
+            height=512,
+            width=512,
+            guidance_scale=10.,
+        )
+        output_dict['description'] = "null"
+
+        emu_end = time()
+        output_dict['time'] = emu_end - emu_start
+
+        return output_dict, image
+
     elif gen_mode == 'text':
+
+        prompt = []
+        for i in range(len(text_inputs)):
+            prompt.append(text_inputs[i])
+            if i < len(text_inputs) - 1:
+                image = process_img(img_path=image_inputs[i],device=device)
+                prompt.append(image)
+                
+        interleaved_sequence = ''
+        image_list = []
+        for item in prompt:
+            if isinstance(item, str):  # text
+                interleaved_sequence += item
+            else:  # image
+                image_list.append(item)
+                interleaved_sequence += image_placeholder
+
+        output_dict = {}
+        emu_start = time()
+
         output_dict['description'] = Emu_inference(emu_model, image_list, interleaved_sequence, instruct=True, system=instruction)
-    emu_end = time()
-    output_dict['time'] = emu_end - emu_start
+        emu_end = time()
+        output_dict['time'] = emu_end - emu_start
 
-    #print(sss)
-
-    return output_dict
+        return output_dict
     
     
     
