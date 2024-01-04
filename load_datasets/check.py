@@ -38,7 +38,7 @@ def check_caption(task_type):
                 image_path = f"{folder_path}/{image}"
                 
                 # llava for generating captions
-                caption_prompt = f"Generate a clear description of the image <image-placeholder>."
+                caption_prompt = f"Generate a clear description of the image <image-placeholder>. The description should include the object and details such as background, weather, texture, color, action, etc, if applicable."
                 caption = eval_model(
                     caption_prompt,
                     [image_path],
@@ -115,7 +115,21 @@ def check_caption(task_type):
             except Exception as e:
                 print(e)
                 print(image)
-                continue
+                row = {
+                    'image': image,
+                    'caption': None,
+                    'ground_truth_detail': None,
+                    'ground_truth_obj': None,
+                    'response_detail': None,
+                    'response_obj': None,
+                    'answer_detail': None,
+                    'answer_obj': None,
+                    'check_detail': None,
+                    'check_obj': None,
+                    'correct': None,
+                }
+                result_df.append(row)
+            
             
     result_df = pd.DataFrame(result_df)
     df_path = f"{root_dir}/results/checks/caption/{task_type}.csv"
@@ -205,7 +219,19 @@ def check_image(task_type):
             except Exception as e:
                 print(e)
                 print(image)
-                continue
+                row = {
+                    'image': image,
+                    'ground_truth_detail': None,
+                    'ground_truth_obj': None,
+                    'response_detail': None,
+                    'response_obj': None,
+                    'answer_detail': None,
+                    'answer_obj': None,
+                    'check_detail': None,
+                    'check_obj': None,
+                    'correct': None,
+                }
+                result_df.append(row)
             
     result_df = pd.DataFrame(result_df)
     df_path = f"{root_dir}/results/checks/image/{task_type}.csv"
