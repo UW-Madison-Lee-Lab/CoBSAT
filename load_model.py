@@ -193,8 +193,7 @@ def load_model(
             gen_mode = gen_mode,
         )
         return lambda configs: call_emu(
-            model, 
-            instruction = instruction, 
+            model,
             gen_mode = gen_mode, 
             **configs
         )

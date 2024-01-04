@@ -117,8 +117,6 @@ def call_emu(
     emu_end = time()
     output_dict['time'] = emu_end - emu_start
 
-    #print(sss)
-
     return output_dict
     
     
