@@ -5,7 +5,6 @@ def load_model(
     model, 
     device = 'cuda',
     gen_mode = 'text',
-    instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
 ):
     """
     Load models. 
@@ -75,7 +74,6 @@ def load_model(
         return lambda configs: call_gpt4v(
             mode = 'path', 
             use_dalle = False, 
-            instruction = instruction,
             **configs,
         )
     elif model == 'qwen':
@@ -91,7 +89,6 @@ def load_model(
                 return lambda configs: call_qwen(
                     model, 
                     tokenizer, 
-                    instruction = instruction, 
                     **configs
                 )
             except KeyboardInterrupt:
@@ -128,7 +125,6 @@ def load_model(
                     context_len,
                     llava_args,
                     device = device,
-                    instruction = instruction,
                     **configs,
                 )
             except KeyboardInterrupt:
@@ -150,7 +146,7 @@ def load_model(
                         f'{root_dir}/models/Emu/Emu2/examples/dog3.jpg',
                     ],
                 )
-                return lambda configs: call_emu2(model, tokenizer, instruction = instruction, **configs)
+                return lambda configs: call_emu2(model, tokenizer, **configs)
             except KeyboardInterrupt:
                 exit()
             except Exception as e:
@@ -175,7 +171,6 @@ def load_model(
                 return lambda configs: call_gill(
                     model, 
                     g_cuda, 
-                    instruction = instruction, 
                     gen_mode = gen_mode, 
                     **configs
                 )
