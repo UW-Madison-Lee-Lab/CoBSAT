@@ -84,7 +84,7 @@ if '__main__' == __name__:
 
     random.seed(args.seed)
     max_file_count = args.max_file_count
-    call_model = load_model(args.model, args.device)
+    call_model = load_model(args.model, args.device, gen_mode='text')
 
     for shot in args.shot:
         for misleading in args.misleading:
