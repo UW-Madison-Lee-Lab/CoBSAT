@@ -29,11 +29,12 @@ def call_qwen(
     set_seed(seed)
     
     # get prompt
-    messages = [{'text': instruction}]
+    messages = []
     for i in range(len(text_inputs)):
         messages.append({'text': text_inputs[i]})
         if i < len(text_inputs) - 1:
             messages.append({'image': image_inputs[i]})
+    messages.append({'text': instruction})
     
     output_dict = {}
     qwen_start = time()
