@@ -4,6 +4,7 @@ import os, sys, hydra
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
 sys.path.append(os.path.join(root_dir, 'models/SEED'))
+from environment import SEED_PROJECT_ROOT
 
 import torch
 from helper import set_seed
@@ -87,7 +88,9 @@ def decode_image_text(generate_ids, tokenizer, gen_mode):
 def load_seed(
     device = 'cuda',
     seed = 123,
-):  
+):
+    os.environ["PROJECT_ROOT"] = SEED_PROJECT_ROOT
+    
     tokenizer_cfg_path = f'{root_dir}/models/SEED/configs/tokenizer/seed_llama_tokenizer_hf.yaml'
     tokenizer_cfg = OmegaConf.load(tokenizer_cfg_path)
     tokenizer = hydra.utils.instantiate(

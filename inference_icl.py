@@ -20,7 +20,7 @@ def inference(
     gen_mode,
 ):
     misleading_flag = "_m" if misleading else ""
-    base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}{misleading_flag}" if gen_mode == "text" else f"{root_dir}/results/exps/{model}_prompt1/shot_{shot}{misleading_flag}"
+    base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}{misleading_flag}"
     
     folder_path = f"{base_path}/task_{task_id}"
     if not os.path.exists(folder_path):
@@ -77,7 +77,7 @@ def inference(
             print(out["description"])
         elif gen_mode == 'image':
             img = out['image']
-            if img != None: img.save(save_path.replace('.jpg'))
+            if img != None: img.save(save_path+'.jpg')
             
             out.pop('image')
             save_json(out, save_path+'.json')
