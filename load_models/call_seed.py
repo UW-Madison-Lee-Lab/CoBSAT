@@ -1,85 +1,114 @@
 # seed: set
 
-import os, sys, json
+import os, sys, json, hydra
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
-sys.path.append(os.path.join(root_dir, 'models/Emu/Emu1'))
-
-from models.modeling_emu import Emu
-from utils import process_img, process_video
+sys.path.append(os.path.join(root_dir, 'models/SEED'))
 
 import torch
 from helper import set_seed
 from PIL import Image
 from time import time
 
+from omegaconf import OmegaConf
+from typing import Optional
+import transformers
+from PIL import Image
+from torchvision.transforms.functional import InterpolationMode
+
+
+import glob
+import numpy as np
+
+from transformers import set_seed
+
 image_placeholder = "[IMG]" + "<image>" * 32 + "[/IMG]"
 
-def Emu_inference(emu_model, image_list, text_sequence, system='', instruct=True, max_new_tokens=128, beam_size=5, length_penalty=0.0):
-    if instruct:
-        prompt = f"{system} [USER]: {text_sequence} [ASSISTANT]:".strip()
+generation_config = {
+    'temperature': 1.0,
+    'num_beams': 1,
+    'max_new_tokens': 512,
+    'top_p': 0.5,
+    'do_sample': True
+}
+
+s_token = "[INST] "
+e_token = " [/INST]"
+sep = "\n"
+
+BOI_TOKEN = '<img>'
+EOI_TOKEN = '</img>'
+IMG_TOKEN = '<img_{:05d}>'
+
+IMG_FLAG = '<image>'
+NUM_IMG_TOKNES = 32
+NUM_IMG_CODES = 8192
+image_id_shift = 32000
+
+def generate(tokenizer, input_tokens, generation_config, model):
+
+    input_ids = tokenizer(
+        input_tokens, add_special_tokens=False, return_tensors='pt').input_ids
+    input_ids = input_ids.to("cuda")
+    generate_ids = model.generate(
+        input_ids=input_ids,
+        **generation_config
+    )
+    generate_ids = generate_ids[0][input_ids.shape[1]:]
+
+    return generate_ids
+
+def decode_image_text(generate_ids, tokenizer):
+
+    boi_list = torch.where(generate_ids == tokenizer(
+        BOI_TOKEN, add_special_tokens=False).input_ids[0])[0]
+    eoi_list = torch.where(generate_ids == tokenizer(
+        EOI_TOKEN, add_special_tokens=False).input_ids[0])[0]
+
+    if len(boi_list) == 0 and len(eoi_list) == 0:
+        text_ids = generate_ids
+        texts = tokenizer.decode(text_ids, skip_special_tokens=True)
+
+        return texts
+
     else:
-        prompt = text_sequence
+        try:
+            boi_index = boi_list[0]
+            eoi_index = eoi_list[0]
+        except:
+            return "error"         
 
-    print(f"===> prompt: {prompt}")
+        text_ids = generate_ids[:boi_index]
+        if len(text_ids) != 0:
+            texts = tokenizer.decode(text_ids, skip_special_tokens=True)
+            return texts
+        else:
+            return "null"
 
-    samples = {"image": torch.cat(image_list, dim=0), "prompt": prompt}
-
-    output_text = emu_model.generate(
-        samples,
-        max_new_tokens=max_new_tokens,
-        num_beams=beam_size,
-        length_penalty=length_penalty,
-        repetition_penalty=1.0,
-    )[0].strip()
-
-    print(f"===> output: {output_text}\n")
-
-
-
-def load_emu(
+def load_seed(
     device = 'cuda',
     seed = 123,
 ):
-    
-    args = type('Args', (), {
-        "instruct": True,
-        "ckpt_path": "/pvc/ceph-block-kangwj1995/wisconsin/Emu/Emu/Emu-instruct.pt", ####
-        "device": torch.device(device),
-    })()
 
-    with open(f'models/Emu/Emu1/models/Emu-14B.json', "r", encoding="utf8") as f:
-        model_cfg = json.load(f)
-    print(f"=====> model_cfg: {model_cfg}")
+    tokenizer_cfg_path = 'models/SEED/configs/tokenizer/seed_llama_tokenizer_hf.yaml'
+    tokenizer_cfg = OmegaConf.load(tokenizer_cfg_path)
+    tokenizer = hydra.utils.instantiate(
+        tokenizer_cfg, device=device, load_diffusion=True)
 
-    model = Emu(**model_cfg, cast_dtype=torch.float, args=args)
+    transform_cfg_path = 'models/SEED/configs/transform/clip_transform.yaml'
+    transform_cfg = OmegaConf.load(transform_cfg_path)
+    transform = hydra.utils.instantiate(transform_cfg)
 
-    if args.instruct:
-        print('Patching LoRA...')
-        from peft import LoraConfig, get_peft_model
-        lora_config = LoraConfig(
-            r=16,
-            lora_alpha=16,
-            target_modules=['q_proj', 'k_proj', 'v_proj', 'o_proj'],
-            lora_dropout=0.05,
-            bias="none",
-            task_type="CAUSAL_LM",
-        )
-        model.decoder.lm = get_peft_model(model.decoder.lm, lora_config)
+    model_cfg = OmegaConf.load('models/SEED/configs/llm/seed_llama_14b.yaml')
+    model = hydra.utils.instantiate(model_cfg, torch_dtype=torch.float16)
+    model = model.eval().to(device)
 
-    print(f"=====> loading from ckpt_path {args.ckpt_path}")
-    ckpt = torch.load(args.ckpt_path, map_location="cpu")
-    if 'module' in ckpt:
-        ckpt = ckpt['module']
-    msg = model.load_state_dict(ckpt, strict=False)
-    model.eval()
-    model.to(args.device).to(torch.bfloat16)
-    print(f"=====> get model.load_state_dict msg: {msg}")
+    return model, tokenizer, transform
 
-    return model
-
-def call_emu(
-    emu_model, 
+def call_seed(
+    model,
+    tokenizer,
+    transform,
     text_inputs = ["Red", "Green", "Yellow"],
     image_inputs = [
         "/data/yzeng58/micl/datasets/weather_pig/aurora_pig.jpg",
@@ -87,35 +116,36 @@ def call_emu(
     ],
     seed = 123,
     gen_mode = 'text',
+    device = 'cuda',
     instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
 ):
     set_seed(seed)
     
-    prompt = []
+    input_tokens = tokenizer.bos_token  + s_token + instruction
     for i in range(len(text_inputs)):
-        prompt.append(text_inputs[i])
+
+        input_tokens = input_tokens + text_inputs[i] + ": "
         if i < len(text_inputs) - 1:
-            image = process_img(img_path=image_inputs[i])
-            prompt.append(image)
-            
-    interleaved_sequence = ''
-    image_list = []
-    for item in prompt:
-        if isinstance(item, str):  # text
-            interleaved_sequence += item
-        else:  # image
-            image_list.append(item)
-            interleaved_sequence += image_placeholder
+            image = Image.open(image_inputs[i]).convert('RGB')
+            image_tensor = transform(image).to(device)
+            img_ids = tokenizer.encode_image(image_torch=image_tensor)
+            img_ids = img_ids.view(-1).cpu().numpy()
+            img_tokens = BOI_TOKEN + ''.join([IMG_TOKEN.format(item)
+                                            for item in img_ids]) + EOI_TOKEN
+            input_tokens = input_tokens + img_tokens
+
+    input_tokens = input_tokens + e_token + sep
 
     output_dict = {}
-    emu_start = time()
+    seed_start = time()
     if gen_mode == 'image':
         output_dict['description'] = model.generate_for_images_and_texts(
             prompt, num_words=2, ret_scale_factor=100.0, generator=g_cuda)
     elif gen_mode == 'text':
-        output_dict['description'] = Emu_inference(emu_model, image_list, interleaved_sequence, instruct=True, system=instruction)
-    emu_end = time()
-    output_dict['time'] = emu_end - emu_start
+        generate_ids = generate(tokenizer, input_tokens, generation_config, model)
+        output_dict['description'] = decode_image_text(generate_ids, tokenizer)
+    seed_end = time()
+    output_dict['time'] = seed_end - seed_start
 
     return output_dict
     

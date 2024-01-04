@@ -48,6 +48,11 @@ def inference(
             continue
 
         retry = 0
+        out = call_model({
+            'text_inputs': text_inputs, 
+            'image_inputs': image_inputs,
+        })
+        """
         while retry <= 10:
             try:
                 out = call_model({
@@ -64,7 +69,7 @@ def inference(
                 
         if retry > 10:
             out = {'description': 'ERROR'}
-        
+        """
         print(out["description"])
         save_json(out, save_path)
 

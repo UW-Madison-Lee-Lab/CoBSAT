@@ -35,6 +35,8 @@ def Emu_inference(emu_model, image_list, text_sequence, system='', instruct=True
 
     print(f"===> output: {output_text}\n")
 
+    return output_text
+
 
 
 def load_emu(
@@ -87,6 +89,7 @@ def call_emu(
     ],
     seed = 123,
     gen_mode = 'text',
+    device = 'cuda',
     instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
 ):
     set_seed(seed)
@@ -95,7 +98,7 @@ def call_emu(
     for i in range(len(text_inputs)):
         prompt.append(text_inputs[i])
         if i < len(text_inputs) - 1:
-            image = process_img(img_path=image_inputs[i])
+            image = process_img(img_path=image_inputs[i],device=device)
             prompt.append(image)
             
     interleaved_sequence = ''

@@ -191,38 +191,38 @@ def load_model(
             ],
             seed = 123,
             gen_mode = gen_mode,
+            device = device,
         )
         return lambda configs: call_emu(
             model,
             gen_mode = gen_mode, 
+            device = device,
             **configs
         )
-        """
-        while True:
-            try:
-                model = load_emu(device=device)
-                call_emu(
-                    model, 
-                    text_inputs = ["Red", "Green", "Yellow"],
-                    image_inputs= [
-                        f"{root_dir}/datasets/weather_pig/aurora_pig.jpg",
-                        f"{root_dir}/datasets/weather_pig/hailstorm_pig.jpg"
-                    ],
-                    seed = 123,
-                    gen_mode = gen_mode,
-                )
-                return lambda configs: call_emu(
-                    model, 
-                    instruction = instruction, 
-                    gen_mode = gen_mode, 
-                    **configs
-                )
-            except KeyboardInterrupt:
-                exit()
-            except Exception as e:
-                print(e)
-                continue
-        """
+    elif model == 'seed':
+        from load_models.call_seed import load_seed, call_seed
+        model, tokenizer, transform = load_seed(device=device)
+        call_seed(
+            model,
+            tokenizer,
+            transform, 
+            text_inputs = ["Red", "Green", "Yellow"],
+            image_inputs= [
+                f"{root_dir}/datasets/weather_pig/aurora_pig.jpg",
+                f"{root_dir}/datasets/weather_pig/hailstorm_pig.jpg"
+            ],
+            seed = 123,
+            gen_mode = gen_mode,
+             device = device,
+        )
+        return lambda configs: call_seed(
+            model,
+            tokenizer,
+            transform,
+            gen_mode = gen_mode,
+            device = device, 
+            **configs
+        )
     else:
         raise ValueError(f"Model {model} not found.")
 
