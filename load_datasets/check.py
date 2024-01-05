@@ -97,6 +97,8 @@ def check_caption(task_type, llava_configs):
                 row = {
                     'image': image,
                     'caption': caption,
+                    'prompt_detail': prompts['detail'],
+                    'prompt_obj': prompts['obj'],
                     'ground_truth_detail': ground_truth['detail'],
                     'ground_truth_obj': ground_truth['obj'],
                     'response_detail': response['detail'],
@@ -120,6 +122,8 @@ def check_caption(task_type, llava_configs):
                 row = {
                     'image': image,
                     'caption': None,
+                    'prompt_detail': None,
+                    'prompt_obj': None,
                     'ground_truth_detail': None,
                     'ground_truth_obj': None,
                     'response_detail': None,
@@ -174,10 +178,9 @@ def check_image(task_type, llava_configs):
                 checks, options, response, true_labels = {}, {}, {}, {}
                 for mode in prompts:
                     for i, item in enumerate(item_list[mode]):
-                        if item in image:
-                            prompts[mode] += f"({i+1}){item2word.get(item, item)}"
+                        prompts[mode] += f"({i+1}){item2word.get(item, item)}"
                     prompts[mode] += ". Answer the number only and do not include any other texts (e.g., 1)."
-                
+                    
                     # llava
                     response[mode] = eval_model(
                         prompts[mode],
@@ -210,6 +213,8 @@ def check_image(task_type, llava_configs):
                         
                 row = {
                     'image': image,
+                    'prompt_detail': prompts['detail'],
+                    'prompt_obj': prompts['obj'],
                     'ground_truth_detail': ground_truth['detail'],
                     'ground_truth_obj': ground_truth['obj'],
                     'response_detail': response['detail'],
@@ -232,6 +237,8 @@ def check_image(task_type, llava_configs):
                 print(image)
                 row = {
                     'image': image,
+                    'prompt_detail': None,
+                    'prompt_obj': None,
                     'ground_truth_detail': None,
                     'ground_truth_obj': None,
                     'response_detail': None,

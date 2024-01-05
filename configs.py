@@ -1,9 +1,9 @@
 task_types = [
-    'color_object', 
-    'weather_animal', 
+    'color_object',  
     'style_object', 
     'action_animal', 
     'texture_object',
+    'background_animal',
 ]
 
 item2word = {
@@ -16,7 +16,7 @@ item_dict = {
     'object': ['leaf', 'hat', 'cup', 'chair', 'car', 'box', 'book', 'ball', 'bag', 'apple'],
     'weather': ['tornado', 'thunder', 'sunny', 'snowy', 'sandstorm', 'rainy', 'rainbow', 'hailstorm', 'foggy', 'aurora'],
     'animal': ['zebra', 'tiger', 'sheep', 'pig', 'monkey', 'lion', 'dog', 'cow', 'cat', 'bird'],
-    'style': ['watercolor', 'sketch', 'pixel', 'origami', 'oil', 'lego', 'icon', 'graffiti', 'futuristic', '3d'],
+    'style': ['watercolor', 'sketch', 'pixel', 'origami', 'lego', 'icon', 'graffiti', 'futuristic', '3d', 'steampunk'],
     'action': ['swim', 'sleep', 'sing', 'run', 'read', 'fly', 'eat', 'drink', 'cry', 'angry'],
     'background': ['beach', 'desert', 'glacier', 'volcano', 'park', 'gym', 'waterfall', 'space', 'cave', 'seafloor'],
     'texture': ['wood', 'wicker', 'sequined', 'plastic', 'paper', 'metal', 'leather', 'lace', 'denim', 'ceramic'],
@@ -38,18 +38,18 @@ task_dataframe = {
         'theta_list': item_dict['color'],
     },
     3: {
-        'task_type': 'weather_animal',
-        'x_space': 'weather',
+        'task_type': 'background_animal',
+        'x_space': 'background',
         'theta_space': 'animal',
-        'x_list': item_dict['weather'],
+        'x_list': item_dict['background'],
         'theta_list': item_dict['animal'],
     },
     4: {
-        'task_type': 'weather_animal',
+        'task_type': 'background_animal',
         'x_space': 'animal',
-        'theta_space': 'weather',
+        'theta_space': 'background',
         'x_list': item_dict['animal'],
-        'theta_list': item_dict['weather'],
+        'theta_list': item_dict['background'],
     },
     5: {
         'task_type': 'style_object',
