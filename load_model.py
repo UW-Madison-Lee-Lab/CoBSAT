@@ -174,10 +174,10 @@ def load_model(
         model = load_emu(device=device, gen_mode=gen_mode)
         call_emu(
             model, 
-            text_inputs = ["Red", "Green", "Yellow"],
+            text_inputs = ['Yellow', 'White', 'Black'],
             image_inputs= [
-                f"{root_dir}/datasets/weather_pig/aurora_pig.jpg",
-                f"{root_dir}/datasets/weather_pig/hailstorm_pig.jpg"
+                f"{root_dir}/models/Emu/Emu2/examples/dog2.jpg",
+                f"{root_dir}/models/Emu/Emu2/examples/dog3.jpg"
             ],
             seed = 123,
             gen_mode = gen_mode,
@@ -196,10 +196,10 @@ def load_model(
             model,
             tokenizer,
             transform, 
-            text_inputs = ["Red", "Green", "Yellow"],
+            text_inputs = ['Yellow', 'White', 'Black'],
             image_inputs= [
-                f"{root_dir}/datasets/weather_pig/aurora_pig.jpg",
-                f"{root_dir}/datasets/weather_pig/hailstorm_pig.jpg"
+                f"{root_dir}/models/Emu/Emu2/examples/dog2.jpg",
+                f"{root_dir}/models/Emu/Emu2/examples/dog3.jpg"
             ],
             seed = 123,
             gen_mode = gen_mode,
