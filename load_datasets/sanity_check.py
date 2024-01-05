@@ -37,7 +37,7 @@ def check_caption(task_type, llava_configs):
                 image_path = f"{folder_path}/{image}"
                 
                 # llava for generating captions
-                caption_prompt = f"Generate a clear description of the image <image-placeholder>. The description should include the object and details such as background, weather, texture, color, action, etc, if applicable."
+                caption_prompt = f"Generate a clear description of the image <image-placeholder>. The description should include the object and details such as background, style, texture, color, action, etc, if applicable."
                 caption = eval_model(
                     caption_prompt,
                     [image_path],
@@ -54,20 +54,19 @@ def check_caption(task_type, llava_configs):
                 
                 # two prompts
                 prompts = {
-                    'detail': f"What is the {category_space['detail']} (of the main object) in the image based on the description? Answer from the following options: ",
-                    'obj': f"What is the main object in this image based on the description? Answer from the following options: ",
+                    'detail': f"Image caption: {caption}. What is the {category_space['detail']} (of the main object) in the image based on the description? Answer from the following options: ",
+                    'obj': f"Image caption: {caption}. What is the main object in this image based on the description? Answer from the following options: ",
                 } 
                 
                 checks, options, response, true_labels = {}, {}, {}, {}
                 for mode in prompts:
                     for i, item in enumerate(item_list[mode]):
-                        if item in image:
-                            prompts[mode] += f" ({i+1}){item2word.get(item, item)}"
+                        prompts[mode] += f" ({i+1}){item2word.get(item, item)}"
                     prompts[mode] += ". Answer the number only and do not include any other texts (e.g., 1)."
                     
                     response[mode] = eval_model(
                         prompts[mode],
-                        [image_path],
+                        [],
                         llava_tokenizer,
                         llava_model,
                         llava_image_processor,
@@ -266,6 +265,7 @@ if '__main__' == __name__:
     
     set_seed(123)
     llava_tokenizer, llava_model, llava_image_processor, llava_context_len, llava_args = load_llava(device=args.device)
+
     llava_configs = {
         'tokenizer': llava_tokenizer,
         'model': llava_model,
