@@ -6,6 +6,7 @@ from helper import save_json, read_json, set_seed
 from load_dataset import load_dataset
 from environment import TRANSFORMER_CACHE
 os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
+from configs import task_dataframe, supported_models
 
 prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list.json")
 
@@ -63,7 +64,7 @@ def inference(
                 exit()
             except Exception as e:
                 retry += 1
-                print(e)
+                print(f"Exception occurred: {type(e).__name__}, {e.args}")
                 print('Retrying...')
                 
         if retry > 10:
@@ -85,15 +86,24 @@ if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate images or image descriptions')
     parser.add_argument('--shot', type=int, nargs='+', default=[4,6,8])
     parser.add_argument('--misleading', type=int, nargs='+', default=[0,1], choices=[0,1])
-    parser.add_argument('--model', type=str, default="qwen", choices = ['qwen', 'llava', 'gpt4v', 'emu2', 'emu', 'seed'])
+    parser.add_argument('--model', type=str, default="qwen", choices = supported_models)
     parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)
     parser.add_argument('--device', nargs='+', type=str, default=['cuda'])
-    parser.add_argument('--task_id', type=int, nargs='+', default=range(1,11))
+    parser.add_argument('--task_id', type=int, nargs='+', default=list(task_dataframe.keys()))
     parser.add_argument('--overwrite', type=int, default=0, choices=[0,1])
     parser.add_argument('--gen_mode', type=str, default="image", choices=['text', 'image'])
 
     args = parser.parse_args()
+    
+    # print experiment configuration
+    args_dict = vars(args)
+    print("########"*3)
+    print('## Experiment Setting:')
+    print("########"*3)
+    for key, value in args_dict.items():
+        print(f"| {key}: {value}")
+    
     if len(args.device) == 1: device = args.device[0]
 
     set_seed(args.seed)

@@ -95,6 +95,15 @@ task_dataframe = {
     },
 }
 
+supported_models = [
+    'qwen', 
+    'llava', 
+    'gpt4v', 
+    'emu2', 
+    'emu', 
+    'seed'
+]
+
 google_folder_id = {
     'llava_evaluation_m': '1i21WRLal2Bsi_2QIQdc1Vd427up7g8N6',
     'llava_evaluation_m/detail': '1i70Ulvf81Peqp_Ch6byT5sZjjj7Ws7xl',
@@ -111,3 +120,4 @@ google_folder_id = {
     'exps': '1fEMxOiV4xKhNpVDSTiJCwvobROv9BiNb',
     'datasets': '1XtseQ7TXrJXnms4GDa1zN4h45lDsRiMU',
 }
+

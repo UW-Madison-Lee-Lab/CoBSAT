@@ -76,115 +76,99 @@ def load_model(
             use_dalle = False, 
             **configs,
         )
+        
     elif model == 'qwen':
         if gen_mode != 'text':
             raise ValueError(f"gen_mode {gen_mode} not supported for qwen.")
         
         from load_models.call_qwen import load_qwen, call_qwen
         # sometimes there are some weird errors
-        while True:
-            try:
-                model, tokenizer = load_qwen(device)
-                call_qwen(model, tokenizer)
-                return lambda configs: call_qwen(
-                    model, 
-                    tokenizer, 
-                    **configs
-                )
-            except KeyboardInterrupt:
-                exit()
-            except Exception as e:
-                print(e)
-                continue
+
+        model, tokenizer = load_qwen(device)
+        call_qwen(model, tokenizer)
+        return lambda configs: call_qwen(
+            model, 
+            tokenizer, 
+            **configs
+        )
+            
     elif model == 'llava':
         if gen_mode != 'text':
             raise ValueError(f"gen_mode {gen_mode} not supported for llava.")
         
         from load_models.call_llava import call_llava, load_llava
-        while True:
-            try:
-                tokenizer, llava_model, image_processor, context_len, llava_args = load_llava(device=device)
-                call_llava(
-                    tokenizer,
-                    llava_model,
-                    image_processor,
-                    context_len,
-                    llava_args,
-                    text_inputs = ["Red", "Green", "Yellow"],
-                    image_inputs = [
-                        "https://media.istockphoto.com/id/1189903200/photo/red-generic-sedan-car-isolated-on-white-background-3d-illustration.jpg?s=612x612&w=0&k=20&c=uRu3o_h5FVljLQHS9z0oyz-XjXzzXN_YkyGXwhdMrjs=",
-                        "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
-                    ],
-                    seed = 123,
-                    device = device,
-                )
-                return lambda configs: call_llava(
-                    tokenizer,
-                    llava_model,
-                    image_processor,
-                    context_len,
-                    llava_args,
-                    device = device,
-                    **configs,
-                )
-            except KeyboardInterrupt:
-                exit()
-            except Exception as e:
-                print(e)
-                continue
+
+        tokenizer, llava_model, image_processor, context_len, llava_args = load_llava(device=device)
+        
+        call_llava(
+            tokenizer,
+            llava_model,
+            image_processor,
+            context_len,
+            llava_args,
+            text_inputs = ["Red", "Green", "Yellow"],
+            image_inputs = [
+                "https://media.istockphoto.com/id/1189903200/photo/red-generic-sedan-car-isolated-on-white-background-3d-illustration.jpg?s=612x612&w=0&k=20&c=uRu3o_h5FVljLQHS9z0oyz-XjXzzXN_YkyGXwhdMrjs=",
+                "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
+            ],
+            seed = 123,
+            device = device,
+        )
+        return lambda configs: call_llava(
+            tokenizer,
+            llava_model,
+            image_processor,
+            context_len,
+            llava_args,
+            device = device,
+            **configs,
+        )
+
     elif model == 'emu2':
         from load_models.call_emu2 import load_emu2, call_emu2
-        while True:
-            try:
-                model, tokenizer = load_emu2(device=device, gen_mode = gen_mode)
-                call_emu2(
-                    model, 
-                    tokenizer,
-                    ['Yellow', 'White', 'Black'],
-                    [
-                        f'{root_dir}/models/Emu/Emu2/examples/dog2.jpg',
-                        f'{root_dir}/models/Emu/Emu2/examples/dog3.jpg',
-                    ],
-                    gen_mode = gen_mode,
-                )
-                return lambda configs: call_emu2(
-                    model, 
-                    tokenizer, 
-                    gen_mode = gen_mode,
-                    **configs
-                )
-            except KeyboardInterrupt:
-                exit()
-            except Exception as e:
-                print(e)
-                continue
+
+        model, tokenizer = load_emu2(device=device, gen_mode = gen_mode)
+        
+        call_emu2(
+            model, 
+            tokenizer,
+            ['Yellow', 'White', 'Black'],
+            [
+                f'{root_dir}/models/Emu/Emu2/examples/dog2.jpg',
+                f'{root_dir}/models/Emu/Emu2/examples/dog3.jpg',
+            ],
+            gen_mode = gen_mode,
+        )
+        
+        return lambda configs: call_emu2(
+            model, 
+            tokenizer, 
+            gen_mode = gen_mode,
+            **configs
+        )
+
     elif model == 'gill':
         from load_models.call_gill import load_gill, call_gill
-        while True:
-            try:
-                model, g_cuda = load_gill(device=device)
-                call_gill(
-                    model, 
-                    g_cuda,
-                    text_inputs = ["Red", "Green", "Yellow"],
-                    image_inputs= [
-                        f"{root_dir}/datasets/weather_pig/aurora_pig.jpg",
-                        f"{root_dir}/datasets/weather_pig/hailstorm_pig.jpg"
-                    ],
-                    seed = 123,
-                    gen_mode = gen_mode,
-                )
-                return lambda configs: call_gill(
-                    model, 
-                    g_cuda, 
-                    gen_mode = gen_mode, 
-                    **configs
-                )
-            except KeyboardInterrupt:
-                exit()
-            except Exception as e:
-                print(e)
-                continue
+
+        model, g_cuda = load_gill(device=device)
+        call_gill(
+            model, 
+            g_cuda,
+            text_inputs = ['Yellow', 'White', 'Black'],
+            image_inputs= [
+                f"{root_dir}/models/Emu/Emu2/examples/dog2.jpg",
+                f"{root_dir}/models/Emu/Emu2/examples/dog3.jpg"
+            ],
+            seed = 123,
+            gen_mode = gen_mode,
+        )
+        return lambda configs: call_gill(
+            model, 
+            g_cuda, 
+            gen_mode = gen_mode, 
+            **configs
+        )
+            
     elif model == 'emu':
         from load_models.call_emu import load_emu, call_emu
         model = load_emu(device=device, gen_mode=gen_mode)

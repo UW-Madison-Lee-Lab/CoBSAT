@@ -12,14 +12,9 @@ from models.llava.llava.eval.run_llava import eval_model
 import argparse, pandas as pd
 from helper import set_seed
 from configs import item_dict, task_types, item2word
+from evaluation_icl import get_eval_prompt, check_single_description
     
-def check_caption(task_type, llava_configs):
-    llava_tokenizer = llava_configs['tokenizer']
-    llava_model = llava_configs['model']
-    llava_image_processor = llava_configs['image_processor']
-    llava_context_len = llava_configs['context_len']
-    llava_args = llava_configs['args']
-    llava_device = llava_configs['device']
+def check_text(task_type, llava_configs):
     
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
@@ -32,8 +27,12 @@ def check_caption(task_type, llava_configs):
         folder_path = f"{root_dir}/datasets/{category_space['detail']}_{obj}"
         images = os.listdir(folder_path)
         for image in images:
+            if not image.endswith('jpg'): continue
+            
+            ground_truth = {}
+            ground_truth['detail'], ground_truth['obj'] = image.split('.')[0].split('_')
+            
             try:
-                if image.startswith('.'): continue # skip .DS_Store
                 image_path = f"{folder_path}/{image}"
                 
                 # llava for generating captions
@@ -41,83 +40,28 @@ def check_caption(task_type, llava_configs):
                 caption = eval_model(
                     caption_prompt,
                     [image_path],
-                    llava_tokenizer,
-                    llava_model,
-                    llava_image_processor,
-                    llava_context_len,
-                    llava_args,
-                    device=llava_device,
+                    llava_configs['tokenizer'],
+                    llava_configs['llava_model'],
+                    llava_configs['image_processor'],
+                    llava_configs['context_len'],
+                    llava_configs['llava_args'],
+                    device=llava_configs['device'],
                 )
                 
-                ground_truth = {}
-                ground_truth['detail'], ground_truth['obj'] = image.split('.')[0].split('_')
-                
-                # two prompts
-                prompts = {
-                    'detail': f"Image caption: {caption}. What is the {category_space['detail']} (of the main object) in the image based on the description? Answer from the following options: ",
-                    'obj': f"Image caption: {caption}. What is the main object in this image based on the description? Answer from the following options: ",
-                } 
-                
-                checks, options, response, true_labels = {}, {}, {}, {}
-                for mode in prompts:
-                    for i, item in enumerate(item_list[mode]):
-                        prompts[mode] += f" ({i+1}){item2word.get(item, item)}"
-                    prompts[mode] += ". Answer the number only and do not include any other texts (e.g., 1)."
-                    
-                    response[mode] = eval_model(
-                        prompts[mode],
-                        [],
-                        llava_tokenizer,
-                        llava_model,
-                        llava_image_processor,
-                        llava_context_len,
-                        llava_args,
-                        device=llava_device,
-                    )
-                    
-                    try:
-                        options[mode] = int(''.join(filter(str.isdigit, response[mode])))
-                    except KeyboardInterrupt:
-                        exit()
-                    except Exception as e:
-                        print(e)
-                        
-                        options[mode] = -1
-                        checks[mode] = False
-                        continue
-                    
-                    true_labels[mode] = item_list[mode].index(ground_truth[mode])+1
-                    
-                    if options[mode] == true_labels[mode]: 
-                        checks[mode] = True
-                    else:
-                        checks[mode] = False
-                        
-                row = {
-                    'image': image,
-                    'caption': caption,
-                    'prompt_detail': prompts['detail'],
-                    'prompt_obj': prompts['obj'],
-                    'ground_truth_detail': ground_truth['detail'],
-                    'ground_truth_obj': ground_truth['obj'],
-                    'response_detail': response['detail'],
-                    'response_obj': response['obj'],
-                    'true_label_detail': true_labels['detail'],
-                    'true_label_obj': true_labels['obj'],
-                    'answer_detail': options['detail'],
-                    'answer_obj': options['obj'],
-                    'check_detail': checks['detail'],
-                    'check_obj': checks['obj'],
-                    'correct': checks['detail'] and checks['obj'],
-                }
-                result_df.append(row)
-                print(row)
+                row = check_single_description(
+                    task_type,
+                    image,
+                    caption,
+                    ground_truth,
+                    llava_configs,
+                )
             
             except KeyboardInterrupt:
                 exit()
             except Exception as e:
-                print(e)
+                print(f"Exception occurred: {type(e).__name__}, {e.args}")
                 print(image)
+                
                 row = {
                     'image': image,
                     'caption': None,
@@ -133,11 +77,13 @@ def check_caption(task_type, llava_configs):
                     'check_obj': None,
                     'correct': None,
                 }
-                result_df.append(row)
+                
+            print(row)
+            result_df.append(row)
             
             
     result_df = pd.DataFrame(result_df)
-    df_path = f"{root_dir}/results/checks/caption/{task_type}.csv"
+    df_path = f"{root_dir}/results/checks/text/{task_type}.csv"
     os.makedirs(os.path.dirname(df_path), exist_ok=True)
     result_df.to_csv(df_path)
         
@@ -156,6 +102,7 @@ def check_image(task_type, llava_configs):
         'obj': item_dict[category_space['obj']],
         'detail': item_dict[category_space['detail']],
     }
+    
     result_df = []
     for obj in item_list['obj']:
         folder_path = f"{root_dir}/datasets/{category_space['detail']}_{obj}"
@@ -169,17 +116,14 @@ def check_image(task_type, llava_configs):
                 ground_truth['detail'], ground_truth['obj'] = image.split('.')[0].split('_')
                 
                 # two prompts
-                prompts = {
-                    'detail': f"What is the {category_space['detail']} (of the main object) in this image? Answer from the following options: ",
-                    'obj': f"What is the main object in this image? Answer from the following options: ",
-                } 
+                prompts = get_eval_prompt(
+                    task_type,
+                    'image',
+                    None,
+                )
                 
                 checks, options, response, true_labels = {}, {}, {}, {}
                 for mode in prompts:
-                    for i, item in enumerate(item_list[mode]):
-                        prompts[mode] += f" ({i+1}){item2word.get(item, item)}"
-                    prompts[mode] += ". Answer the number only and do not include any other texts (e.g., 1)."
-                    
                     # llava
                     response[mode] = eval_model(
                         prompts[mode],
@@ -197,7 +141,7 @@ def check_image(task_type, llava_configs):
                     except KeyboardInterrupt:
                         exit()
                     except Exception as e:
-                        print(e)
+                        print(f"Exception occurred: {type(e).__name__}, {e.args}")
                         
                         options[mode] = -1
                         checks[mode] = False
@@ -232,7 +176,7 @@ def check_image(task_type, llava_configs):
             except KeyboardInterrupt:
                 exit()
             except Exception as e:
-                print(e)
+                print(f"Exception occurred: {type(e).__name__}, {e.args}")
                 print(image)
                 row = {
                     'image': image,
@@ -257,7 +201,7 @@ def check_image(task_type, llava_configs):
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate image descriptions for the dataset')
-    parser.add_argument('--mode', type=str, default = 'image', help='what check to do', choices = ['image', 'caption'])
+    parser.add_argument('--mode', type=str, default = 'image', help='what check to do', choices = ['image', 'text'])
     parser.add_argument('--task_type', type=str, nargs='+', default = task_types, help='what task to check', choices = task_types)
     parser.add_argument('--device', type=str, default = 'cuda:0', help='what device to use')
     
@@ -268,16 +212,16 @@ if '__main__' == __name__:
 
     llava_configs = {
         'tokenizer': llava_tokenizer,
-        'model': llava_model,
+        'llava_model': llava_model,
         'image_processor': llava_image_processor,
         'context_len': llava_context_len,
-        'args': llava_args,
+        'llava_args': llava_args,
         'device': args.device,
     }
     
-    if args.mode == 'caption':
+    if args.mode == 'text':
         for task_type in args.task_type:
-            check_caption(task_type, llava_configs)
+            check_text(task_type, llava_configs)
     elif args.mode == 'image':
         for task_type in args.task_type:
             check_image(task_type, llava_configs)
