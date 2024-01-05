@@ -84,7 +84,7 @@ def load_emu2(
             )
             
         pipe.to(device)
-        return pipe
+        return pipe, None
     else:
         raise NotImplementedError(f'gen_mode {gen_mode} not implemented.')
 
