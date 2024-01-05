@@ -98,7 +98,7 @@ def call_emu2(
     ],
     seed = 123,
     gen_mode = 'text',
-    instruction = "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, weather, action, style, if applicable. ",
+    instruction = "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
 ):
     set_seed(seed)
     

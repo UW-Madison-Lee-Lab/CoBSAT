@@ -24,7 +24,7 @@ def call_qwen(
         "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
     ],
     seed = 123,
-    instruction = "\nBased on the sequence, describe the next image clearly, including details such as the main object, color, texture, weather, action, style, if applicable. ",
+    instruction = "\nBased on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
 ):
     set_seed(seed)
     
