@@ -62,7 +62,7 @@ def check_caption(task_type, llava_configs):
                 for mode in prompts:
                     for i, item in enumerate(item_list[mode]):
                         if item in image:
-                            prompts[mode] += f"({i+1}){item2word.get(item, item)}"
+                            prompts[mode] += f" ({i+1}){item2word.get(item, item)}"
                     prompts[mode] += ". Answer the number only and do not include any other texts (e.g., 1)."
                     
                     response[mode] = eval_model(
@@ -178,7 +178,7 @@ def check_image(task_type, llava_configs):
                 checks, options, response, true_labels = {}, {}, {}, {}
                 for mode in prompts:
                     for i, item in enumerate(item_list[mode]):
-                        prompts[mode] += f"({i+1}){item2word.get(item, item)}"
+                        prompts[mode] += f" ({i+1}){item2word.get(item, item)}"
                     prompts[mode] += ". Answer the number only and do not include any other texts (e.g., 1)."
                     
                     # llava

@@ -7,7 +7,7 @@ task_types = [
 ]
 
 item2word = {
-    '3d': 'three-dimensional rendering',
+    '3d': 'wireframe',
     'park': 'amusement park',
 }
 
@@ -109,5 +109,5 @@ google_folder_id = {
     'gpt_evaluation': '10m4m8G-qv4s-JUEP0h7Mo0MFdnHFNGJA',
     'gpt_evaluation/detail': '1r3WTYpSqOPYyu_2MW1ilXs6IFlX5AcAQ',
     'exps': '1fEMxOiV4xKhNpVDSTiJCwvobROv9BiNb',
-    'datasets': '1mCmuB1IPb6Ht_ZZLfPjip4DCh-cWzO9D',
+    'datasets': '1igD96VWn8GQs5ey1qwPa65ddy6FAx0ua',
 }
