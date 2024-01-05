@@ -44,7 +44,7 @@ def inference(
             print(f"{text_inputs[i]}")
 
         # skip if file exists
-        if not overwrite and os.path.exists(save_path):
+        if not overwrite and os.path.exists(save_path+'.json'):
             print('skip')
             continue
 

@@ -73,7 +73,7 @@ def load_dataset(
             task_dataframe[task_id]["x_list"],
             task_dataframe[task_id]["theta_list"],
         )
-        input_dict['save_path'] = f"{i}_{input_dict['theta']}_{'_'.join(input_dict['x_list'])}.json"
+        input_dict['save_path'] = f"{i}_{input_dict['theta']}_{'_'.join(input_dict['x_list'])}"
         data_loader.append(input_dict)
     print('Done!')
     print("========"*3)
