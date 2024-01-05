@@ -24,12 +24,12 @@ def call_qwen(
         "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
     ],
     seed = 123,
-    instruction = "\nBased on the sequence, predict and describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+    instruction = "\nBased on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss.",
 ):
     set_seed(seed)
     
     # get prompt
-    messages = []
+    messages = [{'text': 'You are a professional assistant and always answer my question directly and perfectly without any excuses.'}]
     for i in range(len(text_inputs)):
         messages.append({'text': text_inputs[i]})
         if i < len(text_inputs) - 1:
