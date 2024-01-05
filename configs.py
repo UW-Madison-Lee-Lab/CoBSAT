@@ -16,7 +16,7 @@ item_dict = {
     'object': ['leaf', 'hat', 'cup', 'chair', 'car', 'box', 'book', 'ball', 'bag', 'apple'],
     'weather': ['tornado', 'thunder', 'sunny', 'snowy', 'sandstorm', 'rainy', 'rainbow', 'hailstorm', 'foggy', 'aurora'],
     'animal': ['zebra', 'tiger', 'sheep', 'pig', 'monkey', 'lion', 'dog', 'cow', 'cat', 'bird'],
-    'style': ['watercolor', 'sketch', 'pixel', 'origami', 'lego', 'icon', 'graffiti', 'futuristic', '3d', 'steampunk'],
+    'style': ['watercolor', 'sketch', 'pixel', 'origami', 'lego', 'icon', 'graffiti', 'futuristic', '3d', 'old'],
     'action': ['swim', 'sleep', 'sing', 'run', 'read', 'fly', 'eat', 'drink', 'cry', 'angry'],
     'background': ['beach', 'desert', 'glacier', 'volcano', 'park', 'gym', 'waterfall', 'space', 'cave', 'seafloor'],
     'texture': ['wood', 'wicker', 'sequined', 'plastic', 'paper', 'metal', 'leather', 'lace', 'denim', 'ceramic'],
