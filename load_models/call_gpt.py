@@ -49,9 +49,9 @@ def prompt_image_eval(
     image_inputs,
     mode,
     image_input_detail,
-    instruction,
 ):    
-    contents = [instruction]
+    instruction = "I will provide you with a few examples with text and images. Complete the example with the description of the next image. The description should be clear with main object, and include details such as color, texture, background, style, and action, if applicable. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. "
+    contents = [process_text(instruction)]
     
     for i in range(len(text_inputs)):
         contents.append(process_text(text_inputs[i]))
@@ -81,7 +81,6 @@ def call_gpt4v(
     image_output_size: Literal["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"] = "1024x1024",
     image_output_quality:  Literal['hd', 'standard'] = 'standard',
     seed = 123,
-    instruction = "I will provide you with a few examples with text and images. Complete the example with the description of the next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
 ):
     
     if len(text_inputs) != (len(image_inputs)+1):
@@ -96,7 +95,6 @@ def call_gpt4v(
         image_inputs, 
         mode,
         image_input_detail,
-        instruction,
     )
     
     # Call GPT-4V to generate text description 
