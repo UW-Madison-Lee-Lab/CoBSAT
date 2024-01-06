@@ -51,17 +51,17 @@ def call_llava(
     ],
     seed = 123,
     device = 'cuda',
-    instruction = "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
 ):
 
     set_seed(seed)
     
+    # prompt = "I will provide you with a few examples with text and images. Complete the example with the description of the next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. "
     prompt = ''
     for i in range(len(text_inputs)):
         prompt = prompt + text_inputs[i]
         if i < len(text_inputs) - 1:
             prompt = prompt + "<image-placeholder>"
-    prompt = prompt + instruction
+    prompt = prompt + "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. "
 
     output_dict = {}
     llava_start = time()
