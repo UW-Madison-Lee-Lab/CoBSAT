@@ -51,7 +51,7 @@ def call_llava(
     ],
     seed = 123,
     device = 'cuda',
-    instruction = "\nBased on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+    instruction = "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
 ):
 
     set_seed(seed)
