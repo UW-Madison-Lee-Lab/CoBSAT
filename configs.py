@@ -101,7 +101,8 @@ supported_models = [
     'gpt4v', 
     'emu2', 
     'emu', 
-    'seed'
+    'seed',
+    'gill',
 ]
 
 google_folder_id = {
