@@ -130,49 +130,66 @@ def check_single_image(
     )
     
     checks, options, response, true_labels = {}, {}, {}, {}
-    for mode in prompts:
-        
-        response[mode] = eval_llava(
-            prompts[mode],
-            [file_path],
-            llava_configs['tokenizer'],
-            llava_configs['llava_model'],
-            llava_configs['image_processor'],
-            llava_configs['context_len'],
-            llava_configs['llava_args'],
-            device=llava_configs['device'],
-        )
-        
-        response_number = ''.join(filter(str.isdigit, response[mode]))
-        if response_number:
-            options[mode] = int(response_number)
-        else:
-            options[mode] = -1
-        
-        true_labels[mode] = item_list[mode].index(ground_truth[mode])+1
-        
-        if options[mode] == true_labels[mode]: 
-            checks[mode] = True
-        else:
-            checks[mode] = False
+    if not os.path.exists(file_path):
+        row = {
+            'file_path': file_path,
+            'prompt_detail': None,
+            'prompt_obj': None,
+            'ground_truth_detail': None,
+            'ground_truth_obj': None,
+            'response_detail': None,
+            'response_obj': None,
+            'true_label_detail': None,
+            'true_label_obj': None,
+            'answer_detail': None,
+            'answer_obj': None,
+            'check_detail': 0,
+            'check_obj': 0,
+            'correct': False,
+        }
+    else:
+        for mode in prompts:
+            response[mode] = eval_llava(
+                prompts[mode],
+                [file_path],
+                llava_configs['tokenizer'],
+                llava_configs['llava_model'],
+                llava_configs['image_processor'],
+                llava_configs['context_len'],
+                llava_configs['llava_args'],
+                device=llava_configs['device'],
+            )
             
-    row = {
-        'file_path': file_path,
-        'prompt_detail': prompts['detail'],
-        'prompt_obj': prompts['obj'],
-        'ground_truth_detail': ground_truth['detail'],
-        'ground_truth_obj': ground_truth['obj'],
-        'response_detail': response['detail'],
-        'response_obj': response['obj'],
-        'true_label_detail': true_labels['detail'],
-        'true_label_obj': true_labels['obj'],
-        'answer_detail': options['detail'],
-        'answer_obj': options['obj'],
-        'check_detail': checks['detail'],
-        'check_obj': checks['obj'],
-        'correct': checks['detail'] and checks['obj'],
-    }
-    
+            response_number = ''.join(filter(str.isdigit, response[mode]))
+            if response_number:
+                options[mode] = int(response_number)
+            else:
+                options[mode] = -1
+            
+            true_labels[mode] = item_list[mode].index(ground_truth[mode])+1
+            
+            if options[mode] == true_labels[mode]: 
+                checks[mode] = True
+            else:
+                checks[mode] = False
+                
+        row = {
+            'file_path': file_path,
+            'prompt_detail': prompts['detail'],
+            'prompt_obj': prompts['obj'],
+            'ground_truth_detail': ground_truth['detail'],
+            'ground_truth_obj': ground_truth['obj'],
+            'response_detail': response['detail'],
+            'response_obj': response['obj'],
+            'true_label_detail': true_labels['detail'],
+            'true_label_obj': true_labels['obj'],
+            'answer_detail': options['detail'],
+            'answer_obj': options['obj'],
+            'check_detail': checks['detail'],
+            'check_obj': checks['obj'],
+            'correct': checks['detail'] and checks['obj'],
+        }
+        
     return row
 
 def eval(
@@ -355,6 +372,7 @@ if '__main__' == __name__:
     parser.add_argument('--wandb', type = int, default = 1, help = 'whether log the results using wandb', choices = [0,1])
     parser.add_argument('--overwrite', type = int, default = 0, help = 'whether overwrite the existing results', choices = [0,1])
     parser.add_argument('--eval_mode', type = str, default = 'text', help = 'evaluation mode', choices = ['text', 'image'])
+    parser.add_argument('--max_file_count', type = int, default = 1000, help = 'max file count')
     
     args = parser.parse_args()
     
@@ -386,7 +404,7 @@ if '__main__' == __name__:
                     args.model,
                     llava_configs,
                     args.seed,
-                    max_file_count = 1000,
+                    max_file_count = args.max_file_count,
                     log_wandb = args.wandb,
                     overwrite = args.overwrite,
                     eval_mode = args.eval_mode,

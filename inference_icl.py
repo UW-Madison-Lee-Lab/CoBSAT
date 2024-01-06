@@ -18,6 +18,7 @@ def inference(
     task_id,
     overwrite,
     gen_mode,
+    max_file_count,
 ):
     misleading_flag = "_m" if misleading else ""
     base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}{misleading_flag}"
@@ -107,7 +108,6 @@ if '__main__' == __name__:
     if len(args.device) == 1: device = args.device[0]
 
     set_seed(args.seed)
-    max_file_count = args.max_file_count
     call_model = load_model(
         args.model, 
         device, 
@@ -125,4 +125,5 @@ if '__main__' == __name__:
                     task_id,
                     args.overwrite,
                     args.gen_mode,
+                    args.max_file_count,
                 )
