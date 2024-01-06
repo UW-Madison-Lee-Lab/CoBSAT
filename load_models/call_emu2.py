@@ -13,6 +13,8 @@ from time import time
 from environment import EMU2_PATH, EMU2_GEN_PATH
 from diffusers import DiffusionPipeline
 
+from models.Emu.Emu2.emu.diffusion import EmuVisualGeneration
+
 def load_emu2(
     device = ['cuda:0', 'cuda:1', 'cuda:2'],
     gen_mode = 'text',
@@ -49,6 +51,15 @@ def load_emu2(
         return model, tokenizer
     
     elif gen_mode == 'image':
+        """
+        pipe = EmuVisualGeneration.from_pretrained(
+                EMU2_GEN_PATH + '/safety_checker/model.bf16.safetensors',
+                dtype=torch.bfloat16,
+                use_safetensors=True,
+        )
+        pipe = pipe.multito(device)
+        """
+        
         if isinstance(device, list): # multi-gpu
             raise NotImplementedError(f'Emu2: gen_mode {gen_mode} not implemented for multi-gpu cases.')
             
@@ -82,7 +93,8 @@ def load_emu2(
                 multimodal_encoder=multimodal_encoder,
                 tokenizer=tokenizer,
             )
-            
+        
+
         pipe.to(device)
         return pipe, None
     else:
