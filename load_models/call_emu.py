@@ -133,11 +133,12 @@ def call_emu(
             guidance_scale=10.,
         )
         output_dict['description'] = "null"
+        output_dict['image'] = image
 
         emu_end = time()
         output_dict['time'] = emu_end - emu_start
 
-        return output_dict, image
+        return output_dict
 
     elif gen_mode == 'text':
 
