@@ -3,12 +3,14 @@
 import os, sys, json
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
+from environment import EMU_IMAGE_PATH, EMU_TEXT_PATH
 sys.path.append(os.path.join(root_dir, 'models/Emu/Emu1'))
 
 from models.modeling_emu import Emu
 from models.pipeline import EmuGenerationPipeline
 
-from utils import process_img, process_video
+from utils import process_img
+
 
 import torch
 from helper import set_seed
@@ -49,11 +51,11 @@ def load_emu(
     if gen_mode == 'text':
         args = type('Args', (), {
             "instruct": True,
-            "ckpt_path": "/pvc/ceph-block-kangwj1995/wisconsin/Emu/Emu/Emu-instruct.pt", ####
+            "ckpt_path": EMU_TEXT_PATH, # "/pvc/ceph-block-kangwj1995/wisconsin/Emu/Emu/Emu-instruct.pt", ####
             "device": torch.device(device),
         })()
 
-        with open(f'models/Emu/Emu1/models/Emu-14B.json', "r", encoding="utf8") as f:
+        with open(f'{root_dir}/models/Emu/Emu1/models/Emu-14B.json', "r", encoding="utf8") as f:
             model_cfg = json.load(f)
         print(f"=====> model_cfg: {model_cfg}")
 
@@ -86,7 +88,7 @@ def load_emu(
     elif gen_mode == 'image':
         args = type('Args', (), {
             "instruct": False,
-            "ckpt_path": "/pvc/ceph-block-kangwj1995/wisconsin/Emu/Emu/pretrain", ####
+            "ckpt_path": EMU_IMAGE_PATH, # "/pvc/ceph-block-kangwj1995/wisconsin/Emu/Emu/pretrain", ####
             "device": torch.device(device),
         })()
 
@@ -100,10 +102,10 @@ def load_emu(
 
 def call_emu(
     emu_model, 
-    text_inputs = ["Red", "Green", "Yellow"],
+    text_inputs = ['Yellow', 'White', 'Black'],
     image_inputs = [
-        "/data/yzeng58/micl/datasets/weather_pig/aurora_pig.jpg",
-        "/data/yzeng58/micl/datasets/weather_pig/hailstorm_pig.jpg"
+        f'{root_dir}/models/Emu/Emu2/examples/dog2.jpg',
+        f'{root_dir}/models/Emu/Emu2/examples/dog3.jpg',
     ],
     seed = 123,
     gen_mode = 'text',

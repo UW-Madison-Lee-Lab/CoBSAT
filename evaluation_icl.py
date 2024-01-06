@@ -219,6 +219,12 @@ def eval(
             'obj': 'theta', 'detail': 'x',
         }
     
+    misleading_flag = "_m" if misleading else ""
+    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{misleading_flag}/task_{task_id}_summary.csv"
+    if os.path.exists(csv_file_path) and not overwrite:
+        print('The evaluation results already exist.')
+        return
+    
     if log_wandb:
         wandb.init(
             project = 'micl',
@@ -236,12 +242,6 @@ def eval(
                 'theta_space': task_dataframe[task_id]['theta_space'],
             },
         )
-        
-    misleading_flag = "_m" if misleading else ""
-    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{misleading_flag}/task_{task_id}_summary.csv"
-    if os.path.exists(csv_file_path) and not overwrite:
-        print('The evaluation results already exist.')
-        return
         
     set_seed(seed)
     
