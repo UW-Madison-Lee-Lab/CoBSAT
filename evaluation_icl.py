@@ -365,7 +365,7 @@ if '__main__' == __name__:
     parser = argparse.ArgumentParser(description = 'Evaluate the results using LLaVA.')
     parser.add_argument('--model', type = str, default = 'qwen', choices = supported_models, help = 'model')
     parser.add_argument('--task_id', type = int, nargs = '+', default = list(task_dataframe.keys()), help = 'task id')
-    parser.add_argument('--shot', type = int, nargs = '+', default = [4,6,8], help = 'shot')
+    parser.add_argument('--shot', type = int, nargs = '+', default = [2,4,6,8], help = 'shot')
     parser.add_argument('--misleading', type = int, nargs = '+', default = [0,1], help = 'misleading', choices = [0,1])
     parser.add_argument('--device', type = str, default = 'cuda', help = 'device')
     parser.add_argument('--seed', type = int, default = 123, help = 'seed')
