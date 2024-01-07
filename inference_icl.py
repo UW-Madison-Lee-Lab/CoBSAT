@@ -105,7 +105,10 @@ if '__main__' == __name__:
     for key, value in args_dict.items():
         print(f"| {key}: {value}")
     
-    if len(args.device) == 1: device = args.device[0]
+    if len(args.device) == 1: 
+        device = args.device[0]
+    else:
+        device = args.device
 
     set_seed(args.seed)
     call_model = load_model(

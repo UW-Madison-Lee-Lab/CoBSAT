@@ -21,18 +21,18 @@ def load_emu2(
 ):  
     if gen_mode == 'text':
         
-        tokenizer = AutoTokenizer.from_pretrained("BAAI/Emu2") # "BAAI/Emu2-Chat"
+        tokenizer = AutoTokenizer.from_pretrained("BAAI/Emu2-Chat") # "BAAI/Emu2-Chat"
 
         if isinstance(device, str): # single-gpu
             model = AutoModelForCausalLM.from_pretrained(
-                "BAAI/Emu2", # "BAAI/Emu2-Chat"
+                "BAAI/Emu2-Chat", # "BAAI/Emu2-Chat"
                 torch_dtype=torch.bfloat16,
                 low_cpu_mem_usage=True,
                 trust_remote_code=True).to(device).eval()
         elif isinstance(device, list):  # multi-gpu 
             with init_empty_weights():
                 model = AutoModelForCausalLM.from_pretrained(
-                    "BAAI/Emu2", # "BAAI/Emu2-Chat"
+                    "BAAI/Emu2-Chat", # "BAAI/Emu2-Chat"
                     torch_dtype=torch.bfloat16,
                     low_cpu_mem_usage=True,
                     trust_remote_code=True)  
