@@ -10,7 +10,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from accelerate import init_empty_weights, infer_auto_device_map, load_checkpoint_and_dispatch
 from time import time
-from environment import EMU2_PATH, EMU2_GEN_PATH
+from environment import EMU2_CHAT_PATH, EMU2_GEN_PATH
 from diffusers import DiffusionPipeline
 
 from models.Emu.Emu2.emu.diffusion import EmuVisualGeneration
@@ -45,7 +45,7 @@ def load_emu2(
 
             model = load_checkpoint_and_dispatch(
                 model, 
-                EMU2_PATH,
+                EMU2_CHAT_PATH,
                 device_map=device_map).eval()
         
         return model, tokenizer

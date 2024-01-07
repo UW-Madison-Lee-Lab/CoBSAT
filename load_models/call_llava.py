@@ -75,6 +75,7 @@ def call_llava(
         llava_args, 
         device = device,
     )
+
     llava_end = time()
     output_dict['time'] = llava_end - llava_start
 
