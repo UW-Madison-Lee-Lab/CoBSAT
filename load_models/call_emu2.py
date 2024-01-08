@@ -16,7 +16,7 @@ from diffusers import DiffusionPipeline
 from models.Emu.Emu2.emu.diffusion import EmuVisualGeneration
 
 def load_emu2(
-    device = ['cuda:0', 'cuda:1', 'cuda:2'],
+    device = {0: '30GiB', 1: '25GiB', 2: '40GiB'},
     gen_mode = 'text',
 ):  
     if gen_mode == 'text':
@@ -29,15 +29,13 @@ def load_emu2(
                 torch_dtype=torch.bfloat16,
                 low_cpu_mem_usage=True,
                 trust_remote_code=True).to(device).eval()
-        elif isinstance(device, list):  # multi-gpu 
+        elif isinstance(device, dict):  # multi-gpu 
             with init_empty_weights():
                 model = AutoModelForCausalLM.from_pretrained(
                     "BAAI/Emu2-Chat", # "BAAI/Emu2-Chat"
                     torch_dtype=torch.bfloat16,
                     low_cpu_mem_usage=True,
                     trust_remote_code=True)  
-                
-            device = {int(i[5:]):'30GiB' for i in device}
 
             device_map = infer_auto_device_map(model, max_memory=device, no_split_module_classes=['Block','LlamaDecoderLayer'])  
             # input and output logits should be on same device

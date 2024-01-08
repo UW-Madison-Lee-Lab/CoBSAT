@@ -90,7 +90,7 @@ if '__main__' == __name__:
     parser.add_argument('--model', type=str, default="qwen", choices = supported_models)
     parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)
-    parser.add_argument('--device', nargs='+', type=str, default=['cuda'])
+    parser.add_argument('--device', nargs='+', type=str, default=['cuda']) # or ['35GiB', '25GiB', '35GiB']
     parser.add_argument('--task_id', type=int, nargs='+', default=list(task_dataframe.keys()))
     parser.add_argument('--overwrite', type=int, default=0, choices=[0,1])
     parser.add_argument('--gen_mode', type=str, default="image", choices=['text', 'image'])
@@ -108,7 +108,9 @@ if '__main__' == __name__:
     if len(args.device) == 1: 
         device = args.device[0]
     else:
-        device = args.device
+        device = {}
+        for i in range(len(args.device)):
+            device[i] = args.device[i]
 
     set_seed(args.seed)
     call_model = load_model(
