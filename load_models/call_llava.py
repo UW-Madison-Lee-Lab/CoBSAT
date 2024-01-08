@@ -4,11 +4,10 @@ import os, sys
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
 from helper import set_seed
-sys.path.append(f"{root_dir}/models/llava")
-from llava.model.builder import load_pretrained_model
-from llava.eval.run_llava import eval_model
-from llava.mm_utils import get_model_name_from_path
-from llava.utils import disable_torch_init
+from models.llava.llava.model.builder import load_pretrained_model
+from models.llava.llava.eval.run_llava import eval_model
+from models.llava.llava.mm_utils import get_model_name_from_path
+from models.llava.llava.utils import disable_torch_init
 from time import time
 
 
