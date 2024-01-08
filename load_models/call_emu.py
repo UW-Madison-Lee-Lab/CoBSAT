@@ -25,8 +25,6 @@ def Emu_inference(emu_model, image_list, text_sequence, system='', instruct=True
     else:
         prompt = text_sequence
 
-    print(f"===> prompt: {prompt}")
-
     samples = {"image": torch.cat(image_list, dim=0), "prompt": prompt}
 
     output_text = emu_model.generate(
@@ -36,8 +34,6 @@ def Emu_inference(emu_model, image_list, text_sequence, system='', instruct=True
         length_penalty=length_penalty,
         repetition_penalty=1.0,
     )[0].strip()
-
-    print(f"===> output: {output_text}\n")
 
     return output_text
 
@@ -111,7 +107,7 @@ def call_emu(
     seed = 123,
     gen_mode = 'text',
     device = 'cuda',
-    instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+    instruction = "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
 ):
     set_seed(seed)
     
