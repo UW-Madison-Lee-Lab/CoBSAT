@@ -46,9 +46,16 @@ def inference(
             print(f"{text_inputs[i]}")
 
         # skip if file exists
-        if not overwrite and os.path.exists(save_path+'.json'):
-            print('skip')
-            continue
+        if gen_mode == 'text':
+            if not overwrite and os.path.exists(save_path+'.json'):
+                print('skip')
+                continue
+        elif gen_mode == 'image':
+            if not overwrite and os.path.exists(save_path+'.jpg'):
+                print('skip')
+                continue
+        else:
+            raise NotImplementedError(f"Unknown gen_mode: {gen_mode}!")
 
         # for avoid unexpected error and retry the same prompt at most 10 times
         # normally it should not happen, but it happens for some models
