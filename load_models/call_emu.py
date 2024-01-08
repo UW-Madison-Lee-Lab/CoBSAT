@@ -3,7 +3,7 @@
 import os, sys, json
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
-from environment import EMU_IMAGE_PATH, EMU_TEXT_PATH
+from environment import EMU_IMAGE_PATH, EMU_TEXT_PATH, EMU_INSTRUCT_PATH
 sys.path.append(os.path.join(root_dir, 'models/Emu/Emu1'))
 
 from models.modeling_emu import Emu
@@ -47,11 +47,12 @@ def load_emu(
     device = 'cuda',
     seed = 123,
     gen_mode = 'image',
+    instruct = True
 ):
     if gen_mode == 'text':
         args = type('Args', (), {
-            "instruct": True,
-            "ckpt_path": EMU_TEXT_PATH, # "/pvc/ceph-block-kangwj1995/wisconsin/Emu/Emu/Emu-instruct.pt", ####
+            "instruct": instruct,
+            "ckpt_path": EMU_INSTRUCT_PATH if instruct else EMU_TEXT_PATH,
             "device": torch.device(device),
         })()
 
@@ -161,7 +162,13 @@ def call_emu(
         output_dict = {}
         emu_start = time()
 
-        output_dict['description'] = Emu_inference(emu_model, image_list, interleaved_sequence, instruct=True, system=instruction)
+        output_dict['description'] = Emu_inference(
+            emu_model, 
+            image_list, 
+            interleaved_sequence, 
+            system=instruction,
+            instruct=True, 
+        )
         emu_end = time()
         output_dict['time'] = emu_end - emu_start
 
