@@ -96,7 +96,7 @@ def load_model(
         if gen_mode != 'text':
             raise ValueError(f"gen_mode {gen_mode} not supported for llava.")
         
-        from load_models.call_llava import call_llava, load_llava
+        from load_models.call_llava import load_llava, call_llava
 
         tokenizer, llava_model, image_processor, context_len, llava_args = load_llava(device=device)
         
