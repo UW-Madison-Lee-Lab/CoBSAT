@@ -24,6 +24,7 @@ item_dict = {
 
 task_dataframe = {
     1: {
+        'task_name': 'Color-I',
         'task_type': 'color_object',
         'x_space': 'color',
         'theta_space': 'object',
@@ -31,6 +32,7 @@ task_dataframe = {
         'theta_list': item_dict['object'],
     },
     2: {
+        'task_name': 'Color-II',
         'task_type': 'color_object',
         'x_space': 'object',
         'theta_space': 'color',
@@ -38,6 +40,7 @@ task_dataframe = {
         'theta_list': item_dict['color'],
     },
     3: {
+        'task_name': 'Background-I',
         'task_type': 'background_animal',
         'x_space': 'background',
         'theta_space': 'animal',
@@ -45,6 +48,7 @@ task_dataframe = {
         'theta_list': item_dict['animal'],
     },
     4: {
+        'task_name': 'Background-II',
         'task_type': 'background_animal',
         'x_space': 'animal',
         'theta_space': 'background',
@@ -52,6 +56,7 @@ task_dataframe = {
         'theta_list': item_dict['background'],
     },
     5: {
+        'task_name': 'Style-I',
         'task_type': 'style_object',
         'x_space': 'style',
         'theta_space': 'object',
@@ -59,6 +64,7 @@ task_dataframe = {
         'theta_list': item_dict['object'],
     },
     6: {
+        'task_name': 'Style-II',
         'task_type': 'style_object',
         'x_space': 'object',
         'theta_space': 'style',
@@ -66,6 +72,7 @@ task_dataframe = {
         'theta_list': item_dict['style'],
     },
     7: {
+        'task_name': 'Action-I',
         'task_type': 'action_animal',
         'x_space': 'action',
         'theta_space': 'animal',
@@ -73,6 +80,7 @@ task_dataframe = {
         'theta_list': item_dict['animal'],
     },
     8: {
+        'task_name': 'Action-II',
         'task_type': 'action_animal',
         'x_space': 'animal',
         'theta_space': 'action',
@@ -80,6 +88,7 @@ task_dataframe = {
         'theta_list': item_dict['action'],
     },
     9: {
+        'task_name': 'Texture-I',
         'task_type': 'texture_object',
         'x_space': 'texture',
         'theta_space': 'object',
@@ -87,6 +96,7 @@ task_dataframe = {
         'theta_list': item_dict['object'],
     },
     10: {
+        'task_name': 'Texture-II',
         'task_type': 'texture_object',
         'x_space': 'object',
         'theta_space': 'texture',
