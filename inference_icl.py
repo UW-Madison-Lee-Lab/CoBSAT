@@ -1,109 +1,143 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-from PIL import Image
-import torch
-from tqdm import notebook
+import os, argparse
+from load_model import load_model
+root_dir = os.path.dirname(os.path.abspath(__file__))
 
-from gill import models
-from gill import utils
+from helper import save_json, read_json, set_seed
+from load_dataset import load_dataset
+from environment import TRANSFORMER_CACHE
+os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
+from configs import task_dataframe, supported_models
 
-# Download the model checkpoint and embeddings to checkpoints/gill_opt/
-model_dir = 'checkpoints/gill_opt/'
-model = models.load_gill(model_dir)
-model.sd_pipe.safety_checker = None
+prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list.json")
 
-g_cuda = torch.Generator(device='cuda').manual_seed(1337)
+def inference(
+    model,
+    call_model,
+    shot,
+    misleading,
+    task_id,
+    overwrite,
+    gen_mode,
+    max_file_count,
+):
+    misleading_flag = "_m" if misleading else ""
+    base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}{misleading_flag}"
+    
+    folder_path = f"{base_path}/task_{task_id}"
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    
+    data_loader = load_dataset(
+        shot,
+        misleading,
+        task_id,
+        max_file_count,
+    )
+    
+    for count in range(max_file_count):
 
-def get_result(prompt, name):
-  return_outputs = model.generate_for_images_and_texts(
-      prompt, num_words=2, ret_scale_factor=100.0, generator=g_cuda)
+        input_dict = data_loader[count]
+        text_inputs, image_inputs = input_dict["text_inputs"], input_dict["image_inputs"]
+        save_path = f"{folder_path}/{input_dict['save_path']}"
+        
+        print(f"===={count}-th sample====")
+        print(f"theta: {input_dict['theta']}")
+        for i in range(shot+1):
+            print(f"{text_inputs[i]}")
 
-  if return_outputs[1]['decision'][0] == 'gen':
-      im = return_outputs[1]['gen'][0][0]
-      im.save(name)
-  else:
-      im = return_outputs[1]['ret'][0][0].resize((512, 512))
-      im.save(name)
-      print('Error!!!')
+        # skip if file exists
+        if gen_mode == 'text':
+            if not overwrite and os.path.exists(save_path+'.json'):
+                print('skip')
+                continue
+        elif gen_mode == 'image':
+            if not overwrite and os.path.exists(save_path+'.jpg'):
+                print('skip')
+                continue
+        else:
+            raise NotImplementedError(f"Unknown gen_mode: {gen_mode}!")
 
+        # for avoid unexpected error and retry the same prompt at most 10 times
+        # normally it should not happen, but it happens for some models
+        # such as gpt (network issue sometimes)
+        retry = 0
+        while retry <= 10:
+            try:
+                out = call_model({
+                    'text_inputs': text_inputs, 
+                    'image_inputs': image_inputs,
+                })
+                break
+            except KeyboardInterrupt:
+                exit()
+            except Exception as e:
+                retry += 1
+                print(f"Exception occurred: {type(e).__name__}, {e.args}")
+                print('Retrying...')
+                
+        if retry > 10:
+            out = {'description': 'ERROR', 'image': None, 'time': 0}
+            print('ERROR')
+            
+        out['text_inputs'] = text_inputs
+        out['image_inputs'] = image_inputs
+        if gen_mode == 'text':
+            save_json(out, save_path+'.json')
+            print('---')
+            print(out["description"])
+        elif gen_mode == 'image':
+            img = out['image']
+            if img != None: img.save(save_path+'.jpg')
+            
+            out.pop('image')
+            save_json(out, save_path+'.json')
 
-def get_image(name):
-  extensions = ['jpg', 'webp', 'jpeg', 'png']
-  found_image = None
-  for ext in extensions:
-      try:
-          image_path = name+f'.{ext}'
-          found_image = Image.open(image_path).convert('RGB')
-          break
-      except FileNotFoundError:
-          continue
+if '__main__' == __name__:
+    parser = argparse.ArgumentParser(description='Generate images or image descriptions')
+    parser.add_argument('--shot', type=int, nargs='+', default=[2,4,6,8])
+    parser.add_argument('--misleading', type=int, nargs='+', default=[0,1], choices=[0,1])
+    parser.add_argument('--model', type=str, default="qwen", choices = supported_models)
+    parser.add_argument('--max_file_count', type=int, default=1000)
+    parser.add_argument('--seed', type=int, default=123)
+    parser.add_argument('--device', nargs='+', type=str, default=['cuda']) # or ['35GiB', '25GiB', '35GiB']
+    parser.add_argument('--task_id', type=int, nargs='+', default=list(task_dataframe.keys()))
+    parser.add_argument('--overwrite', type=int, default=0, choices=[0,1])
+    parser.add_argument('--gen_mode', type=str, default="image", choices=['text', 'image'])
 
-  if found_image is None:
-      print(f"No valid image found for {name} !")
-  return found_image
+    args = parser.parse_args()
+    
+    # print experiment configuration
+    args_dict = vars(args)
+    print("########"*3)
+    print('## Experiment Setting:')
+    print("########"*3)
+    for key, value in args_dict.items():
+        print(f"| {key}: {value}")
+    
+    if len(args.device) == 1: 
+        device = args.device[0]
+    else:
+        device = {}
+        for i in range(len(args.device)):
+            device[i] = args.device[i]
 
+    set_seed(args.seed)
+    call_model = load_model(
+        args.model, 
+        device, 
+        gen_mode=args.gen_mode,
+    )
 
-
-import argparse
-import random
-import glob
-
-
-parser = argparse.ArgumentParser(description='seed_llama')
-parser.add_argument('--shot', type=int, nargs='+', default=[1, 2, 4])
-parser.add_argument('--misleading', type=bool, default=[False, True])
-parser.add_argument('--max_file_count', type=int, default=1)
-
-args = parser.parse_args()
-
-
-
-max_file_count = args.max_file_count
-
-dataset_1_list = [['black','blue','green','pink','purple','red','white','yellow'], ['one','two','three','four','five','six'], ['cartoon','cubism','oil','origami','sketch','watercolor'],['drink','eat','fly','run','sing','sit','sleep','wink'],['beach','classroom','forest','gym','library','office','park','street']]
-space_1_list = ["color", "count", "style", "action", "background"]
-dataset_2_list = [['bag','box','building','car','chair','cup','flower','leaf'],['apple','cat','chair','cup','dog','lion','person','shampoo'], ['apple','car','cat','chair','dog','flower','house','man'],['bird','cat','dog','lion','man','monkey','pig','woman'],['car','cat','chair','dog','man','monkey','robot','woman']]
-space_2_list = ["object", "object", "object","animal", "object"]
-
-task_type = ["odd", "even"]
-
-for shot in args.shot:
-    for misleading in args.misleading:
-        base_path = "results/shot_" + str(shot) if misleading == False else "results/shot_" + str(shot) + "_m"
-        for t, (dataset_1, space_1, dataset_2, space_2) in enumerate(zip(dataset_1_list, space_1_list, dataset_2_list, space_2_list)):
-            for task in task_type:
-                folder_path = base_path + "/task_" + str(2 * t + 1) + "/" if task == "odd" else base_path + "/task_" + str(2 * t + 2) + "/"
-                if not os.path.exists(folder_path):
-                    os.makedirs(folder_path)
-
-                x_list = dataset_1 if task == "odd" else dataset_2 
-                theta_list = dataset_2 if task == "odd" else dataset_1
-
-                while len(glob.glob(folder_path + '/*.jpg')) < max_file_count:
-                    random.shuffle(x_list)
-                    random.shuffle(theta_list)
-                    x_m_list = x_list if misleading == False else [x + " " + theta for x, theta in zip(x_list, theta_list)]
-                    theta = theta_list[shot+1]
-
-                    input_tokens = []
-                    save_path = folder_path + str(len(glob.glob(folder_path + '/*.jpg'))) + "_" + theta + "_"
-                    print("========")
-                    print(theta)
-                    print("--------")
-                    for i in range(shot+1):
-                        image_path_i = "examples/" + space_1 + "_" + theta + "/" + x_list[i] + "_" + theta + ".jpg" if task == "odd" else "examples/" + space_1 + "_" + x_list[i] + "/" + theta + "_" + x_list[i] + ".jpg"
-                        image_i = Image.open(image_path_i).convert('RGB')
-
-                        input_tokens.append(x_m_list[i] + ": ")
-                        if i < shot:
-                            input_tokens.append(image_i)
-
-                        print(x_m_list[i])
-                        save_path = save_path + "_" + x_list[i]
-                    print("========")
-
-                    save_path = save_path + ".jpg"
-
-                    get_result(input_tokens, save_path)
-
+    for shot in args.shot:
+        for misleading in args.misleading:
+            for task_id in args.task_id:
+                inference(
+                    args.model,
+                    call_model,
+                    shot,
+                    misleading,
+                    task_id,
+                    args.overwrite,
+                    args.gen_mode,
+                    args.max_file_count,
+                )

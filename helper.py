@@ -1,4 +1,4 @@
-import os, json, numpy as np, random, torch
+import os, json, numpy as np, random, torch, transformers
 from PIL import Image
 from configs import task_dataframe
 
@@ -30,6 +30,7 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.enabled = False
+    transformers.set_seed(seed)
     
 def get_image(name):
     extensions = ['jpg', 'webp', 'jpeg', 'png', 'JPG', 'Jpeg']
@@ -49,16 +50,26 @@ def get_image(name):
 def find_image(
     root_dir, 
     task_id, 
-    x, 
+    x_idx, 
     theta, 
 ):
     find = False
     
-        
-    if task_id % 2 == 1:
-        image_path_i = f"{root_dir}/datasets/{task_dataframe[task_id]['x_space']}_{theta}/{x}_{theta}.jpg"
+    task_type = task_dataframe[task_id]['task_type']
+    category_space = {}
+    category_space['detail'], category_space['obj'] = task_type.split('_')
+    item_info = {}
+    
+    if task_dataframe[task_id]['x_space'] in ['object', 'animal']:
+        item_info['obj'] = task_dataframe[task_id]['x_list'][x_idx]
+        item_info['detail'] = theta
     else:
-        image_path_i = f"{root_dir}/datasets/{task_dataframe[task_id]['theta_space']}_{x}/{theta}_{x}.jpg"
+        item_info['obj'] = theta
+        item_info['detail'] = task_dataframe[task_id]['x_list'][x_idx]
+        
+    
+    folder_path = f"{root_dir}/datasets/{category_space['detail']}_{item_info['obj']}"
+    image_path_i = f"{folder_path}/{item_info['detail']}_{item_info['obj']}.jpg"
         
     if os.path.exists(image_path_i):
         find = True

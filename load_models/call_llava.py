@@ -1,12 +1,13 @@
+# seed: set
+
 import os, sys
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
 from helper import set_seed
-sys.path.append(f"{root_dir}/models/llava")
-from llava.model.builder import load_pretrained_model
-from llava.eval.run_llava import eval_model
-from llava.mm_utils import get_model_name_from_path
-from llava.utils import disable_torch_init
+from models.llava.llava.model.builder import load_pretrained_model
+from models.llava.llava.eval.run_llava import eval_model
+from models.llava.llava.mm_utils import get_model_name_from_path
+from models.llava.llava.utils import disable_torch_init
 from time import time
 
 
@@ -48,17 +49,18 @@ def call_llava(
         "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
     ],
     seed = 123,
-    device = 'cuda'
+    device = 'cuda',
 ):
 
     set_seed(seed)
     
-    instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. "
-    prompt = instruction
+    # prompt = "I will provide you with a few examples with text and images. Complete the example with the description of the next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. "
+    prompt = ''
     for i in range(len(text_inputs)):
         prompt = prompt + text_inputs[i]
         if i < len(text_inputs) - 1:
             prompt = prompt + "<image-placeholder>"
+    prompt = prompt + "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. "
 
     output_dict = {}
     llava_start = time()
@@ -72,6 +74,7 @@ def call_llava(
         llava_args, 
         device = device,
     )
+
     llava_end = time()
     output_dict['time'] = llava_end - llava_start
 
