@@ -79,6 +79,8 @@ def inference(
             out = {'description': 'ERROR', 'image': None, 'time': 0}
             print('ERROR')
             
+        out['text_inputs'] = text_inputs
+        out['image_inputs'] = image_inputs
         if gen_mode == 'text':
             save_json(out, save_path+'.json')
             print('---')
