@@ -21,7 +21,6 @@ figures/
 *.wandb
 *.model
 *.pickle
-*.txt
 *.sub
 
 **/wandb
