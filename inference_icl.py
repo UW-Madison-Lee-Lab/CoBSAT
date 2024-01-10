@@ -1,4 +1,4 @@
-import os, argparse
+import os, argparse, time
 from load_model import load_model
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -72,6 +72,8 @@ def inference(
                 exit()
             except Exception as e:
                 retry += 1
+                # wait 2 seconds
+                time.sleep(2)
                 print(f"Exception occurred: {type(e).__name__}, {e.args}")
                 print('Retrying...')
                 
