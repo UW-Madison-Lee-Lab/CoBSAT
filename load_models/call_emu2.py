@@ -48,53 +48,25 @@ def load_emu2(
         
         return model, tokenizer
     
-    elif gen_mode == 'image':
-        """
-        pipe = EmuVisualGeneration.from_pretrained(
-                EMU2_GEN_PATH + '/safety_checker/model.bf16.safetensors',
+    elif gen_mode == 'image':      
+        # multi-gpu  
+        if isinstance(device, dict): 
+            pipe = EmuVisualGeneration.from_pretrained(
+                EMU2_GEN_PATH,
                 dtype=torch.bfloat16,
                 use_safetensors=True,
-        )
-        pipe = pipe.multito(device)
-        """
-        
-        if isinstance(device, list): # multi-gpu
-            raise NotImplementedError(f'Emu2: gen_mode {gen_mode} not implemented for multi-gpu cases.')
-            
-        try:
-            # For the non-first time of using, you can init the pipeline directly
-            pipe = DiffusionPipeline.from_pretrained(
+            )
+            pipe.multito(list(device.keys()))
+            return pipe, None
+        # single-GPU
+        elif isinstance(device, str): 
+            pipe = EmuVisualGeneration.from_pretrained(
                 EMU2_GEN_PATH,
-                custom_pipeline="pipeline_emu2_gen",
-                torch_dtype=torch.bfloat16,
+                dtype=torch.bfloat16,
                 use_safetensors=True,
-                variant="bf16",
             )
-        except:
-            # For the first time of using,
-            # you need to download the huggingface repo "BAAI/Emu2-GEN" to local first
-            multimodal_encoder = AutoModelForCausalLM.from_pretrained(
-                f"{EMU2_GEN_PATH}/multimodal_encoder",
-                trust_remote_code=True,
-                torch_dtype=torch.bfloat16,
-                use_safetensors=True,
-                variant="bf16"
-            )
-            tokenizer = AutoTokenizer.from_pretrained(f"{EMU2_GEN_PATH}/tokenizer")
-            
-            pipe = DiffusionPipeline.from_pretrained(
-                EMU2_GEN_PATH,
-                custom_pipeline="pipeline_emu2_gen",
-                torch_dtype=torch.bfloat16,
-                use_safetensors=True,
-                variant="bf16",
-                multimodal_encoder=multimodal_encoder,
-                tokenizer=tokenizer,
-            )
-        
-
-        pipe.to(device)
-        return pipe, None
+            pipe.to(device)
+            return pipe, None
     else:
         raise NotImplementedError(f'gen_mode {gen_mode} not implemented.')
 
