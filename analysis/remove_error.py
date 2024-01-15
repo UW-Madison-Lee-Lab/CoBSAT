@@ -43,18 +43,14 @@ def remove_error(
         input_dict = data_loader[count]
         input_dict['x'] = input_dict['x_list'][-1]
         
-        if eval_mode == 'text':
-            file_path = f"{folder_path}/{input_dict['save_path']}.json"
-            if os.path.exists(file_path):
-                output_dict = read_json(file_path)
-        
-                if output_dict['description'] == 'ERROR':
-                    print(file_path)
-                    # delete this file
-                    os.remove(file_path)
-            
-        else:
-            raise NotImplementedError(f"Unknown eval_mode: {eval_mode}!")
+        file_path = f"{folder_path}/{input_dict['save_path']}.json"
+        if os.path.exists(file_path):
+            output_dict = read_json(file_path)
+    
+            if output_dict['description'].lower() == 'error':
+                print(file_path)
+                # delete this file
+                os.remove(file_path)
     
 
 if '__main__' == __name__:
