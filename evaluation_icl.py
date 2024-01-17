@@ -3,11 +3,26 @@ root_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(root_dir)
 
 from load_models.call_llava import load_llava, eval_model as eval_llava
-import argparse, pandas as pd, wandb
+import argparse, pandas as pd, wandb, torch
 from helper import set_seed, read_json
 from configs import task_dataframe, item_dict, item2word, supported_models
 from load_dataset import load_dataset
 from tqdm import tqdm
+from transformers import CLIPProcessor, CLIPModel
+from PIL import Image
+
+def get_clip_similarity(clip_model, text_embeds, img_embeds):
+    logit_scale = clip_model.logit_scale.exp()
+    clip_similarity = torch.matmul(text_embeds, img_embeds.t()) * logit_scale
+    
+    return clip_similarity.t()[0].detach().cpu().numpy()
+
+def eval_clip(img_file, text_list, clip_model, clip_processor):
+    image = Image.open(img_file).convert("RGB")
+    inputs = clip_processor(text=text_list, images=image, return_tensors="pt", padding=True)
+    outputs = clip_model(**inputs)
+    clip_similarity = get_clip_similarity(clip_model,outputs.text_embeds,outputs.image_embeds)
+    return clip_similarity
 
 def get_eval_prompt(
     category_space,
@@ -148,6 +163,7 @@ def check_single_image(
             'correct': False,
         }
     else:
+        # use llava to evaluate the quality of the generated images
         for mode in prompts:
             response[mode] = eval_llava(
                 prompts[mode],
@@ -384,6 +400,7 @@ if '__main__' == __name__:
     for key, value in args_dict.items():
         print(f"| {key}: {value}")
     
+    # load llava
     tokenizer, llava_model, image_processor, context_len, llava_args = load_llava(device = args.device)
     llava_configs = {
         'tokenizer': tokenizer,
@@ -393,6 +410,10 @@ if '__main__' == __name__:
         'llava_args': llava_args,
         'device': args.device,
     }
+    
+    # load clip
+    clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+    clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
     
     for task_id in args.task_id:
         for shot in args.shot:
