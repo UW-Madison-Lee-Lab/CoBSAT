@@ -45,7 +45,15 @@ def eval_clip_img(
         ]
         for key in keys:
             if key in existing_csv.columns:
-                output_dict[key] = row[key]
+                output_dict[key] = row[key].item()
+                if key in [
+                    'clip_similarity_detail', 
+                    'clip_similarity_obj',
+                    'clip_similarity_overall',
+                ]:
+                    output_dict = float(output_dict[key])
+                else:
+                    output_dict[key] = bool(output_dict[key])
             else:
                 success_flag = False
                 break
@@ -60,7 +68,7 @@ def eval_clip_img(
         images=image, 
         return_tensors="pt", 
         padding=True
-    )
+    ).to(clip_model.device)
     outputs = clip_model(**inputs)
     clip_similarity = get_clip_similarity(clip_model,outputs.text_embeds,outputs.image_embeds)
 
@@ -133,12 +141,14 @@ def eval_llava_img(
             'answer_obj',
             'check_detail',
             'check_obj',
-            'correct'
+            'correct',
         ]
         
         for key in keys:
             if key in existing_csv.columns:
-                output_dict[key] = row[key]
+                output_dict[key] = row[key].item()
+                if key in ['check_detail', 'check_obj', 'correct']: 
+                    output_dict[key] = bool(output_dict[key])
             else:
                 success_flag = False
                 break
@@ -406,6 +416,7 @@ def eval(
                     break
             if this_run: 
                 find_existing_run = run
+                print(f"Find existing run in wandb: {run.name}")
                 break
             
         # initialize wandb
@@ -575,9 +586,9 @@ if '__main__' == __name__:
         'device': args.device,
     }
     
-    # load clip
+    # load clip to device
     clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-    clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+    clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(args.device)
     
     for task_id in args.task_id:
         for shot in args.shot:
