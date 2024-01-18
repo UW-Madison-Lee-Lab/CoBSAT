@@ -2,8 +2,8 @@ import os, sys
 root_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(root_dir)
 
-from load_models.call_llava import load_llava, eval_model as eval_llava
-import argparse, pandas as pd, wandb, torch
+from load_models.call_llava import load_llava, eval_model as infer_llava
+import argparse, pandas as pd, wandb, torch, numpy as np
 from helper import set_seed, read_json
 from configs import task_dataframe, item_dict, item2word, supported_models
 from load_dataset import load_dataset
@@ -13,16 +13,72 @@ from PIL import Image
 
 def get_clip_similarity(clip_model, text_embeds, img_embeds):
     logit_scale = clip_model.logit_scale.exp()
+    # note that the text_embeds and img_embeds are already normalized
+    # torch.matmul here is computing the cosine similarity
     clip_similarity = torch.matmul(text_embeds, img_embeds.t()) * logit_scale
-    
-    return clip_similarity.t()[0].detach().cpu().numpy()
+    clip_similarity = clip_similarity.t()[0].detach().cpu().numpy()
+    for i in range(len(clip_similarity)):
+        clip_similarity[i] = max(float(clip_similarity[i]), 0)
+    return clip_similarity
 
-def eval_clip(img_file, text_list, clip_model, clip_processor):
+def eval_clip_img(
+    img_file, 
+    ground_truth,
+    clip_model, 
+    clip_processor,
+    item_list,
+    true_labels,
+    existing_csv,
+):
+    if not (existing_csv is None):
+        row = existing_csv[existing_csv['file_path'] == img_file]
+        
+        success_flag = True
+        output_dict = {}
+        keys = [
+            'clip_similarity_detail', 
+            'clip_similarity_obj',
+            'clip_similarity_overall',
+            'clip_check_detail',
+            'clip_check_obj',
+            'clip_correct',
+        ]
+        for key in keys:
+            if key in existing_csv.columns:
+                output_dict[key] = row[key]
+            else:
+                success_flag = False
+                break
+        if success_flag: return output_dict
+        
+    detail, obj = ground_truth['detail'], ground_truth['obj']
+    detail_list, obj_list = item_list['detail'], item_list['obj']
+    
     image = Image.open(img_file).convert("RGB")
-    inputs = clip_processor(text=text_list, images=image, return_tensors="pt", padding=True)
+    inputs = clip_processor(
+        text=[detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
+        images=image, 
+        return_tensors="pt", 
+        padding=True
+    )
     outputs = clip_model(**inputs)
     clip_similarity = get_clip_similarity(clip_model,outputs.text_embeds,outputs.image_embeds)
-    return clip_similarity
+
+    # similarity between the generated image and the ground truth
+    output_dict = {
+        'clip_similarity_detail': clip_similarity[0],
+        'clip_similarity_obj': clip_similarity[1],
+        'clip_similarity_overall': clip_similarity[2],
+    }
+    # similarity between the generated image the all possible objects and details
+    pred_obj = np.argmax(clip_similarity[3:(3+len(obj_list))]) + 1
+    pred_detail = np.argmax(clip_similarity[(3+len(obj_list)):(3+len(obj_list)+len(detail_list))]) + 1
+    
+    output_dict['clip_check_obj'] = pred_obj == true_labels['obj']
+    output_dict['clip_check_detail'] = pred_detail == true_labels['detail']
+    output_dict['clip_correct'] = output_dict['clip_check_obj'] and output_dict['clip_check_detail']
+    
+    return output_dict
 
 def get_eval_prompt(
     category_space,
@@ -54,6 +110,85 @@ def get_eval_prompt(
         
     return prompts
 
+def eval_llava_img(
+    category_space,
+    item_list,
+    file_path,
+    true_labels,
+    llava_configs,
+    existing_csv,
+    
+):
+    if not (existing_csv is None):
+        row = existing_csv[existing_csv['file_path'] == file_path]
+        
+        success_flag = True
+        output_dict = {}
+        keys = [
+            'prompt_detail',
+            'prompt_obj',
+            'response_detail',
+            'response_obj',
+            'answer_detail',
+            'answer_obj',
+            'check_detail',
+            'check_obj',
+            'correct'
+        ]
+        
+        for key in keys:
+            if key in existing_csv.columns:
+                output_dict[key] = row[key]
+            else:
+                success_flag = False
+                break
+        if success_flag: return output_dict
+        
+    # two prompts
+    prompts = get_eval_prompt(
+        category_space,
+        item_list,
+        'image',
+        None,
+    )
+        
+    checks, options, response = {}, {}, {}
+    for mode in prompts:
+        response[mode] = infer_llava(
+            prompts[mode],
+            [file_path],
+            llava_configs['tokenizer'],
+            llava_configs['llava_model'],
+            llava_configs['image_processor'],
+            llava_configs['context_len'],
+            llava_configs['llava_args'],
+            device=llava_configs['device'],
+        )
+        
+        response_number = ''.join(filter(str.isdigit, response[mode]))
+        if response_number:
+            options[mode] = int(response_number)
+        else:
+            options[mode] = -1
+        
+        if options[mode] == true_labels[mode]: 
+            checks[mode] = True
+        else:
+            checks[mode] = False
+            
+    output_dict = {
+        'prompt_detail': prompts['detail'],
+        'prompt_obj': prompts['obj'],
+        'response_detail': response['detail'],
+        'response_obj': response['obj'],
+        'answer_detail': options['detail'],
+        'answer_obj': options['obj'],
+        'check_detail': checks['detail'],
+        'check_obj': checks['obj'],
+        'correct': checks['detail'] and checks['obj'],
+    }
+    return output_dict
+
 def check_single_description(
     task_type,
     file_path,
@@ -79,7 +214,7 @@ def check_single_description(
     checks, options, response, true_labels = {}, {}, {}, {}
     for mode in prompts:
         
-        response[mode] = eval_llava(
+        response[mode] = infer_llava(
             prompts[mode],
             [],
             llava_configs['tokenizer'],
@@ -128,6 +263,7 @@ def check_single_image(
     file_path,
     ground_truth,
     llava_configs,
+    existing_csv,
 ):
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
@@ -136,15 +272,7 @@ def check_single_image(
         'detail': item_dict[category_space['detail']],
     }
     
-    # two prompts
-    prompts = get_eval_prompt(
-        category_space,
-        item_list,
-        'image',
-        None,
-    )
-    
-    checks, options, response, true_labels = {}, {}, {}, {}
+    true_labels = {}
     if not os.path.exists(file_path):
         row = {
             'file_path': file_path,
@@ -161,49 +289,60 @@ def check_single_image(
             'check_detail': 0,
             'check_obj': 0,
             'correct': False,
+            'clip_similarity_detail': None,
+            'clip_similarity_obj': None,
+            'clip_similarity_overall': None,
+            'clip_check_detail': False,
+            'clip_check_obj': False,
+            'clip_correct': False,
         }
     else:
-        # use llava to evaluate the quality of the generated images
-        for mode in prompts:
-            response[mode] = eval_llava(
-                prompts[mode],
-                [file_path],
-                llava_configs['tokenizer'],
-                llava_configs['llava_model'],
-                llava_configs['image_processor'],
-                llava_configs['context_len'],
-                llava_configs['llava_args'],
-                device=llava_configs['device'],
-            )
-            
-            response_number = ''.join(filter(str.isdigit, response[mode]))
-            if response_number:
-                options[mode] = int(response_number)
-            else:
-                options[mode] = -1
-            
+        for mode in ['detail', 'obj']:
             true_labels[mode] = item_list[mode].index(ground_truth[mode])+1
-            
-            if options[mode] == true_labels[mode]: 
-                checks[mode] = True
-            else:
-                checks[mode] = False
+        
+        # use llava to evaluate the quality of the generated images
+
+        llava_output = eval_llava_img(
+            category_space,
+            item_list,
+            file_path,
+            true_labels,
+            llava_configs,
+            existing_csv, 
+        )
+         
+        # use clip to evaluate the quality of the generated images
+        clip_output = eval_clip_img(
+            file_path,
+            ground_truth,
+            clip_model,
+            clip_processor,
+            item_list,
+            true_labels,
+            existing_csv,
+        )
                 
         row = {
             'file_path': file_path,
-            'prompt_detail': prompts['detail'],
-            'prompt_obj': prompts['obj'],
+            'prompt_detail': llava_output['prompt_detail'],
+            'prompt_obj': llava_output['prompt_obj'],
             'ground_truth_detail': ground_truth['detail'],
             'ground_truth_obj': ground_truth['obj'],
-            'response_detail': response['detail'],
-            'response_obj': response['obj'],
+            'response_detail': llava_output['response_detail'],
+            'response_obj': llava_output['response_obj'],
             'true_label_detail': true_labels['detail'],
             'true_label_obj': true_labels['obj'],
-            'answer_detail': options['detail'],
-            'answer_obj': options['obj'],
-            'check_detail': checks['detail'],
-            'check_obj': checks['obj'],
-            'correct': checks['detail'] and checks['obj'],
+            'answer_detail': llava_output['answer_detail'],
+            'answer_obj': llava_output['answer_obj'],
+            'check_detail': llava_output['check_detail'],
+            'check_obj': llava_output['check_obj'],
+            'correct': llava_output['correct'],
+            'clip_similarity_detail': clip_output['clip_similarity_detail'],
+            'clip_similarity_obj': clip_output['clip_similarity_obj'],
+            'clip_similarity_overall': clip_output['clip_similarity_overall'],
+            'clip_check_detail': clip_output['clip_check_detail'],
+            'clip_check_obj': clip_output['clip_check_obj'],
+            'clip_correct': clip_output['clip_correct'],
         }
         
     return row
@@ -237,27 +376,45 @@ def eval(
     
     misleading_flag = "_m" if misleading else ""
     csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{misleading_flag}/task_{task_id}_summary.csv"
-    if os.path.exists(csv_file_path) and not overwrite:
-        print('The evaluation results already exist.')
-        return
+    existing_csv = None
+    if os.path.exists(csv_file_path) and (not overwrite): existing_csv = pd.read_csv(csv_file_path)
     
-    if log_wandb:
-        wandb.init(
-            project = 'micl',
-            entity = 'lee-lab-uw-madison',
-            config = {
-                'task_id': task_id,
-                'shot': shot,
-                'misleading': misleading,
-                'model': model,
-                'seed': seed,
-                'stage': 'eval',
-                'file_type': eval_mode,
-                'task_type': task_type,
-                'x_space': task_dataframe[task_id]['x_space'],
-                'theta_space': task_dataframe[task_id]['theta_space'],
-            },
-        )
+    if log_wandb: # log the data into wandb
+        wandb_config = {
+            'task_id': task_id,
+            'shot': shot,
+            'misleading': misleading,
+            'model': model,
+            'seed': seed,
+            'stage': 'eval',
+            'file_type': eval_mode,
+            'task_type': task_type,
+            'x_space': task_dataframe[task_id]['x_space'],
+            'theta_space': task_dataframe[task_id]['theta_space'],
+        }
+        
+        # first check whether there exists a run with the same configuration
+        api = wandb.Api(timeout=300)
+        runs = api.runs("lee-lab-uw-madison/micl")
+        find_existing_run = None
+        for run in runs:
+            run_config_list = {k: v for k,v in run.config.items() if not k.startswith('_')}
+            this_run = True
+            for key in wandb_config:
+                if (not key in run_config_list) or (run_config_list[key] != wandb_config[key]): 
+                    this_run = False
+                    break
+            if this_run: 
+                find_existing_run = run
+                break
+            
+        # initialize wandb
+        if find_existing_run is None:
+            wandb.init(
+                project = 'micl',
+                entity = 'lee-lab-uw-madison',
+                config = wandb_config,
+            )
         
     set_seed(seed)
     
@@ -304,6 +461,7 @@ def eval(
                 ground_truth,
                 llava_configs,
             )
+            
         elif eval_mode == 'image':
             file_path = f"{folder_path}/{input_dict['save_path']}.jpg"
             row = check_single_image(
@@ -311,6 +469,7 @@ def eval(
                 file_path,
                 ground_truth,
                 llava_configs,
+                existing_csv,
             )
             
         else:
@@ -373,8 +532,13 @@ def eval(
     result_df.to_csv(csv_file_path, index = False)
     
     if log_wandb:
-        wandb.log(checks)
-        wandb.finish()
+        if find_existing_run is None:
+            wandb.log(checks)
+            wandb.finish()
+        else:
+            for key in checks:
+                find_existing_run.summary[key] = checks[key]
+            find_existing_run.update() # update the summary
     
 
 if '__main__' == __name__:
