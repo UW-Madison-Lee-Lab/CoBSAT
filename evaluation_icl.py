@@ -11,17 +11,17 @@ from tqdm import tqdm
 from transformers import CLIPProcessor, CLIPModel
 from PIL import Image
 
-def get_clip_similarity(clip_model, batch_pred_embeds, true_embeds):
+def get_clip_similarity(clip_model, batch_true_embeds, pred_embeds):
     logit_scale = clip_model.logit_scale.exp()
     # note that the text_embeds and img_embeds are already normalized
     # torch.matmul here is computing the cosine similarity
-    clip_similarity = torch.matmul(batch_pred_embeds, true_embeds.t()) * logit_scale
+    clip_similarity = torch.matmul(batch_true_embeds, pred_embeds.t()) * logit_scale
     clip_similarity = clip_similarity.t()[0].detach().cpu().numpy()
     for i in range(len(clip_similarity)):
         clip_similarity[i] = max(float(clip_similarity[i]), 0)
     return clip_similarity
 
-def eval_clip_img(
+def eval_clip(
     img_file, 
     ground_truth,
     clip_model, 
@@ -29,6 +29,7 @@ def eval_clip_img(
     item_list,
     true_labels,
     existing_csv,
+    eval_mode,
 ):
     if not (existing_csv is None):
         row = existing_csv[existing_csv['file_path'] == img_file]
@@ -62,15 +63,34 @@ def eval_clip_img(
     detail, obj = ground_truth['detail'], ground_truth['obj']
     detail_list, obj_list = item_list['detail'], item_list['obj']
     
-    image = Image.open(img_file).convert("RGB")
-    inputs = clip_processor(
-        text=[detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
-        images=image, 
-        return_tensors="pt", 
-        padding=True
-    ).to(clip_model.device)
-    outputs = clip_model(**inputs)
-    clip_similarity = get_clip_similarity(clip_model,outputs.text_embeds,outputs.image_embeds)
+    if eval_mode == 'image':
+        image = Image.open(img_file).convert("RGB")
+        inputs = clip_processor(
+            text=[detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
+            images=image, 
+            return_tensors="pt", 
+            padding=True
+        ).to(clip_model.device)
+        outputs = clip_model(**inputs)
+        clip_similarity = get_clip_similarity(
+            clip_model,
+            outputs.text_embeds,
+            outputs.image_embeds
+        )
+    elif eval_mode == 'text':
+        description = read_json(img_file)['description']
+        batch_inputs = clip_processor(
+            text=[description, detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
+            return_tensors="pt", 
+            padding=True
+        ).to(clip_model.device)
+        description_embeds = batch_inputs[0]
+        batch_true_embeds = batch_inputs[1:]
+        clip_similarity = get_clip_similarity(
+             clip_model,
+             batch_true_embeds,
+             description_embeds,
+        )
 
     # similarity between the generated image and the ground truth
     output_dict = {
@@ -117,15 +137,16 @@ def get_eval_prompt(
         prompts[mode] += ". Answer the number only and do not include any other texts (e.g., 1)."
         
     return prompts
+    
 
-def eval_llava_img(
+def eval_llava(
     category_space,
     item_list,
     file_path,
     true_labels,
     llava_configs,
     existing_csv,
-    
+    eval_mode,
 ):
     if not (existing_csv is None):
         row = existing_csv[existing_csv['file_path'] == file_path]
@@ -155,25 +176,43 @@ def eval_llava_img(
         if success_flag: return output_dict
         
     # two prompts
+    caption = None
+    if eval_mode == 'text':
+        caption = read_json(file_path)['description']
+        
     prompts = get_eval_prompt(
         category_space,
         item_list,
-        'image',
-        None,
+        eval_mode,
+        caption,
     )
         
     checks, options, response = {}, {}, {}
     for mode in prompts:
-        response[mode] = infer_llava(
-            prompts[mode],
-            [file_path],
-            llava_configs['tokenizer'],
-            llava_configs['llava_model'],
-            llava_configs['image_processor'],
-            llava_configs['context_len'],
-            llava_configs['llava_args'],
-            device=llava_configs['device'],
-        )
+        if eval_mode == 'image':
+            response[mode] = infer_llava(
+                prompts[mode],
+                [file_path],
+                llava_configs['tokenizer'],
+                llava_configs['llava_model'],
+                llava_configs['image_processor'],
+                llava_configs['context_len'],
+                llava_configs['llava_args'],
+                device=llava_configs['device'],
+            )
+        elif eval_mode == 'text':
+            response[mode] = infer_llava(
+                prompts[mode],
+                [],
+                llava_configs['tokenizer'],
+                llava_configs['llava_model'],
+                llava_configs['image_processor'],
+                llava_configs['context_len'],
+                llava_configs['llava_args'],
+                device=llava_configs['device'],
+            )
+        else:
+            raise NotImplementedError(f"Unknown eval_mode: {eval_mode}!")
         
         response_number = ''.join(filter(str.isdigit, response[mode]))
         if response_number:
@@ -197,83 +236,16 @@ def eval_llava_img(
         'check_obj': checks['obj'],
         'correct': checks['detail'] and checks['obj'],
     }
+
     return output_dict
 
-def check_single_description(
-    task_type,
-    file_path,
-    caption,
-    ground_truth,
-    llava_configs,
-):  
-    category_space = {}
-    category_space['detail'], category_space['obj'] = task_type.split('_')
-    item_list = {
-        'obj': item_dict[category_space['obj']],
-        'detail': item_dict[category_space['detail']],
-    }
-    
-    # two prompts
-    prompts = get_eval_prompt(
-        category_space,
-        item_list,
-        'text',
-        caption,
-    )
-    
-    checks, options, response, true_labels = {}, {}, {}, {}
-    for mode in prompts:
-        
-        response[mode] = infer_llava(
-            prompts[mode],
-            [],
-            llava_configs['tokenizer'],
-            llava_configs['llava_model'],
-            llava_configs['image_processor'],
-            llava_configs['context_len'],
-            llava_configs['llava_args'],
-            device=llava_configs['device'],
-        )
-        
-        response_number = ''.join(filter(str.isdigit, response[mode]))
-        if response_number:
-            options[mode] = int(response_number)
-        else:
-            options[mode] = -1
-        
-        true_labels[mode] = item_list[mode].index(ground_truth[mode])+1
-        
-        if options[mode] == true_labels[mode]: 
-            checks[mode] = True
-        else:
-            checks[mode] = False
- 
-    row = {
-        'file_path': file_path,
-        'caption': caption,
-        'prompt_detail': prompts['detail'],
-        'prompt_obj': prompts['obj'],
-        'ground_truth_detail': ground_truth['detail'],
-        'ground_truth_obj': ground_truth['obj'],
-        'response_detail': response['detail'],
-        'response_obj': response['obj'],
-        'true_label_detail': true_labels['detail'],
-        'true_label_obj': true_labels['obj'],
-        'answer_detail': options['detail'],
-        'answer_obj': options['obj'],
-        'check_detail': checks['detail'],
-        'check_obj': checks['obj'],
-        'correct': checks['detail'] and checks['obj'],
-    }
-    
-    return row
-
-def check_single_image(
+def check_single_output(
     task_type,
     file_path,
     ground_truth,
     llava_configs,
     existing_csv,
+    eval_mode,
 ):
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
@@ -306,23 +278,25 @@ def check_single_image(
             'clip_check_obj': False,
             'clip_correct': False,
         }
+        if eval_mode == 'text': row['caption'] = None
     else:
         for mode in ['detail', 'obj']:
             true_labels[mode] = item_list[mode].index(ground_truth[mode])+1
         
         # use llava to evaluate the quality of the generated images
 
-        llava_output = eval_llava_img(
+        llava_output = eval_llava(
             category_space,
             item_list,
             file_path,
             true_labels,
             llava_configs,
             existing_csv, 
+            eval_mode,
         )
          
         # use clip to evaluate the quality of the generated images
-        clip_output = eval_clip_img(
+        clip_output = eval_clip(
             file_path,
             ground_truth,
             clip_model,
@@ -330,6 +304,7 @@ def check_single_image(
             item_list,
             true_labels,
             existing_csv,
+            eval_mode,
         )
                 
         row = {
@@ -354,6 +329,8 @@ def check_single_image(
             'clip_check_obj': clip_output['clip_check_obj'],
             'clip_correct': clip_output['clip_correct'],
         }
+        
+        if eval_mode == 'text': row['caption'] = read_json(file_path)['description']
         
     return row
 
@@ -467,28 +444,19 @@ def eval(
         
         if eval_mode == 'text':
             file_path = f"{folder_path}/{input_dict['save_path']}.json"
-            output_dict = read_json(file_path)
-        
-            row = check_single_description(
-                task_type,
-                file_path,
-                output_dict['description'],
-                ground_truth,
-                llava_configs,
-            )
-            
         elif eval_mode == 'image':
-            file_path = f"{folder_path}/{input_dict['save_path']}.jpg"
-            row = check_single_image(
-                task_type,
-                file_path,
-                ground_truth,
-                llava_configs,
-                existing_csv,
-            )
-            
+            file_path = f"{folder_path}/{input_dict['save_path']}.jpg"            
         else:
             raise NotImplementedError(f"Unknown eval_mode: {eval_mode}!")
+        
+        row = check_single_output(
+            task_type,
+            file_path,
+            ground_truth,
+            llava_configs,
+            existing_csv,
+            eval_mode,
+        )
         
         row['check_textual'] = row[f"check_{type_dict['x']}"]
         row['check_visual'] = row[f"check_{type_dict['theta']}"]
@@ -505,51 +473,32 @@ def eval(
     checks['clip_similarity_overall'] /= checks['valid_count']
     checks['clip_correct'] /= checks['valid_count']
         
-    if eval_mode == 'text':
-        result_df.append({
-            'file_path': 'SUMMARY',
-            'caption': f"Valid Count: {checks['valid_count']}",
-            'prompt_detail': None,
-            'prompt_obj': None,
-            'ground_truth_detail': None,
-            'ground_truth_obj': None,
-            'response_detail': None,
-            'response_obj': None,
-            'true_label_detail': None,
-            'true_label_obj': None,
-            'answer_detail': None,
-            'answer_obj': None,
-            'check_detail': checks['detail'],
-            'check_obj': checks['obj'],
-            'check_textual': checks['textual'],
-            'check_visual': checks['visual'],
-            'correct': checks['overall'],
-        }) 
-    elif eval_mode == 'image':
-        result_df.append({
-            'file_path': 'SUMMARY',
-            'prompt_detail': f"Valid Count: {checks['valid_count']}",
-            'prompt_obj': None,
-            'ground_truth_detail': None,
-            'ground_truth_obj': None,
-            'response_detail': None,
-            'response_obj': None,
-            'true_label_detail': None,
-            'true_label_obj': None,
-            'answer_detail': None,
-            'answer_obj': None,
-            'check_detail': checks['detail'],
-            'check_obj': checks['obj'],
-            'check_textual': checks['textual'],
-            'check_visual': checks['visual'],
-            'correct': checks['overall'],
-            'clip_similarity_detail': None,
-            'clip_similarity_obj': None,
-            'clip_similarity_overall': checks['clip_similarity_overall'],
-            'clip_check_detail': None,
-            'clip_check_obj': None,
-            'clip_correct': checks['clip_correct'],
-        }) 
+    summary_row = {
+        'file_path': 'SUMMARY',
+        'prompt_detail': f"Valid Count: {checks['valid_count']}",
+        'prompt_obj': None,
+        'ground_truth_detail': None,
+        'ground_truth_obj': None,
+        'response_detail': None,
+        'response_obj': None,
+        'true_label_detail': None,
+        'true_label_obj': None,
+        'answer_detail': None,
+        'answer_obj': None,
+        'check_detail': checks['detail'],
+        'check_obj': checks['obj'],
+        'check_textual': checks['textual'],
+        'check_visual': checks['visual'],
+        'correct': checks['overall'],
+        'clip_similarity_detail': None,
+        'clip_similarity_obj': None,
+        'clip_similarity_overall': checks['clip_similarity_overall'],
+        'clip_check_detail': None,
+        'clip_check_obj': None,
+        'clip_correct': checks['clip_correct'],
+    }
+    if eval_mode == 'text': summary_row['caption'] = None
+    result_df.append(summary_row) 
         
     result_df = pd.DataFrame(result_df)
     
