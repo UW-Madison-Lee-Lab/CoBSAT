@@ -11,11 +11,11 @@ from tqdm import tqdm
 from transformers import CLIPProcessor, CLIPModel
 from PIL import Image
 
-def get_clip_similarity(clip_model, text_embeds, img_embeds):
+def get_clip_similarity(clip_model, batch_pred_embeds, true_embeds):
     logit_scale = clip_model.logit_scale.exp()
     # note that the text_embeds and img_embeds are already normalized
     # torch.matmul here is computing the cosine similarity
-    clip_similarity = torch.matmul(text_embeds, img_embeds.t()) * logit_scale
+    clip_similarity = torch.matmul(batch_pred_embeds, true_embeds.t()) * logit_scale
     clip_similarity = clip_similarity.t()[0].detach().cpu().numpy()
     for i in range(len(clip_similarity)):
         clip_similarity[i] = max(float(clip_similarity[i]), 0)
