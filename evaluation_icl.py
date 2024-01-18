@@ -51,9 +51,9 @@ def eval_clip_img(
                     'clip_similarity_obj',
                     'clip_similarity_overall',
                 ]:
-                    output_dict = float(output_dict[key])
+                    output_dict[key] = float(output_dict[key])
                 else:
-                    output_dict[key] = bool(output_dict[key])
+                    output_dict[key] = output_dict[key] == 'True'
             else:
                 success_flag = False
                 break
@@ -148,7 +148,7 @@ def eval_llava_img(
             if key in existing_csv.columns:
                 output_dict[key] = row[key].item()
                 if key in ['check_detail', 'check_obj', 'correct']: 
-                    output_dict[key] = bool(output_dict[key])
+                    output_dict[key] = output_dict[key] == 'True'
             else:
                 success_flag = False
                 break
@@ -448,7 +448,9 @@ def eval(
         'textual':0,
         'visual':0,
         'overall':0,
-        'valid_count':0
+        'valid_count':0,
+        'clip_correct': 0,
+        'clip_similarity_overall': 0,
     }
     
     for count in tqdm(range(max_file_count), desc = f"Evaluating {model}_{eval_mode}/shot_{shot}{misleading_flag}/task_{task_id}"):
@@ -493,8 +495,13 @@ def eval(
             checks[key] += row[f"check_{key}"]
         checks['overall'] += row['correct']
         checks['valid_count'] += 1
+        checks['clip_similarity_overall'] += row['clip_similarity_overall']
+        checks['clip_correct'] += row['clip_correct']
         
         result_df.append(row)
+        
+    checks['clip_similarity_overall'] /= checks['valid_count']
+    checks['clip_correct'] /= checks['valid_count']
         
     if eval_mode == 'text':
         result_df.append({
@@ -534,6 +541,12 @@ def eval(
             'check_textual': checks['textual'],
             'check_visual': checks['visual'],
             'correct': checks['overall'],
+            'clip_similarity_detail': None,
+            'clip_similarity_obj': None,
+            'clip_similarity_overall': checks['clip_similarity_overall'],
+            'clip_check_detail': None,
+            'clip_check_obj': None,
+            'clip_correct': checks['clip_correct'],
         }) 
         
     result_df = pd.DataFrame(result_df)
@@ -549,7 +562,7 @@ def eval(
         else:
             for key in checks:
                 find_existing_run.summary[key] = checks[key]
-            find_existing_run.update() # update the summary
+            find_existing_run.summary.update() # update the summary
     
 
 if '__main__' == __name__:
