@@ -560,9 +560,17 @@ def eval(
             wandb.log(checks)
             wandb.finish()
         else:
+            print('Previous run statistics:')
+            for k,v in find_existing_run.summary.items():
+                if not k.startswith('_'):
+                    print(f"| {k}: {v}")
             for key in checks:
                 find_existing_run.summary[key] = checks[key]
             find_existing_run.summary.update() # update the summary
+            print('Updated run statistics:')
+            for k,v in find_existing_run.summary.items():
+                if not k.startswith('_'):
+                    print(f"| {k}: {v}")
     
 
 if '__main__' == __name__:
