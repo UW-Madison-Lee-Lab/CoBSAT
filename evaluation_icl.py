@@ -299,9 +299,9 @@ def check_single_image(
             'check_detail': 0,
             'check_obj': 0,
             'correct': False,
-            'clip_similarity_detail': None,
-            'clip_similarity_obj': None,
-            'clip_similarity_overall': None,
+            'clip_similarity_detail': 0,
+            'clip_similarity_obj': 0,
+            'clip_similarity_overall': 0,
             'clip_check_detail': False,
             'clip_check_obj': False,
             'clip_correct': False,
@@ -416,7 +416,9 @@ def eval(
                     break
             if this_run: 
                 find_existing_run = run
+                print("########"*3)
                 print(f"Find existing run in wandb: {run.name}")
+                print("########"*3)
                 break
             
         # initialize wandb
