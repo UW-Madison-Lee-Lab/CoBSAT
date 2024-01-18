@@ -22,7 +22,7 @@ def get_clip_similarity(clip_model, batch_true_embeds, pred_embeds):
     return clip_similarity
 
 def eval_clip(
-    img_file, 
+    file_path, 
     ground_truth,
     clip_model, 
     clip_processor,
@@ -32,7 +32,7 @@ def eval_clip(
     eval_mode,
 ):
     if not (existing_csv is None):
-        row = existing_csv[existing_csv['file_path'] == img_file]
+        row = existing_csv[existing_csv['file_path'] == file_path]
         
         success_flag = True
         output_dict = {}
@@ -64,7 +64,7 @@ def eval_clip(
     detail_list, obj_list = item_list['detail'], item_list['obj']
     
     if eval_mode == 'image':
-        image = Image.open(img_file).convert("RGB")
+        image = Image.open(file_path).convert("RGB")
         inputs = clip_processor(
             text=[detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
             images=image, 
@@ -75,17 +75,19 @@ def eval_clip(
         clip_similarity = get_clip_similarity(
             clip_model,
             outputs.text_embeds,
-            outputs.image_embeds
+            outputs.image_embeds,
         )
     elif eval_mode == 'text':
-        description = read_json(img_file)['description']
+        description = read_json(file_path)['description']
         batch_inputs = clip_processor(
-            text=[description, detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
+            text=[description[:200], detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
             return_tensors="pt", 
-            padding=True
+            padding=True,
         ).to(clip_model.device)
-        description_embeds = batch_inputs[0]
-        batch_true_embeds = batch_inputs[1:]
+        batch_outputs = clip_model.get_text_features(**batch_inputs)
+        batch_outputs = batch_outputs / batch_outputs.norm(dim=1, keepdim=True)
+        description_embeds = batch_outputs[[0]]
+        batch_true_embeds = batch_outputs[1:]
         clip_similarity = get_clip_similarity(
              clip_model,
              batch_true_embeds,
