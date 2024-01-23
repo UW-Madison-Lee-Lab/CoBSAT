@@ -6,7 +6,7 @@ from helper import save_json, read_json, set_seed
 from load_dataset import load_dataset
 from environment import TRANSFORMER_CACHE
 os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
-from configs import task_dataframe, supported_models
+from configs import task_dataframe, supported_models, get_instruction
 
 prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list.json")
 
@@ -20,7 +20,16 @@ def inference(
     gen_mode,
     max_file_count,
 ):
-    misleading_flag = "_m" if misleading else ""
+    if misleading == 1:
+        misleading_flag = "_m"
+    elif misleading == 0:
+        misleading_flag = ""
+    elif misleading == -1:
+        # instruct
+        misleading_flag = "_i"
+    else:
+        raise ValueError(f"Unknown misleading: {misleading}!")
+    
     base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}{misleading_flag}"
     
     folder_path = f"{base_path}/task_{task_id}"
@@ -63,10 +72,17 @@ def inference(
         retry = 0
         while retry <= 10:
             try:
-                out = call_model({
+                query = {
                     'text_inputs': text_inputs, 
                     'image_inputs': image_inputs,
-                })
+                    'instruction': get_instruction(
+                        misleading, 
+                        gen_mode,
+                        task_id,
+                        model,
+                    )
+                }
+                out = call_model(query)
                 break
             except KeyboardInterrupt:
                 exit()
@@ -97,7 +113,7 @@ def inference(
 if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate images or image descriptions')
     parser.add_argument('--shot', type=int, nargs='+', default=[2,4,6,8])
-    parser.add_argument('--misleading', type=int, nargs='+', default=[0,1], choices=[0,1])
+    parser.add_argument('--misleading', type=int, nargs='+', default=[0,1], choices=[-1,0,1])
     parser.add_argument('--model', type=str, default="qwen", choices = supported_models)
     parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)

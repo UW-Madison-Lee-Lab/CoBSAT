@@ -107,18 +107,23 @@ def call_emu(
     seed = 123,
     gen_mode = 'text',
     device = 'cuda',
-    instruction = "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+    instruction = [
+        "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+        '',
+    ],
 ):
     set_seed(seed)
     
     if gen_mode == 'image':
 
-        prompt = []
+        prompt = [instruction[0]]
         for i in range(len(text_inputs)):
             prompt.append(text_inputs[i])
             if i < len(text_inputs) - 1:
                 image = Image.open(image_inputs[i]).convert('RGB')
                 prompt.append(image)
+        prompt.append(instruction[1])
+        print(prompt)
 
         output_dict = {}
         emu_start = time()
@@ -145,6 +150,8 @@ def call_emu(
             if i < len(text_inputs) - 1:
                 image = process_img(img_path=image_inputs[i],device=device)
                 prompt.append(image)
+            prompt.append(instruction[1])
+            print(prompt)
                 
         interleaved_sequence = ''
         image_list = []
@@ -162,7 +169,7 @@ def call_emu(
             emu_model, 
             image_list, 
             interleaved_sequence, 
-            system=instruction,
+            system=instruction[0],
             instruct=True, 
         )
         emu_end = time()

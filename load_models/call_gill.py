@@ -32,6 +32,10 @@ def call_gill(
     ],
     seed = 123,
     gen_mode = 'text',
+    instruction = [
+        'You are a professional assistant and always answer my question directly and perfectly without any excuses.',
+        'Based on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss.',
+    ],
 ):
     set_seed(seed)
     
@@ -42,11 +46,13 @@ def call_gill(
             image = Image.open(image_inputs[i]).convert('RGB')
             prompt.append(image)
             
+    if instruction[0]: prompt.insert(0, instruction[0])
+    if instruction[1]: prompt.append(instruction[1])
+            
     output_dict = {}
     gill_start = time()
     
     if gen_mode == 'image':
-        prompt.insert(0, 'You are a professional assistant can generate a new image based on the seqeunce.')
         return_outputs = model.generate_for_images_and_texts(
             prompt, num_words=2, ret_scale_factor=100.0, generator=g_cuda)
         
@@ -59,8 +65,6 @@ def call_gill(
             print('Error!!!')
         
     elif gen_mode == 'text':
-        prompt.insert(0, 'You are a professional assistant and always answer my question directly and perfectly without any excuses.')
-        prompt.append('Based on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss.')
         output_dict['description'] = model.generate_for_images_and_texts(prompt, num_words=16, min_word_tokens=16)[0]
         
     gill_end = time()

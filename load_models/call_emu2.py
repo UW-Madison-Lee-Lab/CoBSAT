@@ -80,17 +80,20 @@ def call_emu2(
     ],
     seed = 123,
     gen_mode = 'text',
-    instruction = "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+    instruction = [
+        '',
+        "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+    ],
 ):
     set_seed(seed)
     
     if gen_mode == 'text':
-        prompt = ''
+        prompt = instruction[0]
         for i in range(len(text_inputs)):
             prompt = prompt + text_inputs[i]
             if i < len(text_inputs) - 1:
                 prompt = prompt + "[<IMG_PLH>]"
-        prompt = prompt + instruction        
+        prompt = prompt + instruction[1]
         
         images = [Image.open(image_inputs[i]).convert('RGB') for i in range(len(image_inputs))]
         
@@ -115,12 +118,12 @@ def call_emu2(
         output_dict['description'] = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
         output_dict['time'] = emu2_end - emu2_start
     elif gen_mode == 'image':
-        prompt = []
+        prompt = [instruction[0]]
         for i in range(len(text_inputs)):
             prompt.append(text_inputs[i])
             if i < len(text_inputs) - 1:
                 prompt.append(Image.open(image_inputs[i]).convert('RGB'))
-        prompt.append(instruction)
+        prompt.append(instruction[1])
         
         output_dict = {}
         

@@ -63,21 +63,17 @@ def decode_image_text(generate_ids, tokenizer, gen_mode):
         images = None
 
     else:
-        try:
-            boi_index = boi_list[0]
-            eoi_index = eoi_list[0]
-            text_ids = generate_ids[:boi_index]
-            if len(text_ids) != 0:
-                texts = tokenizer.decode(text_ids, skip_special_tokens=True)
-            else:
-                texts = "null"
-            image_ids = (generate_ids[boi_index+1:eoi_index] -
-                        image_id_shift).reshape(1, -1)
-            images = tokenizer.decode_image(image_ids)
-            images = images[0]
-        except:
-            texts = "error"    
-            images = None             
+        boi_index = boi_list[0]
+        eoi_index = eoi_list[0]
+        text_ids = generate_ids[:boi_index]
+        if len(text_ids) != 0:
+            texts = tokenizer.decode(text_ids, skip_special_tokens=True)
+        else:
+            texts = "null"
+        image_ids = (generate_ids[boi_index+1:eoi_index] -
+                    image_id_shift).reshape(1, -1)
+        images = tokenizer.decode_image(image_ids)
+        images = images[0]          
 
     if gen_mode == "text":
         return texts
@@ -118,14 +114,14 @@ def call_seed(
     seed = 123,
     gen_mode = 'text',
     device = 'cuda',
-    instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+    instruction = [
+        "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+        '',
+    ],
 ):
     set_seed(seed)
     
-    if gen_mode == 'text':
-        input_tokens = tokenizer.bos_token  + s_token + instruction
-    else:
-        input_tokens = tokenizer.bos_token  + s_token
+    input_tokens = tokenizer.bos_token  + s_token + instruction[0]
     
     for i in range(len(text_inputs)):
 
@@ -139,6 +135,7 @@ def call_seed(
                                             for item in img_ids]) + EOI_TOKEN
             input_tokens = input_tokens + img_tokens
 
+    input_tokens += instruction[1]
     input_tokens = input_tokens + e_token + sep
 
     output_dict = {}

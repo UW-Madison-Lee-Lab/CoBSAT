@@ -22,7 +22,7 @@ def load_prompt(
         x_demos.append(x_idx)
         theta_idx = theta_list[theta_idxs[demo_idx]]
         
-        if misleading:
+        if misleading == 1:
             text_inputs.append(f"{x_idx} {theta_idx}")
         else:
             text_inputs.append(x_idx)

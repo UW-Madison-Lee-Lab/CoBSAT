@@ -203,7 +203,7 @@ def load_model(
             ],
             seed = 123,
             gen_mode = gen_mode,
-             device = device,
+            device = device,
         )
         return lambda configs: call_seed(
             model,
