@@ -558,7 +558,7 @@ if '__main__' == __name__:
         print(f"| {key}: {value}")
     
     # load llava
-    tokenizer, llava_model, image_processor, context_len, llava_args = None, None, None, None, None # load_llava(device = args.device)
+    tokenizer, llava_model, image_processor, context_len, llava_args = load_llava(device = args.device)
     llava_configs = {
         'tokenizer': tokenizer,
         'llava_model': llava_model,
