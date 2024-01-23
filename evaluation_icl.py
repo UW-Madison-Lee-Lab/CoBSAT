@@ -363,7 +363,15 @@ def eval(
             'obj': 'theta', 'detail': 'x',
         }
     
-    misleading_flag = "_m" if misleading else ""
+    if misleading == -1:
+        misleading_flag = "_i"
+    elif misleading == 0:
+        misleading_flag = ''
+    elif misleading == 1:
+        misleading_flag = "_m"
+    else:
+        raise NotImplementedError(f"Unknown misleading: {misleading}!")
+    
     csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{misleading_flag}/task_{task_id}_summary.csv"
     existing_csv = None
     if os.path.exists(csv_file_path) and (not overwrite): existing_csv = pd.read_csv(csv_file_path)
@@ -531,7 +539,7 @@ if '__main__' == __name__:
     parser.add_argument('--model', type = str, default = 'qwen', choices = supported_models, help = 'model')
     parser.add_argument('--task_id', type = int, nargs = '+', default = list(task_dataframe.keys()), help = 'task id')
     parser.add_argument('--shot', type = int, nargs = '+', default = [2,4,6,8], help = 'shot')
-    parser.add_argument('--misleading', type = int, nargs = '+', default = [0,1], help = 'misleading', choices = [0,1])
+    parser.add_argument('--misleading', type = int, nargs = '+', default = [0,1], help = 'misleading', choices = [-1,0,1])
     parser.add_argument('--device', type = str, default = 'cuda', help = 'device')
     parser.add_argument('--seed', type = int, default = 123, help = 'seed')
     parser.add_argument('--wandb', type = int, default = 1, help = 'whether log the results using wandb', choices = [0,1])

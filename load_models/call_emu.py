@@ -123,7 +123,6 @@ def call_emu(
                 image = Image.open(image_inputs[i]).convert('RGB')
                 prompt.append(image)
         prompt.append(instruction[1])
-        print(prompt)
 
         output_dict = {}
         emu_start = time()
@@ -144,14 +143,13 @@ def call_emu(
 
     elif gen_mode == 'text':
 
-        prompt = []
+        prompt = [instruction[0]]
         for i in range(len(text_inputs)):
             prompt.append(text_inputs[i])
             if i < len(text_inputs) - 1:
                 image = process_img(img_path=image_inputs[i],device=device)
                 prompt.append(image)
-            prompt.append(instruction[1])
-            print(prompt)
+        prompt.append(instruction[1])
                 
         interleaved_sequence = ''
         image_list = []
