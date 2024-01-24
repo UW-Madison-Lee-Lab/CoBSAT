@@ -31,6 +31,7 @@ def call_qwen(
     ],
     call_mode = 'micl', # 'micl' or 'text'
     history = None,
+    save_history = False,
 ):
     set_seed(seed)
     
@@ -49,6 +50,8 @@ def call_qwen(
     output_dict['description'], output_dict['history'] = model.chat(tokenizer, query=query, history=history)
     qwen_end = time()
     output_dict['time'] = qwen_end - qwen_start
+    
+    if not save_history: output_dict.pop('history')
     
     return output_dict
     

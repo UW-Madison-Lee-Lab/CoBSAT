@@ -121,11 +121,12 @@ def call_seed(
     ],
     call_mode = 'micl', # 'micl' or 'text' 
     history = None,
+    save_history = False,
 ):
     set_seed(seed)
     
-    if history is None: history = ['', '']
-    input_tokens = tokenizer.bos_token  + s_token + instruction[0] + 
+    input_tokens = tokenizer.bos_token  + s_token + instruction[0]
+    if history is not None: input_tokens += history.replace(e_token, sep)
     
     for i in range(len(text_inputs)):
 
@@ -143,23 +144,27 @@ def call_seed(
     input_tokens += instruction[1]
     input_tokens = input_tokens + e_token + sep
 
-    output_dict = {'history': input_tokens}
+    output_dict = {}
+    if save_history: output_dict = {'history': input_tokens}
+    
     seed_start = time()
     if gen_mode == 'image':
         generate_ids = generate(tokenizer, input_tokens, generation_config, model)
         output_dict['description'], output_dict['image'] = decode_image_text(generate_ids, tokenizer, gen_mode)
+        if save_history:  output_dict['history'] += ' ' + output_dict['image']
         seed_end = time()
         output_dict['time'] = seed_end - seed_start
-        
-        return output_dict
 
     elif gen_mode == 'text':
         generate_ids = generate(tokenizer, input_tokens, generation_config, model)
         output_dict['description'] = decode_image_text(generate_ids, tokenizer, gen_mode)
+        if save_history: output_dict['history'] += ' ' + output_dict['description']
         seed_end = time()
         output_dict['time'] = seed_end - seed_start
-        
-        return output_dict
+    else:
+        raise ValueError(f'gen_mode {gen_mode} not supported')
+
+    return output_dict
 
     
     

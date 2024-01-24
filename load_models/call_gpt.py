@@ -93,14 +93,14 @@ def call_gpt4v(
         '',
     ],
     call_mode = 'micl', # micl or text only
+    history = None,
+    save_history = False,
 ):
     
     if len(text_inputs) != (len(image_inputs)+1):
         raise ValueError("The number of text inputs must be equal to the number of image urls plus one.")
     if len(text_inputs) > 10:
         raise ValueError("The number of demonstrations must be less than or equal to 10.")
-
-    output_dict = {}
 
     messages = prompt_image_eval(
         text_inputs, 
@@ -110,6 +110,10 @@ def call_gpt4v(
         instruction,
         call_mode,
     )
+    if history is not None: messages = history + messages
+    
+    output_dict = {}
+    if save_history: output_dict = {'history': messages}
     
     # Call GPT-4V to generate text description 
     
@@ -141,6 +145,13 @@ def call_gpt4v(
     
     gpt4v_end = time()
     output_dict['gpt4v_time'] = gpt4v_end - gpt4v_start
+    
+    if save_history:
+        output_dict['history'] = messages + [{
+            'role': 'assistant', 
+            'content': output_dict['description'],
+        }]
+    
 
     # Call DALL-E to generate image
     if use_dalle:

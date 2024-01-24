@@ -38,10 +38,14 @@ def call_gill(
         'Based on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss.',
     ],
     call_mode = 'micl', # 'micl' or 'text'
+    history = None,
+    save_history = False,
 ):
     set_seed(seed)
     
     prompt = []
+    if history: prompt.extend(history)
+    
     for i in range(len(text_inputs)):
         prompt.append(text_inputs[i])
         if call_mode == 'micl':
@@ -53,6 +57,8 @@ def call_gill(
     if instruction[1]: prompt.append(instruction[1])
             
     output_dict = {}
+    if save_history: output_dict['history'] = prompt
+    
     gill_start = time()
     
     if gen_mode == 'image':
@@ -66,10 +72,13 @@ def call_gill(
         else:
             output_dict['image'] = return_outputs[1]['ret'][0][0].resize((512, 512))
             print('Error!!!')
+            
+        if save_history: output_dict['history'] = output_dict['history'] + ' ' + output_dict['image']  
         
     elif gen_mode == 'text':
         output_dict['description'] = model.generate_for_images_and_texts(prompt, num_words=16, min_word_tokens=16)[0]
-        
+        if save_history: output_dict['history'] = output_dict['history'] + ' ' + output_dict['description']    
+    
     gill_end = time()
     output_dict['time'] = gill_end - gill_start
     
