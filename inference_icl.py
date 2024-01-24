@@ -93,7 +93,8 @@ def get_prompt(
                     gen_mode,
                     task_id,
                     model,
-                )
+                ),
+                'save_history': True,
             }
         else:
             instruction = get_instruction(
