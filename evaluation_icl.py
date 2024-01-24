@@ -69,7 +69,9 @@ def eval_clip(
             text=[detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
             images=image, 
             return_tensors="pt", 
-            padding=True
+            padding=True,
+            truncation=True, 
+            max_length=77,
         ).to(clip_model.device)
         outputs = clip_model(**inputs)
         clip_similarity = get_clip_similarity(
@@ -83,8 +85,11 @@ def eval_clip(
             text=[description[:200], detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
             return_tensors="pt", 
             padding=True,
+            truncation=True, 
+            max_length=77,
         ).to(clip_model.device)
         batch_outputs = clip_model.get_text_features(**batch_inputs)
+            
         batch_outputs = batch_outputs / batch_outputs.norm(dim=1, keepdim=True)
         description_embeds = batch_outputs[[0]]
         batch_true_embeds = batch_outputs[1:]
