@@ -21,8 +21,9 @@ def load_gill(
     
     g_cuda = torch.Generator(device=device).manual_seed(seed)
     return model, g_cuda
+    
 
-def call_gill(
+def call_gill_micl(
     model, 
     g_cuda,
     text_inputs = ["Red", "Green", "Yellow"],
@@ -36,15 +37,17 @@ def call_gill(
         'You are a professional assistant and always answer my question directly and perfectly without any excuses.',
         'Based on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss.',
     ],
+    call_mode = 'micl', # 'micl' or 'text'
 ):
     set_seed(seed)
     
     prompt = []
     for i in range(len(text_inputs)):
         prompt.append(text_inputs[i])
-        if i < len(text_inputs) - 1:
-            image = Image.open(image_inputs[i]).convert('RGB')
-            prompt.append(image)
+        if call_mode == 'micl':
+            if i < len(text_inputs) - 1:
+                image = Image.open(image_inputs[i]).convert('RGB')
+                prompt.append(image)
             
     if instruction[0]: prompt.insert(0, instruction[0])
     if instruction[1]: prompt.append(instruction[1])

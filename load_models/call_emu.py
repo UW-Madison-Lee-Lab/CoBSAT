@@ -111,6 +111,7 @@ def call_emu(
         "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
         '',
     ],
+    call_mode = 'micl', # 'micl' or 'text'
 ):
     set_seed(seed)
     
@@ -119,9 +120,10 @@ def call_emu(
         prompt = [instruction[0]]
         for i in range(len(text_inputs)):
             prompt.append(text_inputs[i])
-            if i < len(text_inputs) - 1:
-                image = Image.open(image_inputs[i]).convert('RGB')
-                prompt.append(image)
+            if call_mode == 'micl':
+                if i < len(text_inputs) - 1:
+                    image = Image.open(image_inputs[i]).convert('RGB')
+                    prompt.append(image)
         prompt.append(instruction[1])
 
         output_dict = {}

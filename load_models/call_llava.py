@@ -37,7 +37,7 @@ def load_llava(device = 'cuda'):
 
     return tokenizer, llava_model, image_processor, context_len, llava_args 
 
-def call_llava(
+def call_llava_micl(
     tokenizer,
     llava_model,
     image_processor,
@@ -54,6 +54,7 @@ def call_llava(
         '',
         "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
     ],
+    call_model = 'micl', # 'micl' or 'text'
 ):
 
     set_seed(seed)
@@ -62,8 +63,10 @@ def call_llava(
     prompt = instruction[0]
     for i in range(len(text_inputs)):
         prompt = prompt + text_inputs[i]
-        if i < len(text_inputs) - 1:
-            prompt = prompt + "<image-placeholder>"
+        
+        if call_model == 'micl':
+            if i < len(text_inputs) - 1:
+                prompt = prompt + "<image-placeholder>"
     prompt = prompt + instruction[1]
 
     output_dict = {}

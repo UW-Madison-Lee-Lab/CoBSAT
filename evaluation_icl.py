@@ -4,7 +4,7 @@ sys.path.append(root_dir)
 
 from load_models.call_llava import load_llava, eval_model as infer_llava
 import argparse, pandas as pd, wandb, torch, numpy as np
-from helper import set_seed, read_json
+from helper import set_seed, read_json, prompt_flag
 from configs import task_dataframe, item_dict, item2word, supported_models, prompt_type_options
 from load_dataset import load_dataset
 from tqdm import tqdm
@@ -367,14 +367,7 @@ def eval(
             'obj': 'theta', 'detail': 'x',
         }
     
-    if prompt_type == -1:
-        prompt_type_flag = "_i"
-    elif prompt_type == 0:
-        prompt_type_flag = ''
-    elif prompt_type == 1:
-        prompt_type_flag = "_m"
-    else:
-        raise NotImplementedError(f"Unknown prompt_type: {prompt_type}!")
+    prompt_type_flag = prompt_flag(prompt_type)
     
     csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{prompt_type_flag}/task_{task_id}_summary.csv"
     existing_csv = None

@@ -14,6 +14,7 @@ def load_qwen(device = 'cuda'):
     model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-VL-Chat", device_map=device, trust_remote_code=True).eval()
     model.generation_config = GenerationConfig.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
     return model, tokenizer
+
     
 def call_qwen(
     model, 
@@ -27,7 +28,8 @@ def call_qwen(
     instruction = [
         'You are a professional assistant and always answer my question directly and perfectly without any excuses.',
         "\nBased on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss.",
-    ]
+    ],
+    call_mode = 'micl', # 'micl' or 'text'
 ):
     set_seed(seed)
     
@@ -35,8 +37,9 @@ def call_qwen(
     messages = [{'text': instruction[0]}]
     for i in range(len(text_inputs)):
         messages.append({'text': text_inputs[i]})
-        if i < len(text_inputs) - 1:
-            messages.append({'image': image_inputs[i]})
+        if call_mode: 
+            if i < len(text_inputs) - 1:
+                messages.append({'image': image_inputs[i]})
     messages.append({'text': instruction[1]})
     
     output_dict = {}

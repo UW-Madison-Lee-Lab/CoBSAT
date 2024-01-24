@@ -24,9 +24,9 @@ def load_prompt(
         
         if prompt_type == 1:
             # misleading
-            text_inputs.append(f"{x_idx} {theta_idx}")
+            text_inputs.append(f"{x_idx} {theta_idx}: ")
         else:
-            text_inputs.append(x_idx)
+            text_inputs.append(f"{x_idx}: ")
             
         if demo_idx < shot:
             image_inputs.append(find_image(

@@ -2,11 +2,11 @@ import os, argparse, time, pandas as pd
 from load_model import load_model
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
-from helper import save_json, read_json, set_seed
+from helper import save_json, read_json, set_seed, prompt_flag
 from load_dataset import load_dataset
 from environment import TRANSFORMER_CACHE
 os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
-from configs import task_dataframe, supported_models, prompt_type_options
+from configs import task_dataframe, supported_models, prompt_type_options, instruction_dict
 
 prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list.json")
 
@@ -63,7 +63,10 @@ def get_prompt(
                 raise ValueError(f"Unknown folder: {folder}!")
             
             data_df = pd.read_csv(f'{root_dir}/datasets/{file_name}.csv')
-            text_inputs.insert(2*i+1, data_df[data_df['image_path']==image_path]['caption'].values[0])
+            text_inputs.insert(
+                2*i+1, 
+                data_df[data_df['image']==os.path.basename(image_path)]['caption'].values[0]
+            )
         print(text_inputs) 
             
         query = {
@@ -74,7 +77,8 @@ def get_prompt(
                 gen_mode,
                 task_id,
                 model,
-            )
+            ),
+            'call_mode': 'text',
         }
     return query 
             
@@ -89,20 +93,7 @@ def inference(
     gen_mode,
     max_file_count,
 ):
-    if prompt_type == 1:
-        # misleading
-        prompt_type_flag = "_m"
-    elif prompt_type == 0:
-        # basic
-        prompt_type_flag = ""
-    elif prompt_type == -1:
-        # instruct
-        prompt_type_flag = "_i"
-    elif prompt_type == -2:
-        # caption
-        prompt_type_flag = "_c"
-    else:
-        raise ValueError(f"Unknown prompt_type: {prompt_type}!")
+    prompt_type_flag = prompt_flag(prompt_type)
     
     base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}{prompt_type_flag}"
     

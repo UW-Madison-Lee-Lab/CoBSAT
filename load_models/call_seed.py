@@ -85,6 +85,7 @@ def load_seed(
     device = 'cuda',
     seed = 123,
 ):
+    set_seed(seed)
     os.environ["PROJECT_ROOT"] = SEED_PROJECT_ROOT
     
     tokenizer_cfg_path = f'{root_dir}/models/SEED/configs/tokenizer/seed_llama_tokenizer_hf.yaml'
@@ -118,6 +119,7 @@ def call_seed(
         "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
         '',
     ],
+    call_mode = 'micl', # 'micl' or 'text' 
 ):
     set_seed(seed)
     
@@ -125,15 +127,16 @@ def call_seed(
     
     for i in range(len(text_inputs)):
 
-        input_tokens = input_tokens + text_inputs[i] + ": "
-        if i < len(text_inputs) - 1:
-            image = Image.open(image_inputs[i]).convert('RGB')
-            image_tensor = transform(image).to(device)
-            img_ids = tokenizer.encode_image(image_torch=image_tensor)
-            img_ids = img_ids.view(-1).cpu().numpy()
-            img_tokens = BOI_TOKEN + ''.join([IMG_TOKEN.format(item)
-                                            for item in img_ids]) + EOI_TOKEN
-            input_tokens = input_tokens + img_tokens
+        input_tokens = input_tokens + text_inputs[i]
+        if call_mode == 'micl':
+            if i < len(text_inputs) - 1:
+                image = Image.open(image_inputs[i]).convert('RGB')
+                image_tensor = transform(image).to(device)
+                img_ids = tokenizer.encode_image(image_torch=image_tensor)
+                img_ids = img_ids.view(-1).cpu().numpy()
+                img_tokens = BOI_TOKEN + ''.join([IMG_TOKEN.format(item)
+                                                for item in img_ids]) + EOI_TOKEN
+                input_tokens = input_tokens + img_tokens
 
     input_tokens += instruction[1]
     input_tokens = input_tokens + e_token + sep
