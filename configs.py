@@ -117,11 +117,11 @@ supported_models = [
 
 # need to be updated, and also update the instruction for text generatopm for normal tasks too.
 instruction_dict = {
-    -2: {
+    'caption': {
         'image': 'We provide a few examples, each with a input, and an output of the image description. Based on the examples, predict the next image descripion and visualize it. ',
         'text': 'We provide a few examples, each with a input, and an output of the image description. Based on the examples, predict the next image descripion. ',
     },
-    -1: {
+    'instruct': {
         'image': {
             1: 'Please identify the common main object in the images, and generate another image of this object of the requested color. ',
             2: 'Please identify the common color in the images, and generate another image of the requested object in the same color. ',
@@ -147,7 +147,7 @@ instruction_dict = {
             10: 'Please identify the common texture of the objects in the images, and describe the next image to be generated based on the sequence below. Your description of image should contain the description of the requested object and the common texture. ',
         },
     },
-    0: {
+    'default': {
         'text': {
             'seed': [
                 "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
@@ -216,4 +216,10 @@ google_folder_id = {
     'datasets': '1XtseQ7TXrJXnms4GDa1zN4h45lDsRiMU',
 }
 
-prompt_type_options = [-2,-1,0,1]
+prompt_type_options = [
+    'caption',#  -2, # replace image with image captions
+    'instruct', # -1, # tell the prompt to generate the object of the common attribute
+    'default', # 0, # basic
+    'misleading', # 1, # misleading
+    'cot', # 2, # chain of thought
+]

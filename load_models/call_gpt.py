@@ -2,12 +2,16 @@
 
 from environment import OPENAI_API_KEY
 from openai import OpenAI
-import os, base64, requests
+import os, base64, requests, sys
 from typing import Literal
 from time import time
 
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 client = OpenAI()
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
+from helper import retry_if_fail
+
 
 # Function to encode the image
 def encode_image(image_path):
@@ -69,7 +73,7 @@ def prompt_image_eval(
     
     return messages
         
-
+@retry_if_fail
 def call_gpt4v(
     text_inputs = ["Red", "Green", "Yellow"],
     image_mode: Literal['url', 'path'] = 'path',

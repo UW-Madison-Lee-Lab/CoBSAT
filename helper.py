@@ -1,4 +1,4 @@
-import os, json, numpy as np, random, torch, transformers
+import os, json, numpy as np, random, torch, transformers, functools, time
 root_dir = os.path.dirname(os.path.abspath(__file__))
 from PIL import Image
 from configs import task_dataframe
@@ -97,3 +97,28 @@ def prompt_flag(prompt_type):
     else:
         raise ValueError(f"Unknown prompt_type: {prompt_type}!")
     return prompt_type_flag
+
+def retry_if_fail():
+    def decorator_retry(func):
+        @functools.wraps(func)
+        def wrapper_retry(*args, **kwargs):
+            retry = 0
+            while retry <= 10:
+                try:
+                    out = func(*args, **kwargs)
+                    break
+                except KeyboardInterrupt:
+                    raise KeyboardInterrupt
+                except Exception as e:
+                    retry += 1
+                    time.sleep(2)
+                    print(f"Exception occurred: {type(e).__name__}, {e.args}")
+                    print(f"Retry {retry} times...")
+
+            if retry > 10:
+                out = {'description': 'ERROR', 'image': None, 'time': 0}
+                print('ERROR')
+            
+            return out
+        return wrapper_retry
+    return decorator_retry

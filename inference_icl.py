@@ -1,4 +1,4 @@
-import os, argparse, time, pandas as pd
+import os, argparse, pandas as pd
 from load_model import load_model
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -16,13 +16,13 @@ def get_instruction(
     task_id, 
     model,
 ):
-    if prompt_type == -1:
+    if prompt_type == 'instruct':
         return [instruction_dict[prompt_type][gen_mode][task_id], '']
-    elif prompt_type == -2:
+    elif prompt_type == 'caption':
         return [instruction_dict[prompt_type][gen_mode], '']
     else:
-        if model in instruction_dict[0][gen_mode]:
-            return instruction_dict[0][gen_mode][model]
+        if model in instruction_dict['default'][gen_mode]:
+            return instruction_dict['default'][gen_mode][model]
         else:
             raise NotImplementedError(f'{model} is not supported for {gen_mode} generation!')
 
@@ -35,7 +35,7 @@ def get_prompt(
     model,
     gen_mode, 
 ):
-    if prompt_type in [-1,0,1]:
+    if prompt_type in ['instruct', 'default', 'misleading']: # [-1,0,1]:
         query = {
             'text_inputs': text_inputs, 
             'image_inputs': image_inputs,
@@ -46,7 +46,7 @@ def get_prompt(
                 model,
             )
         }
-    elif prompt_type == -2:
+    elif prompt_type == 'caption': # -2:
         for i, image_path in enumerate(image_inputs):
             folder = os.path.basename(os.path.dirname(image_path))
             if 'action' in folder:
@@ -67,7 +67,6 @@ def get_prompt(
                 2*i+1, 
                 data_df[data_df['image']==os.path.basename(image_path)]['caption'].values[0]
             )
-        print(text_inputs) 
             
         query = {
             'text_inputs': text_inputs,
@@ -81,7 +80,11 @@ def get_prompt(
             'call_mode': 'text',
         }
     return query 
-            
+
+def infer_model(
+    
+):  
+    pass          
 
 def inference(
     model,
@@ -130,35 +133,16 @@ def inference(
                 continue
         else:
             raise NotImplementedError(f"Unknown gen_mode: {gen_mode}!")
-
-        # for avoid unexpected error and retry the same prompt at most 10 times
-        # normally it should not happen, but it happens for some models
-        # such as gpt (network issue sometimes)
-        retry = 0
-        while retry <= 10:
-            try:
-                query = get_prompt(
-                    text_inputs,
-                    image_inputs,
-                    prompt_type,
-                    task_id, 
-                    model,
-                    gen_mode, 
-                )
-                out = call_model(query)
-                break
-            except KeyboardInterrupt:
-                exit()
-            except Exception as e:
-                retry += 1
-                # wait 2 seconds
-                time.sleep(2)
-                print(f"Exception occurred: {type(e).__name__}, {e.args}")
-                print('Retrying...')
-                
-        if retry > 10:
-            out = {'description': 'ERROR', 'image': None, 'time': 0}
-            print('ERROR')
+        
+        query = get_prompt(
+            text_inputs,
+            image_inputs,
+            prompt_type,
+            task_id, 
+            model,
+            gen_mode, 
+        )
+        out = call_model(query)
             
         out['text_inputs'] = text_inputs
         out['image_inputs'] = image_inputs
@@ -176,7 +160,7 @@ def inference(
 if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate images or image descriptions')
     parser.add_argument('--shot', type=int, nargs='+', default=[2,4,6,8])
-    parser.add_argument('--prompt_type', type=int, nargs='+', default=[0,1], choices=prompt_type_options)
+    parser.add_argument('--prompt_type', type=str, nargs='+', default=[0,1], choices=prompt_type_options)
     parser.add_argument('--model', type=str, default="qwen", choices = supported_models)
     parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)
