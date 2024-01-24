@@ -50,6 +50,7 @@ def load_dataset(
     task_id, 
     num_prompt = 1000,
     seed = 123,
+    data_mode = 'inference', # 'inference' or 'ft_train' or 'ft_test'
 ):
     print("========"*3)
     print(f'Loading the dataset for task {task_id}...')
@@ -61,10 +62,16 @@ def load_dataset(
     
     set_seed(seed)
     
-    prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list.json")
+    if data_mode == 'inference':
+        prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list.json")
+    
     data_loader = []
     for i in range(num_prompt):
-        item_inputs = prompts_list[i]
+        if data_mode == 'inference':
+            item_inputs = prompts_list[i]
+        else:
+            raise ValueError(f'Unknown data_mode: {data_mode}')
+        
         input_dict = load_prompt(
             shot,
             prompt_type,
