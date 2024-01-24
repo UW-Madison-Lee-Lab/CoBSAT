@@ -80,23 +80,6 @@ def find_image(
         return None 
     else:
         return image_path_i
-    
-def prompt_flag(prompt_type):
-    if prompt_type == 1:
-        # misleading
-        prompt_type_flag = "_m"
-    elif prompt_type == 0:
-        # basic
-        prompt_type_flag = ""
-    elif prompt_type == -1:
-        # instruct
-        prompt_type_flag = "_i"
-    elif prompt_type == -2:
-        # caption
-        prompt_type_flag = "_c"
-    else:
-        raise ValueError(f"Unknown prompt_type: {prompt_type}!")
-    return prompt_type_flag
 
 def retry_if_fail():
     def decorator_retry(func):

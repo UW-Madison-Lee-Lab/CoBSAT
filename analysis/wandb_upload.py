@@ -2,7 +2,7 @@ import wandb, os, sys
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
 
-from configs import task_dataframe, supported_models
+from configs import task_dataframe, supported_models, prompt_type_options
 import pandas as pd, argparse
  
 def update_wandb(
@@ -16,9 +16,7 @@ def update_wandb(
     task_type = task_dataframe[task_id]['task_type']
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
-    
-    prompt_type_flag = "_m" if prompt_type else ""
-    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{prompt_type_flag}/task_{task_id}_summary.csv"
+    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}/{prompt_type}/task_{task_id}_summary.csv"
     
     # Initialize a new run
     wandb.init(
@@ -58,7 +56,7 @@ if '__main__' == __name__:
     parser.add_argument('--model', type = str, default = 'qwen', choices = supported_models, help = 'model')
     parser.add_argument('--task_id', type = int, nargs = '+', default = list(task_dataframe.keys()), help = 'task id')
     parser.add_argument('--shot', type = int, nargs = '+', default = [2,4,6,8], help = 'shot')
-    parser.add_argument('--prompt_type', type = int, nargs = '+', default = [0,1], help = 'prompt_type', choices = [0,1])
+    parser.add_argument('--prompt_type', type = str, nargs = '+', default = ['default'], help = 'prompt_type', choices = prompt_type_options)
     parser.add_argument('--seed', type = int, default = 123, help = 'seed')
     parser.add_argument('--eval_mode', type = str, default = 'text', help = 'evaluation mode', choices = ['text', 'image'])
 

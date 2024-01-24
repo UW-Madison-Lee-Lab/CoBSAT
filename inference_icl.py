@@ -2,7 +2,7 @@ import os, argparse, pandas as pd
 from load_model import load_model
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
-from helper import save_json, read_json, set_seed, prompt_flag
+from helper import save_json, read_json, set_seed
 from load_dataset import load_dataset
 from environment import TRANSFORMER_CACHE
 os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
@@ -159,7 +159,7 @@ def inference(
 if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate images or image descriptions')
     parser.add_argument('--shot', type=int, nargs='+', default=[2,4,6,8])
-    parser.add_argument('--prompt_type', type=str, nargs='+', default=[0,1], choices=prompt_type_options)
+    parser.add_argument('--prompt_type', type=str, nargs='+', default=['default'], choices=prompt_type_options)
     parser.add_argument('--model', type=str, default="qwen", choices = supported_models)
     parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)

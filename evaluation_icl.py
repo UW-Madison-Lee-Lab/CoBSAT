@@ -4,7 +4,7 @@ sys.path.append(root_dir)
 
 from load_models.call_llava import load_llava, eval_model as infer_llava
 import argparse, pandas as pd, wandb, torch, numpy as np
-from helper import set_seed, read_json, prompt_flag
+from helper import set_seed, read_json
 from configs import task_dataframe, item_dict, item2word, supported_models, prompt_type_options
 from load_dataset import load_dataset
 from tqdm import tqdm
@@ -367,9 +367,7 @@ def eval(
             'obj': 'theta', 'detail': 'x',
         }
     
-    prompt_type_flag = prompt_flag(prompt_type)
-    
-    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{prompt_type_flag}/task_{task_id}_summary.csv"
+    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}/{prompt_type}/task_{task_id}_summary.csv"
     existing_csv = None
     if os.path.exists(csv_file_path) and (not overwrite): existing_csv = pd.read_csv(csv_file_path)
     
@@ -537,7 +535,7 @@ if '__main__' == __name__:
     parser.add_argument('--model', type = str, default = 'qwen', choices = supported_models, help = 'model')
     parser.add_argument('--task_id', type = int, nargs = '+', default = list(task_dataframe.keys()), help = 'task id')
     parser.add_argument('--shot', type = int, nargs = '+', default = [2,4,6,8], help = 'shot')
-    parser.add_argument('--prompt_type', type = str, nargs = '+', default = [0,1], help = 'prompt_type', choices = prompt_type_options)
+    parser.add_argument('--prompt_type', type = str, nargs = '+', default = ['default'], help = 'prompt_type', choices = prompt_type_options)
     parser.add_argument('--device', type = str, default = 'cuda', help = 'device')
     parser.add_argument('--seed', type = int, default = 123, help = 'seed')
     parser.add_argument('--wandb', type = int, default = 1, help = 'whether log the results using wandb', choices = [0,1])

@@ -22,7 +22,7 @@ def load_prompt(
         x_demos.append(x_idx)
         theta_idx = theta_list[theta_idxs[demo_idx]]
         
-        if prompt_type == 1:
+        if prompt_type == 'misleading':
             # misleading
             text_inputs.append(f"{x_idx} {theta_idx}: ")
         else:
