@@ -6,26 +6,17 @@ from helper import save_json, read_json, set_seed
 from load_dataset_ft import load_dataset
 from configs import task_dataframe, item_dict, item2word
 
+import pandas as pd
+
 
 def image_description(
     task_id,
-    x,
-    theta,
+    data,
 ):
-    task_description = {
-        1: f"object {theta} of color {x}",
-        2: f"object {x} of color {theta}",
-        3: f"animal {theta} in background {x}",
-        4: f"animal {x} in background {theta}",
-        5: f"object {theta} in style {x}",
-        6: f"object {x} in style {theta}",
-        7: f"animal {theta} doing {x}",
-        8: f"animal {x} doing {theta}",
-        9: f"object {theta} in texture {x}",
-        10: f"object {x} in texture {theta}",
-    }
+    csv = pd.read_csv(task_dataframe[task_id]["task_type"] + ".csv", sep = ",")
+    find = csv[csv["image"] == os.path.basename(data["image_inputs"][-1])] 
 
-    return task_description[task_id]
+    return find.values[0][1]
 
 
 if '__main__' == __name__:
@@ -37,7 +28,6 @@ if '__main__' == __name__:
 
     args = parser.parse_args()
     
-    # print experiment configuration
     args_dict = vars(args)
     print("########"*3)
     print('## Experiment Setting:')
@@ -82,7 +72,7 @@ if '__main__' == __name__:
                 },
                 {
                     "from": "assistant",
-                    "value": image_description(task_id, data["x_list"][-1], data["theta"])
+                    "value": image_description(task_id, data)
                 }
                 ]
             }
