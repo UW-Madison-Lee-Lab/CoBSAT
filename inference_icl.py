@@ -102,13 +102,12 @@ def get_prompt(
                 task_id,
                 model,
             )
-            instruction[0] += history[0] 
-            instruction[1] = history[1] + instruction[1]
             
             query = {
                 'text_inputs': text_inputs, 
                 'image_inputs': image_inputs,
                 'instruction': instruction,
+                'history': history,
             }
             
     else:
@@ -138,15 +137,14 @@ def infer_model(
         print("CoT step:")
         print(f"{out['description']}\n")
         
-        history = [query['instruction'][0], query['instruction'][1] + out['description']]
         query = get_prompt(
-            text_inputs,
-            image_inputs,
+            [],
+            [],
             prompt_type,
             task_id, 
             model,
             gen_mode, 
-            history,
+            history = out['history'],
         )
         query['instruction'][1] = query['instruction'][1] + f"'{text_inputs[-1]}'."
         out = call_model(query)
