@@ -96,9 +96,8 @@ def inference(
     gen_mode,
     max_file_count,
 ):
-    prompt_type_flag = prompt_flag(prompt_type)
     
-    base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}{prompt_type_flag}"
+    base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}/{prompt_type}"
     
     folder_path = f"{base_path}/task_{task_id}"
     if not os.path.exists(folder_path):
