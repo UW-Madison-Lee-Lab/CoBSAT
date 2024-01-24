@@ -38,7 +38,7 @@ def call_qwen(
     messages = [{'text': instruction[0]}]
     for i in range(len(text_inputs)):
         messages.append({'text': text_inputs[i]})
-        if call_mode: 
+        if call_mode == 'micl': 
             if i < len(text_inputs) - 1:
                 messages.append({'image': image_inputs[i]})
     messages.append({'text': instruction[1]})

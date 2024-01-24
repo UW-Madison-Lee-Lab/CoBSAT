@@ -69,7 +69,7 @@ def get_prompt(
             data_df = pd.read_csv(f'{root_dir}/datasets/{file_name}.csv')
             text_inputs.insert(
                 2*i+1, 
-                data_df[data_df['image']==os.path.basename(image_path)]['caption'].values[0]
+                data_df[data_df['image']==os.path.basename(image_path)]['caption'].values[0] + ' '
             )
             
         query = {
@@ -134,6 +134,9 @@ def infer_model(
             'general', 
         )
         out = call_model(query)
+        print('-------------------')
+        print("CoT step:")
+        print(f"{out['description']}\n")
         
         history = [query['instruction'][0], query['instruction'][1] + out['description']]
         query = get_prompt(
@@ -145,6 +148,7 @@ def infer_model(
             gen_mode, 
             history,
         )
+        query['instruction'][1] = query['instruction'][1] + f"'{text_inputs[-1]}'."
         out = call_model(query)
     else:
         query = get_prompt(
@@ -219,12 +223,13 @@ def inference(
         out['image_inputs'] = image_inputs
         if gen_mode == 'text':
             save_json(out, save_path+'.json')
-            print('---')
+            print('-------------------')
             print(out["description"])
         elif gen_mode == 'image':
             img = out['image']
             if img != None: img.save(save_path+'.jpg')
-            
+            print('-------------------')
+            print(out["description"])
             out.pop('image')
             save_json(out, save_path+'.json')
 
