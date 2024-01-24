@@ -25,7 +25,7 @@ def load_prompt(
         
         text_inputs.append(x_idx)
             
-        if demo_idx < shot:
+        if demo_idx < shot + 1: ##########
             image_inputs.append(find_image(
                 root_dir, 
                 task_id, 
