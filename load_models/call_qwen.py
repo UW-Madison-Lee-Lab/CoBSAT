@@ -30,6 +30,7 @@ def call_qwen(
     ]
 ):
     set_seed(seed)
+    
     # get prompt
     messages = [{'text': instruction[0]}]
     for i in range(len(text_inputs)):

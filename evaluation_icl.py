@@ -5,7 +5,7 @@ sys.path.append(root_dir)
 from load_models.call_llava import load_llava, eval_model as infer_llava
 import argparse, pandas as pd, wandb, torch, numpy as np
 from helper import set_seed, read_json
-from configs import task_dataframe, item_dict, item2word, supported_models
+from configs import task_dataframe, item_dict, item2word, supported_models, prompt_type_options
 from load_dataset import load_dataset
 from tqdm import tqdm
 from transformers import CLIPProcessor, CLIPModel
@@ -246,9 +246,12 @@ def check_single_output(
     file_path,
     ground_truth,
     llava_configs,
+    clip_configs,
     existing_csv,
     eval_mode,
 ):
+    clip_processor, clip_model = clip_configs['clip_processor'], clip_configs['clip_model']
+    
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
     item_list = {
@@ -339,9 +342,10 @@ def check_single_output(
 def eval(
     task_id,
     shot,
-    misleading,
+    prompt_type,
     model,
     llava_configs,
+    clip_configs,
     seed,
     max_file_count = 1000,
     log_wandb = False,
@@ -363,16 +367,16 @@ def eval(
             'obj': 'theta', 'detail': 'x',
         }
     
-    if misleading == -1:
-        misleading_flag = "_i"
-    elif misleading == 0:
-        misleading_flag = ''
-    elif misleading == 1:
-        misleading_flag = "_m"
+    if prompt_type == -1:
+        prompt_type_flag = "_i"
+    elif prompt_type == 0:
+        prompt_type_flag = ''
+    elif prompt_type == 1:
+        prompt_type_flag = "_m"
     else:
-        raise NotImplementedError(f"Unknown misleading: {misleading}!")
+        raise NotImplementedError(f"Unknown prompt_type: {prompt_type}!")
     
-    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{misleading_flag}/task_{task_id}_summary.csv"
+    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{prompt_type_flag}/task_{task_id}_summary.csv"
     existing_csv = None
     if os.path.exists(csv_file_path) and (not overwrite): existing_csv = pd.read_csv(csv_file_path)
     
@@ -380,7 +384,7 @@ def eval(
         wandb_config = {
             'task_id': task_id,
             'shot': shot,
-            'misleading': misleading,
+            'prompt_type': prompt_type,
             'model': model,
             'seed': seed,
             'stage': 'eval',
@@ -420,12 +424,12 @@ def eval(
     
     data_loader = load_dataset(
         shot,
-        misleading,
+        prompt_type,
         task_id,
         max_file_count,
     )
     
-    base_path = f"{root_dir}/results/exps/{model}_{eval_mode}/shot_{shot}{misleading_flag}"
+    base_path = f"{root_dir}/results/exps/{model}_{eval_mode}/shot_{shot}{prompt_type_flag}"
     folder_path = f"{base_path}/task_{task_id}"
     if not os.path.exists(folder_path):
         raise Exception(f"Folder {folder_path} does not exist.")
@@ -442,7 +446,7 @@ def eval(
         'clip_similarity_overall': 0,
     }
     
-    for count in tqdm(range(max_file_count), desc = f"Evaluating {model}_{eval_mode}/shot_{shot}{misleading_flag}/task_{task_id}"):
+    for count in tqdm(range(max_file_count), desc = f"Evaluating {model}_{eval_mode}/shot_{shot}{prompt_type_flag}/task_{task_id}"):
             
         input_dict = data_loader[count]
         input_dict['x'] = input_dict['x_list'][-1]
@@ -464,6 +468,7 @@ def eval(
             file_path,
             ground_truth,
             llava_configs,
+            clip_configs,
             existing_csv,
             eval_mode,
         )
@@ -539,7 +544,7 @@ if '__main__' == __name__:
     parser.add_argument('--model', type = str, default = 'qwen', choices = supported_models, help = 'model')
     parser.add_argument('--task_id', type = int, nargs = '+', default = list(task_dataframe.keys()), help = 'task id')
     parser.add_argument('--shot', type = int, nargs = '+', default = [2,4,6,8], help = 'shot')
-    parser.add_argument('--misleading', type = int, nargs = '+', default = [0,1], help = 'misleading', choices = [-1,0,1])
+    parser.add_argument('--prompt_type', type = int, nargs = '+', default = [0,1], help = 'prompt_type', choices = prompt_type_options)
     parser.add_argument('--device', type = str, default = 'cuda', help = 'device')
     parser.add_argument('--seed', type = int, default = 123, help = 'seed')
     parser.add_argument('--wandb', type = int, default = 1, help = 'whether log the results using wandb', choices = [0,1])
@@ -571,16 +576,22 @@ if '__main__' == __name__:
     # load clip to device
     clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
     clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(args.device)
+    clip_configs = {
+        'clip_processor': clip_processor,
+        'clip_model': clip_model,
+    }
+    
     
     for task_id in args.task_id:
         for shot in args.shot:
-            for misleading in args.misleading:
+            for prompt_type in args.prompt_type:
                 eval(
                     task_id,
                     shot,
-                    misleading,
+                    prompt_type,
                     args.model,
                     llava_configs,
+                    clip_configs,
                     args.seed,
                     max_file_count = args.max_file_count,
                     log_wandb = args.wandb,

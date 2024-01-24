@@ -1,4 +1,5 @@
 import os, json, numpy as np, random, torch, transformers
+root_dir = os.path.dirname(os.path.abspath(__file__))
 from PIL import Image
 from configs import task_dataframe
 
@@ -79,3 +80,4 @@ def find_image(
         return None 
     else:
         return image_path_i
+    

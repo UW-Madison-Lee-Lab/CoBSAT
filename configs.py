@@ -117,7 +117,10 @@ supported_models = [
 
 # need to be updated, and also update the instruction for text generatopm for normal tasks too.
 instruction_dict = {
-    2: 'Based on the sequence, complete the sentence',
+    -2: {
+        'image': 'We provide a few examples, each with a input, and an output of the image description. Based on the examples, predict the next image descripion and visualize it. ',
+        'text': 'We provide a few examples, each with a input, and an output of the image description. Based on the examples, predict the next image descripion. ',
+    },
     -1: {
         'image': {
             1: 'Please identify the common main object in the images, and generate another image of this object of the requested color. ',
@@ -132,16 +135,16 @@ instruction_dict = {
             10: 'Please identify the common texture of the objects in the images, and generate another image of the requested object in the same texture. ',
         },
         'text': {
-            1: 'Please identify the common main object in the images, and generate the description of the next image based on the sequence below. Your description of image should contain the description of the common main object in the requested color. ',
-            2: 'Please identify the common main color in the images, and generate the description of the next image based on the sequence below. Your description of image should contain the description of the requested object in the same color. ',
-            3: 'Please identify the common animal in the images, and generate the description of the next image based on the sequence below. Your description of image should contain the description of the common animal in the requested background. ',
-            4: 'Please identify the common background in the images, and generate the description of the next image based on the sequence below. Your description of image should contain the description of the requested animal in the same background. ',
-            5: 'Please identify the common object in the images, and generate the description of the next image based on the sequence below. Your description of image should contain the description of the common object in the requested style. ',
-            6: 'Please identify the common style in the images, and generate the description of the next image based on the sequence below. Your description of image should contain the description of the requested object in the same style. ',
-            7: 'Please identify the common animal in the images, and generate the description of the next image based on the sequence below. Your description of image should contain the description of the common animal doing the requested action. ',
-            8: 'Please identify the common action/mood the animal is doing in the images, and generate the description of the next image based on the sequence below. Your description of image should contain the description of the requested animal doing the same action/mood. ',
-            9: 'Please identify the common main object in the images, and generate the description of the next image based on the sequence below. Your description of image should contain the description of the common main object in the requested texture. ',
-            10: 'Please identify the common texture of the objects in the images, and generate the description of the next image based on the sequence below. Your description of image should contain the description of the requested object in the same texture. ',
+            1: 'Please identify the common main object in the images, and describe the next image to be generated based on the sequence below. Your description of image should contain the description of the common main object and the requested color. ',
+            2: 'Please identify the common main color in the images, and describe the next image to be generated based on the sequence below. Your description of image should contain the description of the requested object and the common color. ',
+            3: 'Please identify the common animal in the images, and describe the next image to be generated based on the sequence below. Your description of image should contain the description of the common animal and the requested background. ',
+            4: 'Please identify the common background in the images, and describe the next image to be generated based on the sequence below. Your description of image should contain the description of the requested animal and the common background. ',
+            5: 'Please identify the common object in the images, and describe the next image to be generated based on the sequence below. Your description of image should contain the description of the common object and the requested style. ',
+            6: 'Please identify the common style in the images, and describe the next image to be generated based on the sequence below. Your description of image should contain the description of the requested object and the common style. ',
+            7: 'Please identify the common animal in the images, and describe the next image to be generated based on the sequence below. Your description of image should contain the description of the common animal and the requested action. ',
+            8: 'Please identify the common action/mood the animal is doing in the images, and describe the next image to be generated based on the sequence below. Your description of image should contain the description of the requested animal and the common action/mood. ',
+            9: 'Please identify the common main object in the images, and describe the next image to be generated based on the sequence below. Your description of image should contain the description of the common main object and the requested texture. ',
+            10: 'Please identify the common texture of the objects in the images, and describe the next image to be generated based on the sequence below. Your description of image should contain the description of the requested object and the common texture. ',
         },
     },
     0: {
@@ -196,23 +199,6 @@ instruction_dict = {
     }
 }
 
-
-def get_instruction(
-    misleading, 
-    model_mode,
-    task_id, 
-    model,
-):
-    if misleading == -1:
-        return [instruction_dict[misleading][model_mode][task_id], '']
-    elif misleading == -1:
-        return [instruction_dict[misleading], '']
-    else:
-        if model in instruction_dict[0][model_mode]:
-            return instruction_dict[0][model_mode][model]
-        else:
-            raise NotImplementedError(f'{model} is not supported for {model_mode} generation!')
-
 google_folder_id = {
     'llava_evaluation_m': '1i21WRLal2Bsi_2QIQdc1Vd427up7g8N6',
     'llava_evaluation_m/detail': '1i70Ulvf81Peqp_Ch6byT5sZjjj7Ws7xl',
@@ -230,3 +216,4 @@ google_folder_id = {
     'datasets': '1XtseQ7TXrJXnms4GDa1zN4h45lDsRiMU',
 }
 
+prompt_type_options = [-2,-1,0,1]

@@ -8,7 +8,7 @@ import pandas as pd, argparse
 def update_wandb(
     model, 
     shot,
-    misleading, 
+    prompt_type, 
     task_id,
     eval_mode, 
     seed = 123,
@@ -17,8 +17,8 @@ def update_wandb(
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
     
-    misleading_flag = "_m" if misleading else ""
-    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{misleading_flag}/task_{task_id}_summary.csv"
+    prompt_type_flag = "_m" if prompt_type else ""
+    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{prompt_type_flag}/task_{task_id}_summary.csv"
     
     # Initialize a new run
     wandb.init(
@@ -27,7 +27,7 @@ def update_wandb(
         config = {
             'task_id': task_id,
             'shot': shot,
-            'misleading': misleading,
+            'prompt_type': prompt_type,
             'model': model,
             'seed': seed,
             'stage': 'eval',
@@ -58,18 +58,18 @@ if '__main__' == __name__:
     parser.add_argument('--model', type = str, default = 'qwen', choices = supported_models, help = 'model')
     parser.add_argument('--task_id', type = int, nargs = '+', default = list(task_dataframe.keys()), help = 'task id')
     parser.add_argument('--shot', type = int, nargs = '+', default = [2,4,6,8], help = 'shot')
-    parser.add_argument('--misleading', type = int, nargs = '+', default = [0,1], help = 'misleading', choices = [0,1])
+    parser.add_argument('--prompt_type', type = int, nargs = '+', default = [0,1], help = 'prompt_type', choices = [0,1])
     parser.add_argument('--seed', type = int, default = 123, help = 'seed')
     parser.add_argument('--eval_mode', type = str, default = 'text', help = 'evaluation mode', choices = ['text', 'image'])
 
     args = parser.parse_args()
     for task_id in args.task_id:
         for shot in args.shot:
-            for misleading in args.misleading:
+            for prompt_type in args.prompt_type:
                 update_wandb(
                     args.model, 
                     shot,
-                    misleading, 
+                    prompt_type, 
                     task_id,
                     args.eval_mode, 
                     seed = 123,

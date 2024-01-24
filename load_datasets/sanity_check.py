@@ -10,11 +10,12 @@ os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
 from load_models.call_llava import load_llava
 from models.llava.llava.eval.run_llava import eval_model
 import argparse, pandas as pd
-from helper import set_seed
+from helper import set_seed, save_json
 from configs import item_dict, task_types
-from evaluation_icl import check_single_description, check_single_image
+from evaluation_icl import check_single_output
+from transformers import CLIPProcessor, CLIPModel
     
-def check_text(task_type, llava_configs):
+def check_text(task_type, llava_configs, clip_configs):
     
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
@@ -32,53 +33,34 @@ def check_text(task_type, llava_configs):
             ground_truth = {}
             ground_truth['detail'], ground_truth['obj'] = image.split('.')[0].split('_')
             
-            try:
-                image_path = f"{folder_path}/{image}"
-                
-                # llava for generating captions
-                caption_prompt = f"Generate a clear description of the image <image-placeholder>. The description should include the object and details such as background, style, texture, color, action, etc, if applicable."
-                caption = eval_model(
-                    caption_prompt,
-                    [image_path],
-                    llava_configs['tokenizer'],
-                    llava_configs['llava_model'],
-                    llava_configs['image_processor'],
-                    llava_configs['context_len'],
-                    llava_configs['llava_args'],
-                    device=llava_configs['device'],
-                )
-                
-                row = check_single_description(
-                    task_type,
-                    image,
-                    caption,
-                    ground_truth,
-                    llava_configs,
-                )
+            image_path = f"{folder_path}/{image}"
             
-            except KeyboardInterrupt:
-                exit()
-            except Exception as e:
-                print(f"Exception occurred: {type(e).__name__}, {e.args}")
-                print(image)
-                
-                row = {
-                    'image': image,
-                    'caption': None,
-                    'prompt_detail': None,
-                    'prompt_obj': None,
-                    'ground_truth_detail': None,
-                    'ground_truth_obj': None,
-                    'response_detail': None,
-                    'response_obj': None,
-                    'answer_detail': None,
-                    'answer_obj': None,
-                    'check_detail': None,
-                    'check_obj': None,
-                    'correct': None,
-                }
-                
-            print(row)
+            # llava for generating captions
+            caption_prompt = f"Generate a clear description of the image <image-placeholder>. The description should include the object and details such as background, style, texture, color, action, etc, if applicable."
+            caption = eval_model(
+                caption_prompt,
+                [image_path],
+                llava_configs['tokenizer'],
+                llava_configs['llava_model'],
+                llava_configs['image_processor'],
+                llava_configs['context_len'],
+                llava_configs['llava_args'],
+                device=llava_configs['device'],
+            )
+            
+            text_path = f"{root_dir}/results/captions/{task_type}/{image.split('.')[0]}.json"
+            save_json({'description': caption}, text_path)
+            
+            row = check_single_output(
+                task_type,
+                text_path,
+                ground_truth,
+                llava_configs,
+                clip_configs,
+                existing_csv = None,
+                eval_mode = 'text',
+            )
+            
             result_df.append(row)
             
             
@@ -88,7 +70,7 @@ def check_text(task_type, llava_configs):
     result_df.to_csv(df_path)
         
                 
-def check_image(task_type, llava_configs):
+def check_image(task_type, llava_configs, clip_configs):
     
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
@@ -107,37 +89,18 @@ def check_image(task_type, llava_configs):
             ground_truth = {}
             ground_truth['detail'], ground_truth['obj'] = image.split('.')[0].split('_')
             
-            try:
-                image_path = f"{folder_path}/{image}"
-                
-                row = check_single_image(
-                    task_type,
-                    image_path,
-                    ground_truth,
-                    llava_configs,
-                )
-                     
-            except KeyboardInterrupt:
-                exit()
-            except Exception as e:
-                print(f"Exception occurred: {type(e).__name__}, {e.args}")
-                print(image)
-                row = {
-                    'file_path': image,
-                    'prompt_detail': None,
-                    'prompt_obj': None,
-                    'ground_truth_detail': None,
-                    'ground_truth_obj': None,
-                    'response_detail': None,
-                    'response_obj': None,
-                    'answer_detail': None,
-                    'answer_obj': None,
-                    'check_detail': None,
-                    'check_obj': None,
-                    'correct': None,
-                }
+            image_path = f"{folder_path}/{image}"
             
-            print(row)
+            row = check_single_output(
+                task_type,
+                image_path,
+                ground_truth,
+                llava_configs,
+                clip_configs,
+                existing_csv = None, 
+                eval_mode = 'image',
+            )
+            
             result_df.append(row)
             
     result_df = pd.DataFrame(result_df)
@@ -165,11 +128,18 @@ if '__main__' == __name__:
         'device': args.device,
     }
     
+    clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+    clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(args.device)
+    clip_configs = {
+        'clip_processor': clip_processor,
+        'clip_model': clip_model,
+    }
+    
     if args.mode == 'text':
         for task_type in args.task_type:
-            check_text(task_type, llava_configs)
+            check_text(task_type, llava_configs, clip_configs)
     elif args.mode == 'image':
         for task_type in args.task_type:
-            check_image(task_type, llava_configs)
+            check_image(task_type, llava_configs, clip_configs)
         
     

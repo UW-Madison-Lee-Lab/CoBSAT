@@ -6,31 +6,105 @@ from helper import save_json, read_json, set_seed
 from load_dataset import load_dataset
 from environment import TRANSFORMER_CACHE
 os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
-from configs import task_dataframe, supported_models, get_instruction
+from configs import task_dataframe, supported_models, prompt_type_options
 
 prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list.json")
+
+def get_instruction(
+    prompt_type, 
+    gen_mode,
+    task_id, 
+    model,
+):
+    if prompt_type == -1:
+        return [instruction_dict[prompt_type][gen_mode][task_id], '']
+    elif prompt_type == -2:
+        return [instruction_dict[prompt_type][gen_mode], '']
+    else:
+        if model in instruction_dict[0][gen_mode]:
+            return instruction_dict[0][gen_mode][model]
+        else:
+            raise NotImplementedError(f'{model} is not supported for {gen_mode} generation!')
+
+
+def get_prompt(
+    text_inputs,
+    image_inputs,
+    prompt_type,
+    task_id, 
+    model,
+    gen_mode, 
+):
+    if prompt_type in [-1,0,1]:
+        query = {
+            'text_inputs': text_inputs, 
+            'image_inputs': image_inputs,
+            'instruction': get_instruction(
+                prompt_type, 
+                gen_mode,
+                task_id,
+                model,
+            )
+        }
+    elif prompt_type == -2:
+        for i, image_path in enumerate(image_inputs):
+            folder = os.path.basename(os.path.dirname(image_path))
+            if 'action' in folder:
+                file_name = 'action_animal'
+            elif 'background' in folder:
+                file_name = 'background_animal'
+            elif 'color' in folder:
+                file_name = 'color_object'
+            elif 'style' in folder:
+                file_name = 'style_object'
+            elif 'texture' in folder:
+                file_name = 'texture_object'
+            else:
+                raise ValueError(f"Unknown folder: {folder}!")
+            
+            data_df = pd.read_csv(f'{root_dir}/datasets/{file_name}.csv')
+            text_inputs.insert(2*i+1, data_df[data_df['image_path']==image_path]['caption'].values[0])
+        print(text_inputs) 
+            
+        query = {
+            'text_inputs': text_inputs,
+            'image_inputs': [],
+            'instruction': get_instruction(
+                prompt_type, 
+                gen_mode,
+                task_id,
+                model,
+            )
+        }
+    return query 
+            
 
 def inference(
     model,
     call_model,
     shot,
-    misleading,
+    prompt_type,
     task_id,
     overwrite,
     gen_mode,
     max_file_count,
 ):
-    if misleading == 1:
-        misleading_flag = "_m"
-    elif misleading == 0:
-        misleading_flag = ""
-    elif misleading == -1:
+    if prompt_type == 1:
+        # misleading
+        prompt_type_flag = "_m"
+    elif prompt_type == 0:
+        # basic
+        prompt_type_flag = ""
+    elif prompt_type == -1:
         # instruct
-        misleading_flag = "_i"
+        prompt_type_flag = "_i"
+    elif prompt_type == -2:
+        # caption
+        prompt_type_flag = "_c"
     else:
-        raise ValueError(f"Unknown misleading: {misleading}!")
+        raise ValueError(f"Unknown prompt_type: {prompt_type}!")
     
-    base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}{misleading_flag}"
+    base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}{prompt_type_flag}"
     
     folder_path = f"{base_path}/task_{task_id}"
     if not os.path.exists(folder_path):
@@ -38,7 +112,7 @@ def inference(
     
     data_loader = load_dataset(
         shot,
-        misleading,
+        prompt_type,
         task_id,
         max_file_count,
     )
@@ -72,16 +146,14 @@ def inference(
         retry = 0
         while retry <= 10:
             try:
-                query = {
-                    'text_inputs': text_inputs, 
-                    'image_inputs': image_inputs,
-                    'instruction': get_instruction(
-                        misleading, 
-                        gen_mode,
-                        task_id,
-                        model,
-                    )
-                }
+                query = get_prompt(
+                    text_inputs,
+                    image_inputs,
+                    prompt_type,
+                    task_id, 
+                    model,
+                    gen_mode, 
+                )
                 out = call_model(query)
                 break
             except KeyboardInterrupt:
@@ -113,7 +185,7 @@ def inference(
 if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate images or image descriptions')
     parser.add_argument('--shot', type=int, nargs='+', default=[2,4,6,8])
-    parser.add_argument('--misleading', type=int, nargs='+', default=[0,1], choices=[-1,0,1])
+    parser.add_argument('--prompt_type', type=int, nargs='+', default=[0,1], choices=prompt_type_options)
     parser.add_argument('--model', type=str, default="qwen", choices = supported_models)
     parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)
@@ -147,13 +219,13 @@ if '__main__' == __name__:
     )
 
     for shot in args.shot:
-        for misleading in args.misleading:
+        for prompt_type in args.prompt_type:
             for task_id in args.task_id:
                 inference(
                     args.model,
                     call_model,
                     shot,
-                    misleading,
+                    prompt_type,
                     task_id,
                     args.overwrite,
                     args.gen_mode,

@@ -6,7 +6,7 @@ from configs import task_dataframe
 
 def load_prompt(
     shot,
-    misleading,
+    prompt_type,
     task_id,
     x_idxs,
     theta_idxs,
@@ -22,7 +22,8 @@ def load_prompt(
         x_demos.append(x_idx)
         theta_idx = theta_list[theta_idxs[demo_idx]]
         
-        if misleading == 1:
+        if prompt_type == 1:
+            # misleading
             text_inputs.append(f"{x_idx} {theta_idx}")
         else:
             text_inputs.append(x_idx)
@@ -45,7 +46,7 @@ def load_prompt(
 
 def load_dataset(
     shot,
-    misleading,
+    prompt_type,
     task_id, 
     num_prompt = 1000,
     seed = 123,
@@ -55,7 +56,7 @@ def load_dataset(
     print(f'| task type: {task_dataframe[task_id]["task_type"]}')
     print(f'| x_space: {task_dataframe[task_id]["x_space"]}')
     print(f'| theta_space: {task_dataframe[task_id]["theta_space"]}')
-    print(f'| misleading: {misleading}')
+    print(f'| prompt_type: {prompt_type}')
     print(f'| shot: {shot}')
     
     set_seed(seed)
@@ -66,7 +67,7 @@ def load_dataset(
         item_inputs = prompts_list[i]
         input_dict = load_prompt(
             shot,
-            misleading,
+            prompt_type,
             task_id,
             item_inputs["x_list"],
             item_inputs["theta_list"],
