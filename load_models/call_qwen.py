@@ -47,7 +47,12 @@ def call_qwen(
     output_dict = {}
     qwen_start = time()
     query = tokenizer.from_list_format(messages)
-    output_dict['description'], output_dict['history'] = model.chat(tokenizer, query=query, history=history)
+    output_dict['description'], output_dict['history'] = model.chat(
+        tokenizer, 
+        query=query, 
+        history=history,
+        system = "You are a professional assistant and always answer my question directly and perfectly without any excuses. ",
+    )
     qwen_end = time()
     output_dict['time'] = qwen_end - qwen_start
     

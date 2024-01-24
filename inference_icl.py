@@ -17,9 +17,9 @@ def get_instruction(
     model,
 ):
     if prompt_type == 'instruct':
-        return [instruction_dict[prompt_type][gen_mode][task_id], '']
+        return (instruction_dict[prompt_type][gen_mode][task_id], '')
     elif prompt_type == 'caption':
-        return [instruction_dict[prompt_type][gen_mode], '']
+        return (instruction_dict[prompt_type][gen_mode], '')
     elif prompt_type == 'cot':
         return instruction_dict[prompt_type][gen_mode]
     elif prompt_type in ['default', 'misleading']:
@@ -147,7 +147,8 @@ def infer_model(
             gen_mode, 
             history = out['history'],
         )
-        query['instruction'][1] = query['instruction'][1] + f"'{text_inputs[-1]}'."
+        query['instruction'] = [query['instruction'][0], query['instruction'][1] + f"'{text_inputs[-1]}'."]
+        print(f"Question: {query['instruction'][1]}")
         out = call_model(query)
     else:
         query = get_prompt(
@@ -222,15 +223,14 @@ def inference(
         out['image_inputs'] = image_inputs
         if gen_mode == 'text':
             save_json(out, save_path+'.json')
-            print('-------------------')
-            print(out["description"])
         elif gen_mode == 'image':
             img = out['image']
             if img != None: img.save(save_path+'.jpg')
-            print('-------------------')
-            print(out["description"])
             out.pop('image')
             save_json(out, save_path+'.json')
+            
+        print('-------------------')
+        print(f"{out['description']} \n")
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Generate images or image descriptions')

@@ -122,12 +122,12 @@ instruction_dict = {
         'text': 'We provide a few examples, each with a input, and an output of the image description. Based on the examples, predict the next image descripion. ',
     },
     'cot': {
-        'general': [
+        'general': (
             "We provide a few examples, each with a input, and an output of the image description. Based on the examples, the task is to predict the next image descripion.\n\n\n", 
             "\n\n\nBefore predicting the next image, let's think step by step and analyze what the relationship between the text input and image output in each example is first. \n\n\n"
-        ], 
-        'image': ['', "\n\n\nBased on the analysis, please generate the next image given the request "], 
-        'text': ['', "\n\n\nBased on the analysis, please describe what the next image should be look like given the request "], 
+        ), 
+        'image': ('', "\n\n\nBased on the analysis, please generate the next image given the request "), 
+        'text': ('', "\n\n\nBased on the analysis, please describe what the next image should be look like given the request "), 
     },
     'instruct': {
         'image': {
@@ -157,52 +157,52 @@ instruction_dict = {
     },
     'default': {
         'text': {
-            'seed': [
+            'seed': (
                 "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
                 '',
-            ],
-            'qwen': [
-                'You are a professional assistant and always answer my question directly and perfectly without any excuses. ', 
+            ),
+            'qwen': (
+                '', 
                 "\nBased on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss. ",
-            ],
-            'llava': [
+            ),
+            'llava': (
                 '',
                 "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
-            ],
-            'gpt4v': [
+            ),
+            'gpt4v': (
                 "I will provide you with a few examples with text and images. Complete the example with the description of the next image. The description should be clear with main object, and include details such as color, texture, background, style, and action, if applicable. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
                 "",
-            ],
-            'gill': [
+            ),
+            'gill': (
                 'You are a professional assistant and always answer my question directly and perfectly without any excuses. ',
                 'Based on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss. ',
-            ],
-            'emu': [
+            ),
+            'emu': (
                 "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
                 '',
-            ],
-            'emu2': [
+            ),
+            'emu2': (
                 '',
                 "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
-            ],
+            ),
         },
         'image': {
-            'gill': [
+            'gill': (
                 'You are a professional assistant can generate a new image based on the seqeunce. ',
                 '',
-            ],
-            'emu': [
+            ),
+            'emu': (
                 '',
                 '',
-            ],
+            ),
             'seed': [
                 '',
                 '',
             ],
-            'emu2': [
+            'emu2': (
                 '',
                 '',
-            ]
+            )
         }
     }
 }
