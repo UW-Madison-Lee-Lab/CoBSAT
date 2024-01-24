@@ -96,11 +96,6 @@ def call_gpt4v(
     history = None,
     save_history = False,
 ):
-    
-    if len(text_inputs) != (len(image_inputs)+1):
-        raise ValueError("The number of text inputs must be equal to the number of image urls plus one.")
-    if len(text_inputs) > 10:
-        raise ValueError("The number of demonstrations must be less than or equal to 10.")
 
     messages = prompt_image_eval(
         text_inputs, 
