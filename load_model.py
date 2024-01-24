@@ -72,7 +72,7 @@ def load_model(
         
         from load_models.call_gpt import call_gpt4v
         return lambda configs: call_gpt4v(
-            mode = 'path', 
+            image_mode = 'path', 
             use_dalle = False, 
             **configs,
         )

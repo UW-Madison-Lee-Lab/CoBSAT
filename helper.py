@@ -81,27 +81,25 @@ def find_image(
     else:
         return image_path_i
 
-def retry_if_fail():
-    def decorator_retry(func):
-        @functools.wraps(func)
-        def wrapper_retry(*args, **kwargs):
-            retry = 0
-            while retry <= 10:
-                try:
-                    out = func(*args, **kwargs)
-                    break
-                except KeyboardInterrupt:
-                    raise KeyboardInterrupt
-                except Exception as e:
-                    retry += 1
-                    time.sleep(2)
-                    print(f"Exception occurred: {type(e).__name__}, {e.args}")
-                    print(f"Retry {retry} times...")
+def retry_if_fail(func):
+    @functools.wraps(func)
+    def wrapper_retry(*args, **kwargs):
+        retry = 0
+        while retry <= 10:
+            try:
+                out = func(*args, **kwargs)
+                break
+            except KeyboardInterrupt:
+                raise KeyboardInterrupt
+            except Exception as e:
+                retry += 1
+                time.sleep(2)
+                print(f"Exception occurred: {type(e).__name__}, {e.args}")
+                print(f"Retry {retry} times...")
 
-            if retry > 10:
-                out = {'description': 'ERROR', 'image': None, 'time': 0}
-                print('ERROR')
-            
-            return out
-        return wrapper_retry
-    return decorator_retry
+        if retry > 10:
+            out = {'description': 'ERROR', 'image': None, 'time': 0}
+            print('ERROR')
+        
+        return out
+    return wrapper_retry

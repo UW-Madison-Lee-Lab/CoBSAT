@@ -135,6 +135,7 @@ def call_gpt4v(
             headers=headers, 
             json=payload,
         )
+        print(response.json())
         output_dict['description'] = response.json()['choices'][0]['message']['content']
     else:
         raise ValueError("The image_mode must be either 'url' or 'path', not {mode}.")    

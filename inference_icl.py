@@ -146,7 +146,6 @@ def infer_model(
             history,
         )
         out = call_model(query)
-        
     else:
         query = get_prompt(
             text_inputs,
