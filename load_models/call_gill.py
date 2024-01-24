@@ -23,7 +23,7 @@ def load_gill(
     return model, g_cuda
     
 
-def call_gill_micl(
+def call_gill(
     model, 
     g_cuda,
     text_inputs = ["Red", "Green", "Yellow"],

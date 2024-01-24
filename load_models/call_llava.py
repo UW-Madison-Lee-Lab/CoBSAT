@@ -37,7 +37,7 @@ def load_llava(device = 'cuda'):
 
     return tokenizer, llava_model, image_processor, context_len, llava_args 
 
-def call_llava_micl(
+def call_llava(
     tokenizer,
     llava_model,
     image_processor,

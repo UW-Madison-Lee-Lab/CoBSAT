@@ -20,12 +20,15 @@ def get_instruction(
         return [instruction_dict[prompt_type][gen_mode][task_id], '']
     elif prompt_type == 'caption':
         return [instruction_dict[prompt_type][gen_mode], '']
-    else:
+    elif prompt_type == 'cot':
+        return instruction_dict[prompt_type][gen_mode]
+    elif prompt_type in ['default', 'misleading']:
         if model in instruction_dict['default'][gen_mode]:
             return instruction_dict['default'][gen_mode][model]
         else:
             raise NotImplementedError(f'{model} is not supported for {gen_mode} generation!')
-
+    else:
+        raise NotImplementedError(f'{prompt_type} is not supported!')
 
 def get_prompt(
     text_inputs,
@@ -82,9 +85,38 @@ def get_prompt(
     return query 
 
 def infer_model(
-    
+    prompt_type,
+    text_inputs,
+    image_inputs,
+    task_id,
+    model,
+    gen_mode,
 ):  
-    pass          
+    if prompt_type == 'cot':
+        query = get_prompt(
+            text_inputs,
+            image_inputs,
+            prompt_type,
+            task_id, 
+            model,
+            'general', 
+        )
+        out = call_model(query)
+        
+        new_text_inputs = text_inputs + [out['description']]
+        new_text_input
+        
+    else:
+        query = get_prompt(
+            text_inputs,
+            image_inputs,
+            prompt_type,
+            task_id, 
+            model,
+            gen_mode, 
+        )
+        out = call_model(query)
+    return out
 
 def inference(
     model,
@@ -133,15 +165,14 @@ def inference(
         else:
             raise NotImplementedError(f"Unknown gen_mode: {gen_mode}!")
         
-        query = get_prompt(
+        out = infer_model(
+            prompt_type,
             text_inputs,
             image_inputs,
-            prompt_type,
-            task_id, 
+            task_id,
             model,
-            gen_mode, 
+            gen_mode,
         )
-        out = call_model(query)
             
         out['text_inputs'] = text_inputs
         out['image_inputs'] = image_inputs

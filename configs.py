@@ -121,6 +121,11 @@ instruction_dict = {
         'image': 'We provide a few examples, each with a input, and an output of the image description. Based on the examples, predict the next image descripion and visualize it. ',
         'text': 'We provide a few examples, each with a input, and an output of the image description. Based on the examples, predict the next image descripion. ',
     },
+    'cot': {
+        'general': ["We provide a few examples, each with a input, and an output of the image description. Based on the examples, the task is to predict the next image descripion. Let's think step by step and analyze what the relationship between the text input and image output in each example is. ", ''], 
+        'image': ['', "Based on the analysis, please generate the next image."], 
+        'text': ['', "Based on the analysis, please describe what the next image should be look like."], 
+    },
     'instruct': {
         'image': {
             1: 'Please identify the common main object in the images, and generate another image of this object of the requested color. ',
