@@ -37,6 +37,7 @@ def get_prompt(
     task_id, 
     model,
     gen_mode, 
+    history = None,
 ):
     if prompt_type in ['instruct', 'default', 'misleading']: # [-1,0,1]:
         query = {
@@ -82,9 +83,40 @@ def get_prompt(
             ),
             'call_mode': 'text',
         }
+    elif prompt_type == 'cot':
+        if gen_mode == 'general':
+            query = {
+                'text_inputs': text_inputs, 
+                'image_inputs': image_inputs,
+                'instruction': get_instruction(
+                    prompt_type, 
+                    gen_mode,
+                    task_id,
+                    model,
+                )
+            }
+        else:
+            instruction = get_instruction(
+                prompt_type, 
+                gen_mode,
+                task_id,
+                model,
+            )
+            instruction[0] += history[0] 
+            instruction[1] = history[1] + instruction[1]
+            
+            query = {
+                'text_inputs': text_inputs, 
+                'image_inputs': image_inputs,
+                'instruction': instruction,
+            }
+            
+    else:
+        raise NotImplementedError(f"Unknown prompt_type: {prompt_type}!")
     return query 
 
 def infer_model(
+    call_model,
     prompt_type,
     text_inputs,
     image_inputs,
@@ -103,8 +135,17 @@ def infer_model(
         )
         out = call_model(query)
         
-        new_text_inputs = text_inputs + [out['description']]
-        new_text_input
+        history = [query['instruction'][0], query['instruction'][1] + out['description']]
+        query = get_prompt(
+            text_inputs,
+            image_inputs,
+            prompt_type,
+            task_id, 
+            model,
+            gen_mode, 
+            history,
+        )
+        out = call_model(query)
         
     else:
         query = get_prompt(
@@ -166,6 +207,7 @@ def inference(
             raise NotImplementedError(f"Unknown gen_mode: {gen_mode}!")
         
         out = infer_model(
+            call_model,
             prompt_type,
             text_inputs,
             image_inputs,

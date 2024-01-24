@@ -30,6 +30,7 @@ def call_qwen(
         "\nBased on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss.",
     ],
     call_mode = 'micl', # 'micl' or 'text'
+    history = None,
 ):
     set_seed(seed)
     
@@ -45,7 +46,7 @@ def call_qwen(
     output_dict = {}
     qwen_start = time()
     query = tokenizer.from_list_format(messages)
-    output_dict['description'], output_dict['history'] = model.chat(tokenizer, query=query, history=None)
+    output_dict['description'], output_dict['history'] = model.chat(tokenizer, query=query, history=history)
     qwen_end = time()
     output_dict['time'] = qwen_end - qwen_start
     
