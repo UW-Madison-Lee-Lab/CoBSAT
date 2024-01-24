@@ -120,10 +120,12 @@ def call_seed(
         '',
     ],
     call_mode = 'micl', # 'micl' or 'text' 
+    history = None,
 ):
     set_seed(seed)
     
-    input_tokens = tokenizer.bos_token  + s_token + instruction[0]
+    if history is None: history = ['', '']
+    input_tokens = tokenizer.bos_token  + s_token + instruction[0] + 
     
     for i in range(len(text_inputs)):
 
@@ -141,7 +143,7 @@ def call_seed(
     input_tokens += instruction[1]
     input_tokens = input_tokens + e_token + sep
 
-    output_dict = {}
+    output_dict = {'history': input_tokens}
     seed_start = time()
     if gen_mode == 'image':
         generate_ids = generate(tokenizer, input_tokens, generation_config, model)
