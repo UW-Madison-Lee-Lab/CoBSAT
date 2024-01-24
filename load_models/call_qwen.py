@@ -51,7 +51,7 @@ def call_qwen(
         tokenizer, 
         query=query, 
         history=history,
-        system = "You are a professional assistant and always answer my question directly and perfectly without any excuses. ",
+        system = "You are a professional assistant and always answer my question directly and perfectly without any excuses. If I ask you to predict, you should always give me the prediction with the highest probability or even random guess.",
     )
     qwen_end = time()
     output_dict['time'] = qwen_end - qwen_start
