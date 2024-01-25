@@ -1,4 +1,4 @@
-import os, json, numpy as np, random, torch, transformers, functools, time
+import os, json, numpy as np, random, torch, transformers, functools, time, pandas as pd
 root_dir = os.path.dirname(os.path.abspath(__file__))
 from PIL import Image
 from configs import task_dataframe
@@ -103,3 +103,24 @@ def retry_if_fail(func):
         
         return out
     return wrapper_retry
+
+def find_caption(
+    image_path, 
+): 
+    folder = os.path.basename(os.path.dirname(image_path))
+    if 'action' in folder:
+        file_name = 'action_animal'
+    elif 'background' in folder:
+        file_name = 'background_animal'
+    elif 'color' in folder:
+        file_name = 'color_object'
+    elif 'style' in folder:
+        file_name = 'style_object'
+    elif 'texture' in folder:
+        file_name = 'texture_object'
+    else:
+        raise ValueError(f"Unknown folder: {folder}!")
+    
+    data_df = pd.read_csv(f'{root_dir}/datasets/{file_name}.csv')
+    caption = data_df[data_df['image']==os.path.basename(image_path)]['caption'].values[0]
+    return caption

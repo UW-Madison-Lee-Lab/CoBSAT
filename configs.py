@@ -231,3 +231,9 @@ prompt_type_options = [
     'misleading', # 1, # misleading
     'cot', # 2, # chain of thought
 ]
+
+data_modes = [
+    'inference',
+    'ft_train',
+    'ft_test',
+]

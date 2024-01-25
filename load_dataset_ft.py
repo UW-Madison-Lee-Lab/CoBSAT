@@ -6,7 +6,7 @@ from configs import task_dataframe
 
 from itertools import permutations, combinations
 
-def load_prompt(
+def load_inputs(
     shot,
     task_id,
     x_idxs,
@@ -64,7 +64,7 @@ def load_dataset(
 
     for x_list in x_lists:
         for theta_list in theta_lists:
-            input_dict = load_prompt(
+            input_dict = load_inputs(
                 shot,
                 task_id,
                 x_list,

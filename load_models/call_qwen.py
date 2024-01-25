@@ -1,4 +1,4 @@
-# seed -- set
+# Update qwen/finetune.py
 
 import os, sys
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -6,8 +6,10 @@ sys.path.append(root_dir)
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.generation import GenerationConfig
-from helper import set_seed 
+from helper import set_seed, find_caption, find_image
 from time import time
+from load_dataset import get_prompt
+from configs import task_dataframe
 
 def load_qwen(device = 'cuda'):
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
@@ -15,6 +17,21 @@ def load_qwen(device = 'cuda'):
     model.generation_config = GenerationConfig.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
     return model, tokenizer
 
+def load_qwen_prompt(
+    instruction,
+    text_inputs,
+    call_mode,
+    image_inputs,
+):  
+    # get prompt
+    messages = [{'text': instruction[0]}]
+    for i in range(len(text_inputs)):
+        messages.append({'text': text_inputs[i]})
+        if call_mode == 'micl': 
+            if i < len(text_inputs) - 1:
+                messages.append({'image': image_inputs[i]})
+    messages.append({'text': instruction[1]})
+    return messages
     
 def call_qwen(
     model, 
@@ -35,14 +52,12 @@ def call_qwen(
 ):
     set_seed(seed)
     
-    # get prompt
-    messages = [{'text': instruction[0]}]
-    for i in range(len(text_inputs)):
-        messages.append({'text': text_inputs[i]})
-        if call_mode == 'micl': 
-            if i < len(text_inputs) - 1:
-                messages.append({'image': image_inputs[i]})
-    messages.append({'text': instruction[1]})
+    messages = load_qwen_prompt(
+        instruction,
+        text_inputs,
+        call_mode,
+        image_inputs,
+    )
     
     output_dict = {}
     qwen_start = time()
@@ -59,4 +74,101 @@ def call_qwen(
     if not save_history: output_dict.pop('history')
     
     return output_dict
+
+def load_ft_qwen_prompt(
+    task_id,
+    data_idx,
+    prompt_type,
+    text_inputs,
+    image_inputs,
+    x_idx,
+    theta,
+):
+    query = get_prompt(
+        text_inputs,
+        image_inputs,
+        prompt_type,
+        task_id,
+        model = 'qwen',
+        gen_mode = 'text',
+        history = None,
+    )
+    
+    messages = load_qwen_prompt(
+        query['instruction'],
+        query['text_inputs'],
+        'micl',
+        query['image_inputs'],
+    )
+    
+    prompt, image_count = '', 0
+    for message in messages:
+        if 'text' in message:
+            prompt += message['text']
+        elif 'image' in message:
+            prompt = f"{prompt} Picture {image_count+1}: <img>{image_inputs[image_count]}</img>\n"
+            image_count += 1
+        else:
+            raise ValueError(f"Unknown message type: {message.keys()}")
+        
+    
+    prompt_ft = {
+        'id': f"{task_id}_{data_idx}",
+        "conversations":[
+            {
+                "from": "user",
+                "value": prompt,
+            },
+            {
+                "from": "assistant",
+                "value": find_caption(find_image(
+                    root_dir,
+                    task_id,
+                    x_idx,
+                    theta,
+                )),
+            }
+        ]
+    }
+    return prompt_ft
+
+def ft_qwen(
+    data_path,
+    output_dir,
+    use_lora = True,
+    q_lora = False,
+    lora_r = 64,
+    lora_alpha = 16,
+    lora_dropout = 0.05,
+    seed = 123,
+):
+    set_seed(seed)
+    from models.Qwen.finetune import train, ModelArguments, DataArguments, TrainingArguments, LoraArguments
+    model_args = ModelArguments(
+        model_name_or_path="Qwen/Qwen-VL-Chat"
+    )
+    data_args = DataArguments(
+        data_path=data_path, 
+        eval_data_path=None, 
+        lazy_preprocess=True,
+    )
+    training_args = TrainingArguments(
+        cache_dir = None,
+        optim = "adamw_torch",
+        model_max_length = 512,
+        use_lora = use_lora,
+        output_dir = output_dir,
+    )
+    lora_args = LoraArguments(
+        lora_r = lora_r,
+        lora_alpha = lora_alpha,
+        lora_dropout = lora_dropout,
+        q_lora = q_lora
+    )
+    train(
+        model_args,
+        data_args,
+        training_args,
+        lora_args,
+    )
     
