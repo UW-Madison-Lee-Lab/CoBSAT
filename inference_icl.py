@@ -185,4 +185,5 @@ if '__main__' == __name__:
                     task_id,
                     args.overwrite,
                     args.gen_mode,
+                    args.finetuned,
                 )

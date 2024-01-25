@@ -453,7 +453,7 @@ def eval(
         'clip_similarity_overall': 0,
     }
     
-    for count in tqdm(range(max_file_count), desc = f"Evaluating {folder_path}"):
+    for count in tqdm(range(len(data_loader)), desc = f"Evaluating {folder_path}"):
             
         input_dict = data_loader[count]
         input_dict['x'] = input_dict['x_list'][-1]
@@ -557,6 +557,7 @@ if '__main__' == __name__:
     parser.add_argument('--wandb', type = int, default = 1, help = 'whether log the results using wandb', choices = [0,1])
     parser.add_argument('--overwrite', type = int, default = 0, help = 'whether overwrite the existing results', choices = [0,1])
     parser.add_argument('--eval_mode', type = str, default = 'text', help = 'evaluation mode', choices = ['text', 'image'])
+    parser.add_argument('--finetuned', type=int, default=0, choices=[0,1], help = "whether to use the results of the finetuned model")
     
     args = parser.parse_args()
     
@@ -602,4 +603,5 @@ if '__main__' == __name__:
                     log_wandb = args.wandb,
                     overwrite = args.overwrite,
                     eval_mode = args.eval_mode,
+                    finetuned = args.finetuned,
                 )
