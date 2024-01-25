@@ -141,7 +141,7 @@ if '__main__' == __name__:
     parser.add_argument('--task_id', type=int, nargs='+', default=list(task_dataframe.keys()))
     parser.add_argument('--overwrite', type=int, default=0, choices=[0,1])
     parser.add_argument('--gen_mode', type=str, default="image", choices=['text', 'image'])
-    parser.add_argument('--finetuned', type=int, default=0, choices=[0,1])
+    parser.add_argument('--finetuned', type=int, default=0, choices=[0,1], help = "whether to use finetuned model")
 
     args = parser.parse_args()
     
@@ -162,8 +162,11 @@ if '__main__' == __name__:
 
     set_seed(args.seed)
     
-    if args.finetuned and len(args.shot) > 1:
-        raise ValueError(f"finetuned models only supports loading one shot setting at a time. You are considering {len(args.shot)} different shot setting. shot: {args.shot}.")
+    if args.finetuned:
+        if len(args.shot) > 1:
+            raise ValueError(f"finetuned models only supports loading one shot setting at a time. You are considering {len(args.shot)} different shot setting. shot: {args.shot}.")
+        if len(args.prompt_type) > 1:
+            raise ValueError(f"finetuned models only supports loading one prompt type at a time. You are considering {len(args.prompt_type)} different prompt type. prompt_type: {args.prompt_type}.")
     
     call_model = load_model(
         args.model, 
@@ -171,7 +174,7 @@ if '__main__' == __name__:
         gen_mode=args.gen_mode,
         finetuned = args.finetuned,
         shot = args.shot[0],
-        prompt_type=args.prompt_type,
+        prompt_type=args.prompt_type[0],
     )
 
     for shot in args.shot:
