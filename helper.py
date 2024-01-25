@@ -137,11 +137,16 @@ def get_result_path(
     if finetuned: base_path += "/exps"
     return base_path
 
-def get_ft_model_dir(
+def get_ft_path(
     model,
     gen_mode,
     shot,
     prompt_type,
 ):
-    output_dir = f'{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/model'
-    return output_dir
+    # output_dir = f'{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/model'
+    output_dir = f"{model}_{gen_mode}/shot_{shot}_{prompt_type}"
+    data_path = f'{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/dataset_ft.json'
+    return {
+        'model': output_dir,
+        'data': data_path,
+    }

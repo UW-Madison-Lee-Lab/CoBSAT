@@ -3,8 +3,8 @@ root_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(root_dir)
 
 from load_dataset import load_dataset
-from configs import task_dataframe, num_prompt_dict
-from helper import save_json, get_ft_model_dir, set_seed
+from configs import task_dataframe
+from helper import save_json, get_ft_path, set_seed
 import argparse
 
 def ft_model(
@@ -18,14 +18,14 @@ def ft_model(
     if prompt_type in ['misleading', 'cot', 'caption']: 
         raise ValueError(f"Finetuning mode does not support prompt type {prompt_type}!")
     
-    output_dir = get_ft_model_dir(
+    path_dict = get_ft_path(
         model,
         gen_mode,
         shot,
         prompt_type,
     )
     
-    data_path = f'{output_dir}/dataset_ft.json'
+    output_dir, data_path = path_dict['model'], path_dict['data']
     
     data_loader = {}
     for task_id in task_dataframe:
@@ -33,7 +33,6 @@ def ft_model(
             shot,
             prompt_type = 'default',
             task_id = task_id,
-            num_prompt = num_prompt_dict['ft_train'],
             data_mode = 'ft_train',
         )
         
@@ -64,7 +63,12 @@ def ft_model(
         raise ValueError(f"Unknown model: {model}")
 
 if '__main__' == __name__:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser("""
+        Finetune the model using our dataset.
+        
+        Example Usage:
+        $ CUDA_VISIBLE_DEVICES=7 CUDA_DEVICE_MAX_CONNECTIONS=1 python finetune_icl.py --model qwen --shot 2
+    """)
     parser.add_argument('--model', type=str, default='qwen', help='model name')
     parser.add_argument('--shot', type=int, default=2, help='number of demonstrations')
     parser.add_argument('--prompt_type', type=str, default='default', help='prompt type')
