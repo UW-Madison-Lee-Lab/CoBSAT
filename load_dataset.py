@@ -2,7 +2,7 @@ import os
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
 from helper import set_seed, read_json, find_image, find_caption
-from configs import task_dataframe, instruction_dict
+from configs import task_dataframe, instruction_dict, num_prompt_dict
 from itertools import permutations
 
 def load_inputs(
@@ -50,7 +50,6 @@ def load_dataset(
     shot,
     prompt_type,
     task_id, 
-    num_prompt = 1000,
     seed = 123,
     data_mode = 'inference', # 'inference' or 'ft_train' or 'ft_test'
 ):
@@ -68,7 +67,7 @@ def load_dataset(
     
     if data_mode in ['inference', 'ft_test']:
         data_loader = []
-        for i in range(num_prompt):
+        for i in range(num_prompt_dict[prompt_type]):
             item_inputs = prompts_list[i]
             
             input_dict = load_inputs(

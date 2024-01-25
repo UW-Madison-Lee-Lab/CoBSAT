@@ -124,3 +124,24 @@ def find_caption(
     data_df = pd.read_csv(f'{root_dir}/datasets/{file_name}.csv')
     caption = data_df[data_df['image']==os.path.basename(image_path)]['caption'].values[0]
     return caption
+
+def get_result_path(
+    finetuned,
+    model,
+    gen_mode,
+    shot,
+    prompt_type,
+):
+    exp_folder = 'ft' if finetuned else 'exps'
+    base_path = f"{root_dir}/results/{exp_folder}/{model}_{gen_mode}/shot_{shot}/{prompt_type}"
+    if finetuned: base_path += "/exps"
+    return base_path
+
+def get_ft_model_dir(
+    model,
+    gen_mode,
+    shot,
+    prompt_type,
+):
+    output_dir = f'{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/model'
+    return output_dir

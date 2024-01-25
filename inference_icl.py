@@ -2,11 +2,11 @@ import os, argparse, pandas as pd
 from load_model import load_model
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
-from helper import save_json, set_seed
+from helper import save_json, set_seed, get_result_path
 from load_dataset import load_dataset, get_prompt
 from environment import TRANSFORMER_CACHE
 os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
-from configs import task_dataframe, supported_models, prompt_type_options
+from configs import task_dataframe, supported_models, prompt_type_options, num_prompt_dict
 
 def infer_model(
     call_model,
@@ -63,23 +63,29 @@ def inference(
     task_id,
     overwrite,
     gen_mode,
-    max_file_count,
+    finetuned = False,
 ):
-    
-    base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}/{prompt_type}"
+    base_path = get_result_path(
+        finetuned,
+        model,
+        gen_mode,
+        shot,
+        prompt_type,
+    )
     
     folder_path = f"{base_path}/task_{task_id}"
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
-    
+
+    data_mode = 'ft_test' if finetuned else 'inference'
     data_loader = load_dataset(
         shot,
         prompt_type,
         task_id,
-        max_file_count,
+        data_mode = data_mode,
     )
     
-    for count in range(max_file_count):
+    for count in range(len(data_loader)):
 
         input_dict = data_loader[count]
         text_inputs, image_inputs = input_dict["text_inputs"], input_dict["image_inputs"]
@@ -130,12 +136,12 @@ if '__main__' == __name__:
     parser.add_argument('--shot', type=int, nargs='+', default=[2,4,6,8])
     parser.add_argument('--prompt_type', type=str, nargs='+', default=['default'], choices=prompt_type_options)
     parser.add_argument('--model', type=str, default="qwen", choices = supported_models)
-    parser.add_argument('--max_file_count', type=int, default=1000)
     parser.add_argument('--seed', type=int, default=123)
     parser.add_argument('--device', nargs='+', type=str, default=['cuda']) # or ['35GiB', '25GiB', '35GiB']
     parser.add_argument('--task_id', type=int, nargs='+', default=list(task_dataframe.keys()))
     parser.add_argument('--overwrite', type=int, default=0, choices=[0,1])
     parser.add_argument('--gen_mode', type=str, default="image", choices=['text', 'image'])
+    parser.add_argument('--finetuned', type=int, default=0, choices=[0,1])
 
     args = parser.parse_args()
     
@@ -155,10 +161,17 @@ if '__main__' == __name__:
             device[i] = args.device[i]
 
     set_seed(args.seed)
+    
+    if args.finetuned and len(args.shot) > 1:
+        raise ValueError(f"finetuned models only supports loading one shot setting at a time. You are considering {len(args.shot)} different shot setting. shot: {args.shot}.")
+    
     call_model = load_model(
         args.model, 
         device, 
         gen_mode=args.gen_mode,
+        finetuned = args.finetuned,
+        shot = args.shot[0],
+        prompt_type=args.prompt_type,
     )
 
     for shot in args.shot:
@@ -172,5 +185,4 @@ if '__main__' == __name__:
                     task_id,
                     args.overwrite,
                     args.gen_mode,
-                    args.max_file_count,
                 )

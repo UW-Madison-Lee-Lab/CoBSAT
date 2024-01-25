@@ -4,7 +4,7 @@ sys.path.append(root_dir)
 
 from load_models.call_llava import load_llava, eval_model as infer_llava
 import argparse, pandas as pd, wandb, torch, numpy as np
-from helper import set_seed, read_json
+from helper import set_seed, read_json, get_result_path
 from configs import task_dataframe, item_dict, item2word, supported_models, prompt_type_options
 from load_dataset import load_dataset
 from tqdm import tqdm
@@ -352,10 +352,10 @@ def eval(
     llava_configs,
     clip_configs,
     seed,
-    max_file_count = 1000,
     log_wandb = False,
     overwrite = False,
     eval_mode = 'text',
+    finetuned = False,
 ):
     task_type = task_dataframe[task_id]['task_type']
     category_space = {}
@@ -372,7 +372,10 @@ def eval(
             'obj': 'theta', 'detail': 'x',
         }
     
-    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}/{prompt_type}/task_{task_id}_summary.csv"
+    if finetuned:
+        csv_file_path = f"{root_dir}/results/ft/{model}_{eval_mode}/shot_{shot}/{prompt_type}/evals/task_{task_id}_summary.csv"
+    else:
+        csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}/{prompt_type}/task_{task_id}_summary.csv"
     existing_csv = None
     if os.path.exists(csv_file_path) and (not overwrite): existing_csv = pd.read_csv(csv_file_path)
     
@@ -418,14 +421,22 @@ def eval(
         
     set_seed(seed)
     
+    data_mode = 'ft_test' if finetuned else 'inference'
     data_loader = load_dataset(
         shot,
         prompt_type,
         task_id,
-        max_file_count,
+        data_mode = data_mode,
     )
     
-    base_path = f"{root_dir}/results/exps/{model}_{eval_mode}/shot_{shot}/{prompt_type}"
+    base_path = get_result_path(
+        finetuned, 
+        model,
+        eval_mode,
+        shot,
+        prompt_type,
+    )
+    
     folder_path = f"{base_path}/task_{task_id}"
     if not os.path.exists(folder_path):
         raise Exception(f"Folder {folder_path} does not exist.")
@@ -546,7 +557,6 @@ if '__main__' == __name__:
     parser.add_argument('--wandb', type = int, default = 1, help = 'whether log the results using wandb', choices = [0,1])
     parser.add_argument('--overwrite', type = int, default = 0, help = 'whether overwrite the existing results', choices = [0,1])
     parser.add_argument('--eval_mode', type = str, default = 'text', help = 'evaluation mode', choices = ['text', 'image'])
-    parser.add_argument('--max_file_count', type = int, default = 1000, help = 'max file count')
     
     args = parser.parse_args()
     
@@ -589,7 +599,6 @@ if '__main__' == __name__:
                     llava_configs,
                     clip_configs,
                     args.seed,
-                    max_file_count = args.max_file_count,
                     log_wandb = args.wandb,
                     overwrite = args.overwrite,
                     eval_mode = args.eval_mode,

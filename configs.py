@@ -237,3 +237,9 @@ data_modes = [
     'ft_train',
     'ft_test',
 ]
+
+num_prompt_dict = {
+    'inference': 1000,
+    'ft_test': 250,
+    'ft_train': None,
+}

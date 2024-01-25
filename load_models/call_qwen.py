@@ -6,7 +6,7 @@ sys.path.append(root_dir)
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.generation import GenerationConfig
-from helper import set_seed, find_caption, find_image
+from helper import set_seed, find_caption, find_image, get_ft_model_dir
 from time import time
 from load_dataset import get_prompt
 from peft import AutoPeftModelForCausalLM
@@ -21,7 +21,12 @@ def load_qwen(
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
     
     if finetuned:
-        ft_path = f"{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}"
+        ft_path = get_ft_model_dir(
+            'qwen',
+            gen_mode,
+            shot,
+            prompt_type,
+        )
         model = AutoPeftModelForCausalLM.from_pretrained(
             ft_path, # path to the output directory
             device_map="auto",

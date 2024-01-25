@@ -3,8 +3,8 @@ root_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(root_dir)
 
 from load_dataset import load_dataset
-from configs import task_dataframe
-from helper import save_json
+from configs import task_dataframe, num_prompt_dict
+from helper import save_json, get_ft_model_dir, set_seed
 import argparse
 
 def ft_model(
@@ -13,10 +13,18 @@ def ft_model(
     prompt_type,
     gen_mode,
 ):
+    set_seed(123)
+    
     if prompt_type in ['misleading', 'cot', 'caption']: 
         raise ValueError(f"Finetuning mode does not support prompt type {prompt_type}!")
     
-    output_dir = f'{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}'
+    output_dir = get_ft_model_dir(
+        model,
+        gen_mode,
+        shot,
+        prompt_type,
+    )
+    
     data_path = f'{output_dir}/dataset_ft.json'
     
     data_loader = {}
@@ -25,6 +33,7 @@ def ft_model(
             shot,
             prompt_type = 'default',
             task_id = task_id,
+            num_prompt = num_prompt_dict['ft_train'],
             data_mode = 'ft_train',
         )
         
