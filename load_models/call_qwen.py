@@ -9,13 +9,28 @@ from transformers.generation import GenerationConfig
 from helper import set_seed, find_caption, find_image
 from time import time
 from load_dataset import get_prompt
-from configs import task_dataframe
+from peft import AutoPeftModelForCausalLM
 
-def load_qwen(device = 'cuda'):
+def load_qwen(
+    device = 'cuda',
+    finetuned = False,
+    shot = 2, 
+    gen_mode = 'text',
+    prompt_type = 'default',
+):  
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-VL-Chat", device_map=device, trust_remote_code=True).eval()
-    model.generation_config = GenerationConfig.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
-    return model, tokenizer
+    
+    if finetuned:
+        ft_path = f"{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}"
+        model = AutoPeftModelForCausalLM.from_pretrained(
+            ft_path, # path to the output directory
+            device_map="auto",
+            trust_remote_code=True,
+        ).eval()
+    else: 
+        model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-VL-Chat", device_map=device, trust_remote_code=True).eval()
+        model.generation_config = GenerationConfig.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
+        return model, tokenizer
 
 def load_qwen_prompt(
     instruction,

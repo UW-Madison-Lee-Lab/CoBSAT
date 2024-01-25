@@ -5,6 +5,9 @@ def load_model(
     model, 
     device = 'cuda',
     gen_mode = 'text',
+    finetuned = False,
+    shot = 2, 
+    prompt_type = 'default',
 ):
     """
     Load models. 
@@ -66,6 +69,10 @@ def load_model(
     'time': 1.8119871616363525}
         
     """
+    if finetuned: 
+        if model != 'qwen':
+            raise ValueError(f"finetuned is only supported for {model}. Only qwen is supported.")
+        
     if model == 'gpt4v':
         if gen_mode != 'text':
             raise ValueError(f"gen_mode {gen_mode} not supported for gpt4v.")
@@ -84,7 +91,13 @@ def load_model(
         from load_models.call_qwen import load_qwen, call_qwen
         # sometimes there are some weird errors
 
-        model, tokenizer = load_qwen(device)
+        model, tokenizer = load_qwen(
+            device,
+            finetuned = finetuned,
+            shot = shot, 
+            gen_mode = gen_mode, 
+            prompt_type = prompt_type,
+        )
         call_qwen(model, tokenizer)
         return lambda configs: call_qwen(
             model, 
