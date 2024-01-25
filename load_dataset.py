@@ -67,7 +67,7 @@ def load_dataset(
     
     if data_mode in ['inference', 'ft_test']:
         data_loader = []
-        for i in range(num_prompt_dict[prompt_type]):
+        for i in range(num_prompt_dict[data_mode]):
             item_inputs = prompts_list[i]
             
             input_dict = load_inputs(
