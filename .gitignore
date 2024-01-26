@@ -33,7 +33,7 @@ figures/
 **/datasets
 **/.ipynb_checkpoints/
 **/results
-**/seed_llama
+**/ft_models
 **/logs
 **/archive
 
@@ -51,3 +51,4 @@ credentials.json
 token_drive_v3.pickle
 
 nohup.out
+SimSun.ttf

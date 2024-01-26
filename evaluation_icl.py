@@ -391,6 +391,7 @@ def eval(
             'task_type': task_type,
             'x_space': task_dataframe[task_id]['x_space'],
             'theta_space': task_dataframe[task_id]['theta_space'],
+            'finetuned': finetuned,
         }
         
         # first check whether there exists a run with the same configuration
@@ -492,8 +493,16 @@ def eval(
         
         result_df.append(row)
         
-    checks['clip_similarity_overall'] /= checks['valid_count']
-    checks['clip_correct'] /= checks['valid_count']
+    for key in [
+        'clip_similarity_overall', 
+        'clip_correct', 
+        'detail', 
+        'obj', 
+        'textual', 
+        'visual', 
+        'overall'
+    ]:
+        checks[key] /= checks['valid_count']
         
     summary_row = {
         'file_path': 'SUMMARY',

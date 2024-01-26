@@ -9,7 +9,7 @@ from transformers.generation import GenerationConfig
 from helper import set_seed, find_caption, find_image, get_ft_path
 from time import time
 from load_dataset import get_prompt
-from peft import AutoPeftModelForCausalLM, PeftModel
+from peft import PeftModel
 
 def load_qwen(
     device = 'cuda',
@@ -27,17 +27,12 @@ def load_qwen(
             shot,
             prompt_type,
         )['model']
-        # model = AutoPeftModelForCausalLM.from_pretrained(
-        #     ft_path, # path to the output directory
-        #     device_map="auto",
-        #     trust_remote_code=True,
-        # ).eval()
         model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-VL-Chat", device_map=device, trust_remote_code=True).eval()
         model = PeftModel.from_pretrained(model, ft_path)
     else: 
         model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-VL-Chat", device_map=device, trust_remote_code=True).eval()
         model.generation_config = GenerationConfig.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
-        return model, tokenizer
+    return model, tokenizer
 
 def load_qwen_prompt(
     instruction,

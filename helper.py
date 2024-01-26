@@ -144,7 +144,7 @@ def get_ft_path(
     prompt_type,
 ):
     # output_dir = f'{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/model'
-    output_dir = f"{model}_{gen_mode}/shot_{shot}_{prompt_type}"
+    output_dir = f"ft_models/{model}_{gen_mode}_shot_{shot}_{prompt_type}"
     data_path = f'{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/dataset_ft.json'
     return {
         'model': output_dir,
