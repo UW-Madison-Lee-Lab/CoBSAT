@@ -69,13 +69,17 @@ def load_dataset(
         data_loader = []
         for i in range(num_prompt_dict[data_mode]):
             item_inputs = prompts_list[i]
+            if data_mode == 'inference':
+                theta_input = item_inputs["theta_list"]
+            else:
+                theta_input = [item_inputs["theta_list"][i%len(item_inputs["theta_list"])] for i in range(shot+2)]
             
             input_dict = load_inputs(
                 shot,
                 prompt_type,
                 task_id,
                 item_inputs["x_list"],
-                item_inputs["theta_list"],
+                theta_input,
                 task_dataframe[task_id]["x_list"],
                 task_dataframe[task_id]["theta_list"],
             )

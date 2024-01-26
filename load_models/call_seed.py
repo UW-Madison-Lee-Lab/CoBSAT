@@ -151,7 +151,7 @@ def call_seed(
     if gen_mode == 'image':
         generate_ids = generate(tokenizer, input_tokens, generation_config, model)
         output_dict['description'], output_dict['image'] = decode_image_text(generate_ids, tokenizer, gen_mode)
-        if save_history and output_dict['image']: output_dict['history'] += ' ' + output_dict['image']
+        if save_history: output_dict['history'] += ' ' + output_dict['description']
         seed_end = time()
         output_dict['time'] = seed_end - seed_start
 
