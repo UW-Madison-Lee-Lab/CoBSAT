@@ -133,12 +133,26 @@ def get_result_path(
     shot,
     prompt_type,
 ):
-    if finetuned_model:
-        base_path = f"{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/exps/{data_mode}"
+    if data_mode == 'ft_test':
+        base_path = f"{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/exps/finetuned_{finetuned_model}"
     else:
         base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}/{prompt_type}"
         
     return base_path
+
+def get_summary_path(
+    finetuned_model,
+    model,
+    eval_mode, 
+    shot,
+    prompt_type,
+    task_id,
+):
+    if data_mode == 'ft_test':
+        csv_file_path = f"{root_dir}/results/ft/{model}_{eval_mode}/shot_{shot}/{prompt_type}/evals/finetuned_{finetuned_model}/task_{task_id}_summary.csv"
+    else:
+        csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}/{prompt_type}/task_{task_id}_summary.csv"
+    return csv_file_path
 
 def get_ft_path(
     model,
