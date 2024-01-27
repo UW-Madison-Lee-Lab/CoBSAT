@@ -4,7 +4,7 @@ sys.path.append(root_dir)
 
 from load_models.call_llava import load_llava, eval_model as infer_llava
 import argparse, pandas as pd, wandb, torch, numpy as np
-from helper import set_seed, read_json, get_result_path
+from helper import set_seed, read_json, get_result_path, get_summary_path
 from configs import task_dataframe, item_dict, item2word, supported_models, prompt_type_options
 from load_dataset import load_dataset
 from tqdm import tqdm
@@ -376,10 +376,16 @@ def eval(
             'obj': 'theta', 'detail': 'x',
         }
     
-    if finetuned_model:
-        csv_file_path = f"{root_dir}/results/ft/{model}_{eval_mode}/shot_{shot}/{prompt_type}/evals/task_{task_id}_summary.csv"
-    else:
-        csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}/{prompt_type}/task_{task_id}_summary.csv"
+    csv_file_path = get_summary_path(
+        finetuned_model,
+        model,
+        eval_mode, 
+        shot,
+        prompt_type,
+        task_id,
+        data_mode,
+    )
+        
     existing_csv = None
     if os.path.exists(csv_file_path) and (not overwrite): existing_csv = pd.read_csv(csv_file_path)
     
