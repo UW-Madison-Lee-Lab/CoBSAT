@@ -26,6 +26,9 @@ def load_inputs(
             # misleading
             theta_idx = theta_list[theta_idxs[demo_idx]]
             text_inputs.append(f"{x_idx} {theta_idx}: ")
+        elif prompt_type == 'exact':
+            # exact
+            text_inputs.append(f"{x_idx} {theta}: ")
         else:
             text_inputs.append(f"{x_idx}: ")
             
@@ -51,7 +54,7 @@ def load_dataset(
     prompt_type,
     task_id, 
     seed = 123,
-    data_mode = 'inference', # 'inference' or 'ft_train' or 'ft_test'
+    data_mode = 'default', # 'default' or 'ft_train' or 'ft_test'
 ):
     print("========"*3)
     print(f'Loading the dataset for task {task_id}...')
@@ -65,11 +68,11 @@ def load_dataset(
     
     prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list_{data_mode}.json")
     
-    if data_mode in ['inference', 'ft_test']:
+    if data_mode in ['default', 'ft_test']:
         data_loader = []
         for i in range(num_prompt_dict[data_mode]):
             item_inputs = prompts_list[i]
-            if data_mode == 'inference':
+            if data_mode == 'default':
                 theta_input = item_inputs["theta_list"]
             else:
                 theta_input = [item_inputs["theta_list"][i%len(item_inputs["theta_list"])] for i in range(shot+2)]
@@ -121,7 +124,7 @@ def get_instruction(
         return (instruction_dict[prompt_type][gen_mode], '')
     elif prompt_type == 'cot':
         return instruction_dict[prompt_type][gen_mode]
-    elif prompt_type in ['default', 'misleading']:
+    elif prompt_type in ['default', 'misleading', 'exact']:
         if model in instruction_dict['default'][gen_mode]:
             return instruction_dict['default'][gen_mode][model]
         else:
@@ -139,7 +142,7 @@ def get_prompt(
     gen_mode, 
     history = None,
 ):
-    if prompt_type in ['instruct', 'default', 'misleading']: # [-1,0,1]:
+    if prompt_type in ['instruct', 'default', 'misleading', 'exact']: # [-1,0,1]:
         query = {
             'text_inputs': text_inputs, 
             'image_inputs': image_inputs,

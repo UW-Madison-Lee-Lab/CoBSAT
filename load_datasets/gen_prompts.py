@@ -24,8 +24,8 @@ if '__main__' == __name__:
     for data_mode in data_modes:
         random.seed(seed)
 
-        if data_mode in ['inference', 'ft_test']:
-            if data_mode == 'inference':
+        if data_mode in ['default', 'ft_test']:
+            if data_mode == 'default':
                 x_list = list(range(list_length))
                 theta_list = list(range(list_length))
             else:

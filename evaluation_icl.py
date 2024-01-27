@@ -355,8 +355,12 @@ def eval(
     log_wandb = False,
     overwrite = False,
     eval_mode = 'text',
-    finetuned = False,
+    finetuned_model = False,
+    data_mode = 'default', # ['default', 'ft_test'],
 ):
+    if finetuned_model and data_mode != 'ft_test':
+        raise ValueError(f"finetuned models only supports loading ft_test data. You are considering {data_mode} data.")
+        
     task_type = task_dataframe[task_id]['task_type']
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
@@ -372,7 +376,7 @@ def eval(
             'obj': 'theta', 'detail': 'x',
         }
     
-    if finetuned:
+    if finetuned_model:
         csv_file_path = f"{root_dir}/results/ft/{model}_{eval_mode}/shot_{shot}/{prompt_type}/evals/task_{task_id}_summary.csv"
     else:
         csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}/{prompt_type}/task_{task_id}_summary.csv"
@@ -391,7 +395,8 @@ def eval(
             'task_type': task_type,
             'x_space': task_dataframe[task_id]['x_space'],
             'theta_space': task_dataframe[task_id]['theta_space'],
-            'finetuned': finetuned,
+            'finetuned': finetuned_model,
+            'data_mode': data_mode,
         }
         
         # first check whether there exists a run with the same configuration
@@ -422,7 +427,6 @@ def eval(
         
     set_seed(seed)
     
-    data_mode = 'ft_test' if finetuned else 'inference'
     data_loader = load_dataset(
         shot,
         prompt_type,
@@ -431,7 +435,8 @@ def eval(
     )
     
     base_path = get_result_path(
-        finetuned, 
+        finetuned_model, 
+        data_mode,
         model,
         eval_mode,
         shot,
@@ -566,7 +571,8 @@ if '__main__' == __name__:
     parser.add_argument('--wandb', type = int, default = 1, help = 'whether log the results using wandb', choices = [0,1])
     parser.add_argument('--overwrite', type = int, default = 0, help = 'whether overwrite the existing results', choices = [0,1])
     parser.add_argument('--eval_mode', type = str, default = 'text', help = 'evaluation mode', choices = ['text', 'image'])
-    parser.add_argument('--finetuned', type=int, default=0, choices=[0,1], help = "whether to use the results of the finetuned model")
+    parser.add_argument('--finetuned_model', type=int, default=0, choices=[0,1], help = "whether to use the results of the finetuned model")
+    parser.add_argument('--data_mode', type=str, default="default", choices=['default', 'ft_test'], help = "what dataset to use")
     
     args = parser.parse_args()
     
@@ -612,5 +618,6 @@ if '__main__' == __name__:
                     log_wandb = args.wandb,
                     overwrite = args.overwrite,
                     eval_mode = args.eval_mode,
-                    finetuned = args.finetuned,
+                    finetuned_model = args.finetuned_model,
+                    data_mode = args.data_mode,
                 )

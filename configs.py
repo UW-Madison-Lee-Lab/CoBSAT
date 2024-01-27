@@ -230,16 +230,17 @@ prompt_type_options = [
     'default', # 0, # basic
     'misleading', # 1, # misleading
     'cot', # 2, # chain of thought
+    'exact', # 3, # exact
 ]
 
 data_modes = [
-    'inference',
+    'default',
     'ft_train',
     'ft_test',
 ]
 
 num_prompt_dict = {
-    'inference': 1000,
+    'default': 1000,
     'ft_test': 250,
     'ft_train': None,
 }

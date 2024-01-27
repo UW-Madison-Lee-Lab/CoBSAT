@@ -63,10 +63,15 @@ def inference(
     task_id,
     overwrite,
     gen_mode,
-    finetuned = False,
+    finetuned_model = False,
+    data_mode = 'default', # ['default', 'ft_test']
 ):
+    if finetuned_model and data_mode != 'ft_test':
+        raise ValueError(f"finetuned models only supports loading ft_test data. You are considering {data_mode} data.")
+        
     base_path = get_result_path(
-        finetuned,
+        finetuned_model,
+        data_mode,
         model,
         gen_mode,
         shot,
@@ -77,7 +82,6 @@ def inference(
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    data_mode = 'ft_test' if finetuned else 'inference'
     data_loader = load_dataset(
         shot,
         prompt_type,
@@ -141,7 +145,8 @@ if '__main__' == __name__:
     parser.add_argument('--task_id', type=int, nargs='+', default=list(task_dataframe.keys()))
     parser.add_argument('--overwrite', type=int, default=0, choices=[0,1])
     parser.add_argument('--gen_mode', type=str, default="image", choices=['text', 'image'])
-    parser.add_argument('--finetuned', type=int, default=0, choices=[0,1], help = "whether to use finetuned model")
+    parser.add_argument('--finetuned_model', type=int, default=0, choices=[0,1], help = "whether to use finetuned model")
+    parser.add_argument('--data_mode', type=str, default="default", choices=['default', 'ft_test'], help = "what dataset to use")
 
     args = parser.parse_args()
     
@@ -162,7 +167,7 @@ if '__main__' == __name__:
 
     set_seed(args.seed)
     
-    if args.finetuned:
+    if args.finetuned_model:
         if len(args.shot) > 1:
             raise ValueError(f"finetuned models only supports loading one shot setting at a time. You are considering {len(args.shot)} different shot setting. shot: {args.shot}.")
         if len(args.prompt_type) > 1:
@@ -172,7 +177,7 @@ if '__main__' == __name__:
         args.model, 
         device, 
         gen_mode=args.gen_mode,
-        finetuned = args.finetuned,
+        finetuned = args.finetuned_model,
         shot = args.shot[0],
         prompt_type=args.prompt_type[0],
     )
@@ -188,5 +193,6 @@ if '__main__' == __name__:
                     task_id,
                     args.overwrite,
                     args.gen_mode,
-                    args.finetuned,
+                    args.finetuned_model,
+                    args.data_mode,
                 )

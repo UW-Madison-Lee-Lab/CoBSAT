@@ -126,15 +126,18 @@ def find_caption(
     return caption
 
 def get_result_path(
-    finetuned,
+    finetuned_model,
+    data_mode,
     model,
     gen_mode,
     shot,
     prompt_type,
 ):
-    exp_folder = 'ft' if finetuned else 'exps'
-    base_path = f"{root_dir}/results/{exp_folder}/{model}_{gen_mode}/shot_{shot}/{prompt_type}"
-    if finetuned: base_path += "/exps"
+    if finetuned_model:
+        base_path = f"{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/exps/{data_mode}"
+    else:
+        base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}/{prompt_type}"
+        
     return base_path
 
 def get_ft_path(
