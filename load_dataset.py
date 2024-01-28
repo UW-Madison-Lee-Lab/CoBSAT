@@ -2,7 +2,7 @@ import os
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
 from helper import set_seed, read_json, find_image, find_caption
-from configs import task_dataframe, instruction_dict, num_prompt_dict
+from configs import task_dataframe, instruction_dict, num_prompt_dict, item2word
 from itertools import permutations
 
 def load_inputs(
@@ -20,6 +20,7 @@ def load_inputs(
     
     for demo_idx in range(shot+1):
         x_idx = x_list[x_idxs[demo_idx]]
+        x_idx = item2word.get(x_idx, x_idx)
         x_demos.append(x_idx)
         
         if prompt_type == 'misleading':
