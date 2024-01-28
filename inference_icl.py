@@ -6,7 +6,7 @@ from helper import save_json, set_seed, get_result_path
 from load_dataset import load_dataset, get_prompt
 from environment import TRANSFORMER_CACHE
 os.environ['TRANSFORMERS_CACHE'] = TRANSFORMER_CACHE
-from configs import task_dataframe, supported_models, prompt_type_options, num_prompt_dict
+from configs import task_dataframe, supported_models, prompt_type_options
 
 def infer_model(
     call_model,

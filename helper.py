@@ -147,6 +147,7 @@ def get_summary_path(
     shot,
     prompt_type,
     task_id,
+    data_mode,
 ):
     if data_mode == 'ft_test':
         csv_file_path = f"{root_dir}/results/ft/{model}_{eval_mode}/shot_{shot}/{prompt_type}/evals/finetuned_{finetuned_model}/task_{task_id}_summary.csv"
