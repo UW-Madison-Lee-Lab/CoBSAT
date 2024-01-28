@@ -118,8 +118,8 @@ supported_models = [
 # need to be updated, and also update the instruction for text generatopm for normal tasks too.
 instruction_dict = {
     'caption': {
-        'image': 'We provide a few examples, each with a input, and an output of the image description. Based on the examples, predict the next image descripion and visualize it. ',
-        'text': 'We provide a few examples, each with a input, and an output of the image description. Based on the examples, predict the next image descripion. ',
+        'image': 'We provide a few examples, each with an input, and an output of the image description. Based on the examples, predict the next image description and visualize it. ',
+        'text': 'We provide a few examples, each with an input, and an output of the image description. Based on the examples, predict the next image description. ',
     },
     'cot': {
         'general': (
