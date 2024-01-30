@@ -4,58 +4,58 @@ channels:
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=main
-  - _openmp_mutex=5.1=1_gnu
+  - _openmp_mutex
   - asttokens=2.4.1=pyhd8ed1ab_0
   - backcall=0.2.0=pyh9f0ad1d_0
-  - ca-certificates=2023.11.17=hbcca054_0
+  - ca-certificates
   - comm=0.1.4=pyhd8ed1ab_0
-  - debugpy=1.6.7=py38h6a678d5_0
+  - debugpy
   - decorator=5.1.1=pyhd8ed1ab_0
   - entrypoints=0.4=pyhd8ed1ab_0
   - executing=2.0.1=pyhd8ed1ab_0
   - ipykernel=6.26.0=pyhf8b6a83_0
   - ipython=8.12.0=pyh41d4057_0
   - jedi=0.19.1=pyhd8ed1ab_0
-  - jupyter_core=5.5.1=py38h578d9bd_0
-  - ld_impl_linux-64=2.38=h1181459_1
-  - libffi=3.4.4=h6a678d5_0
-  - libgcc-ng=11.2.0=h1234567_1
-  - libgomp=11.2.0=h1234567_1
-  - libsodium=1.0.18=h36c2ea0_1
-  - libstdcxx-ng=11.2.0=h1234567_1
+  - jupyter_core=5.5.1
+  - ld_impl_linux-64
+  - libffi
+  - libgcc-ng=11.2.0
+  - libgomp
+  - libsodium
+  - libstdcxx-ng
   - matplotlib-inline=0.1.6=pyhd8ed1ab_0
-  - ncurses=6.4=h6a678d5_0
+  - ncurses
   - nest-asyncio=1.5.8=pyhd8ed1ab_0
-  - openssl=3.0.12=h7f8727e_0
+  - openssl
   - packaging=23.2=pyhd8ed1ab_0
   - parso=0.8.3=pyhd8ed1ab_0
   - pexpect=4.8.0=pyh1a96a4e_2
   - pickleshare=0.7.5=py_1003
-  - pip=23.3.1=py38h06a4308_0
+  - pip
   - platformdirs=4.1.0=pyhd8ed1ab_0
   - prompt-toolkit=3.0.42=pyha770c72_0
   - prompt_toolkit=3.0.42=hd8ed1ab_0
-  - psutil=5.9.0=py38h5eee18b_0
+  - psutil
   - ptyprocess=0.7.0=pyhd3deb0d_0
   - pure_eval=0.2.2=pyhd8ed1ab_0
   - pygments=2.17.2=pyhd8ed1ab_0
-  - python=3.8.18=h955ad1f_0
+  - python=3.8.18
   - python-dateutil=2.8.2=pyhd8ed1ab_0
   - python_abi=3.8=2_cp38
-  - pyzmq=25.1.0=py38h6a678d5_0
-  - readline=8.2=h5eee18b_0
-  - setuptools=68.2.2=py38h06a4308_0
+  - pyzmq
+  - readline
+  - setuptools
   - six=1.16.0=pyh6c4a22f_0
-  - sqlite=3.41.2=h5eee18b_0
+  - sqlite=3.41.2
   - stack_data=0.6.2=pyhd8ed1ab_0
-  - tk=8.6.12=h1ccaba5_0
+  - tk
   - traitlets=5.14.0=pyhd8ed1ab_0
   - typing_extensions=4.9.0=pyha770c72_0
   - wcwidth=0.2.12=pyhd8ed1ab_0
-  - wheel=0.41.2=py38h06a4308_0
-  - xz=5.4.5=h5eee18b_0
-  - zeromq=4.3.4=h2531618_0
-  - zlib=1.2.13=h5eee18b_0
+  - wheel
+  - xz
+  - zeromq
+  - zlib
   - pip:
       - absl-py==2.0.0
       - accelerate==0.25.0
@@ -225,7 +225,7 @@ dependencies:
       - tomli==2.0.1
       - torch==2.1.2
       - torchvision==0.16.2
-      - tornado==6.4
+      - tornado
       - tqdm==4.66.1
       - transformers==4.36.2
       - transformers-stream-generator==0.0.4
