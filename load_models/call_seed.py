@@ -63,21 +63,17 @@ def decode_image_text(generate_ids, tokenizer, gen_mode):
         images = None
 
     else:
-        try:
-            boi_index = boi_list[0]
-            eoi_index = eoi_list[0]
-            text_ids = generate_ids[:boi_index]
-            if len(text_ids) != 0:
-                texts = tokenizer.decode(text_ids, skip_special_tokens=True)
-            else:
-                texts = "null"
-            image_ids = (generate_ids[boi_index+1:eoi_index] -
-                        image_id_shift).reshape(1, -1)
-            images = tokenizer.decode_image(image_ids)
-            images = images[0]
-        except:
-            texts = "error"    
-            images = None             
+        boi_index = boi_list[0]
+        eoi_index = eoi_list[0]
+        text_ids = generate_ids[:boi_index]
+        if len(text_ids) != 0:
+            texts = tokenizer.decode(text_ids, skip_special_tokens=True)
+        else:
+            texts = "null"
+        image_ids = (generate_ids[boi_index+1:eoi_index] -
+                    image_id_shift).reshape(1, -1)
+        images = tokenizer.decode_image(image_ids)
+        images = images[0]          
 
     if gen_mode == "text":
         return texts
@@ -89,6 +85,7 @@ def load_seed(
     device = 'cuda',
     seed = 123,
 ):
+    set_seed(seed)
     os.environ["PROJECT_ROOT"] = SEED_PROJECT_ROOT
     
     tokenizer_cfg_path = f'{root_dir}/models/SEED/configs/tokenizer/seed_llama_tokenizer_hf.yaml'
@@ -118,46 +115,56 @@ def call_seed(
     seed = 123,
     gen_mode = 'text',
     device = 'cuda',
-    instruction = "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+    instruction = [
+        "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+        '',
+    ],
+    call_mode = 'micl', # 'micl' or 'text' 
+    history = None,
+    save_history = False,
 ):
     set_seed(seed)
     
-    if gen_mode == 'text':
-        input_tokens = tokenizer.bos_token  + s_token + instruction
-    else:
-        input_tokens = tokenizer.bos_token  + s_token
+    input_tokens = tokenizer.bos_token  + s_token + instruction[0]
+    if history is not None: input_tokens += history.replace(e_token, sep)
     
     for i in range(len(text_inputs)):
 
-        input_tokens = input_tokens + text_inputs[i] + ": "
-        if i < len(text_inputs) - 1:
-            image = Image.open(image_inputs[i]).convert('RGB')
-            image_tensor = transform(image).to(device)
-            img_ids = tokenizer.encode_image(image_torch=image_tensor)
-            img_ids = img_ids.view(-1).cpu().numpy()
-            img_tokens = BOI_TOKEN + ''.join([IMG_TOKEN.format(item)
-                                            for item in img_ids]) + EOI_TOKEN
-            input_tokens = input_tokens + img_tokens
+        input_tokens = input_tokens + text_inputs[i]
+        if call_mode == 'micl':
+            if i < len(text_inputs) - 1:
+                image = Image.open(image_inputs[i]).convert('RGB')
+                image_tensor = transform(image).to(device)
+                img_ids = tokenizer.encode_image(image_torch=image_tensor)
+                img_ids = img_ids.view(-1).cpu().numpy()
+                img_tokens = BOI_TOKEN + ''.join([IMG_TOKEN.format(item)
+                                                for item in img_ids]) + EOI_TOKEN
+                input_tokens = input_tokens + img_tokens
 
+    input_tokens += instruction[1]
     input_tokens = input_tokens + e_token + sep
 
     output_dict = {}
+    if save_history: output_dict = {'history': input_tokens}
+    
     seed_start = time()
     if gen_mode == 'image':
         generate_ids = generate(tokenizer, input_tokens, generation_config, model)
         output_dict['description'], output_dict['image'] = decode_image_text(generate_ids, tokenizer, gen_mode)
+        if save_history: output_dict['history'] += ' ' + output_dict['description']
         seed_end = time()
         output_dict['time'] = seed_end - seed_start
-        
-        return output_dict
 
     elif gen_mode == 'text':
         generate_ids = generate(tokenizer, input_tokens, generation_config, model)
         output_dict['description'] = decode_image_text(generate_ids, tokenizer, gen_mode)
+        if save_history: output_dict['history'] += ' ' + output_dict['description']
         seed_end = time()
         output_dict['time'] = seed_end - seed_start
-        
-        return output_dict
+    else:
+        raise ValueError(f'gen_mode {gen_mode} not supported')
+
+    return output_dict
 
     
     

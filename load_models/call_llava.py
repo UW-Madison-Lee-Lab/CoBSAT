@@ -50,19 +50,34 @@ def call_llava(
     ],
     seed = 123,
     device = 'cuda',
+    instruction = [
+        '',
+        "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+    ],
+    call_model = 'micl', # 'micl' or 'text'
+    history = None,
+    save_history = False,
 ):
 
     set_seed(seed)
     
     # prompt = "I will provide you with a few examples with text and images. Complete the example with the description of the next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. "
-    prompt = ''
+    prompt = instruction[0]
+    if history is not None:
+        prompt = prompt + ' ' + history['prompt']
+        image_inputs.insesrt(0, history['images'])
+    
     for i in range(len(text_inputs)):
         prompt = prompt + text_inputs[i]
-        if i < len(text_inputs) - 1:
-            prompt = prompt + "<image-placeholder>"
-    prompt = prompt + "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. "
+        
+        if call_model == 'micl':
+            if i < len(text_inputs) - 1:
+                prompt = prompt + "<image-placeholder>"
+    prompt = prompt + instruction[1]
 
     output_dict = {}
+    if save_history: output_dict = {'history': {'prompt': prompt, 'images': image_inputs}}
+    
     llava_start = time()
     output_dict['description'] = eval_model(
         prompt, 
@@ -74,7 +89,8 @@ def call_llava(
         llava_args, 
         device = device,
     )
-
+    
+    if save_history: output_dict['history']['prompt'] += ' ' + output_dict['description']
     llava_end = time()
     output_dict['time'] = llava_end - llava_start
 

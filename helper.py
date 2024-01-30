@@ -1,4 +1,5 @@
-import os, json, numpy as np, random, torch, transformers
+import os, json, numpy as np, random, torch, transformers, functools, time, pandas as pd
+root_dir = os.path.dirname(os.path.abspath(__file__))
 from PIL import Image
 from configs import task_dataframe
 
@@ -79,3 +80,91 @@ def find_image(
         return None 
     else:
         return image_path_i
+
+def retry_if_fail(func):
+    @functools.wraps(func)
+    def wrapper_retry(*args, **kwargs):
+        retry = 0
+        while retry <= 10:
+            try:
+                out = func(*args, **kwargs)
+                break
+            except KeyboardInterrupt:
+                raise KeyboardInterrupt
+            except Exception as e:
+                retry += 1
+                time.sleep(2)
+                print(f"Exception occurred: {type(e).__name__}, {e.args}")
+                print(f"Retry {retry} times...")
+
+        if retry > 10:
+            out = {'description': 'ERROR', 'image': None, 'time': 0}
+            print('ERROR')
+        
+        return out
+    return wrapper_retry
+
+def find_caption(
+    image_path, 
+): 
+    folder = os.path.basename(os.path.dirname(image_path))
+    if 'action' in folder:
+        file_name = 'action_animal'
+    elif 'background' in folder:
+        file_name = 'background_animal'
+    elif 'color' in folder:
+        file_name = 'color_object'
+    elif 'style' in folder:
+        file_name = 'style_object'
+    elif 'texture' in folder:
+        file_name = 'texture_object'
+    else:
+        raise ValueError(f"Unknown folder: {folder}!")
+    
+    data_df = pd.read_csv(f'{root_dir}/datasets/{file_name}.csv')
+    caption = data_df[data_df['image']==os.path.basename(image_path)]['caption'].values[0]
+    return caption
+
+def get_result_path(
+    finetuned_model,
+    data_mode,
+    model,
+    gen_mode,
+    shot,
+    prompt_type,
+):
+    if data_mode == 'ft_test':
+        base_path = f"{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/exps/finetuned_{finetuned_model}"
+    else:
+        base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}/{prompt_type}"
+        
+    return base_path
+
+def get_summary_path(
+    finetuned_model,
+    model,
+    eval_mode, 
+    shot,
+    prompt_type,
+    task_id,
+    data_mode,
+):
+    if data_mode == 'ft_test':
+        csv_file_path = f"{root_dir}/results/ft/{model}_{eval_mode}/shot_{shot}/{prompt_type}/evals/finetuned_{finetuned_model}/task_{task_id}_summary.csv"
+    else:
+        csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}/{prompt_type}/task_{task_id}_summary.csv"
+    return csv_file_path
+
+def get_ft_path(
+    model,
+    gen_mode,
+    shot,
+    prompt_type,
+):
+    # output_dir = f'{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/model'
+    output_dir = f"ft_models/{model}_{gen_mode}_shot_{shot}_{prompt_type}"
+    data_path = f'{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/dataset_ft.json'
+    return {
+        'model': output_dir,
+        'data': data_path,
+    }

@@ -2,20 +2,24 @@
 
 from environment import OPENAI_API_KEY
 from openai import OpenAI
-import os, base64, requests
+import os, base64, requests, sys
 from typing import Literal
 from time import time
 
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 client = OpenAI()
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
+from helper import retry_if_fail
+
 
 # Function to encode the image
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
     
-def process_image(image_input, mode, image_input_detail):
-    if mode == 'url':
+def process_image(image_input, image_mode, image_input_detail):
+    if image_mode == 'url':
         image_content = {
             "type": "image_url",
             "image_url": {
@@ -23,7 +27,7 @@ def process_image(image_input, mode, image_input_detail):
                 "detail": image_input_detail,
             },
         }
-    elif mode == 'path':
+    elif image_mode == 'path':
         image_content = {
             "type": "image",
             "image_url": {
@@ -32,7 +36,7 @@ def process_image(image_input, mode, image_input_detail):
             },
         }
     else:
-        raise ValueError("The mode must be either 'url' or 'path', not {mode}.")
+        raise ValueError("The image_mode must be either 'url' or 'path', not {image_mode}.")
     
     return image_content
 
@@ -47,18 +51,21 @@ def process_text(text_input):
 def prompt_image_eval(
     text_inputs, 
     image_inputs,
-    mode,
+    image_mode,
     image_input_detail,
+    instruction = "I will provide you with a few examples with text and images. Complete the example with the description of the next image. The description should be clear with main object, and include details such as color, texture, background, style, and action, if applicable. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+    call_mode = 'micl', # micl or text only
 ):    
-    instruction = "I will provide you with a few examples with text and images. Complete the example with the description of the next image. The description should be clear with main object, and include details such as color, texture, background, style, and action, if applicable. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. "
-    contents = [process_text(instruction)]
+    contents = [process_text(instruction[0])]
     
     for i in range(len(text_inputs)):
         contents.append(process_text(text_inputs[i]))
         
-        if i < len(text_inputs) - 1:
-            contents.append(process_image(image_inputs[i], mode, image_input_detail))
+        if call_mode == 'micl':
+            if i < len(text_inputs) - 1:
+                contents.append(process_image(image_inputs[i], image_mode, image_input_detail))
         
+    contents.append(process_text(instruction[1]))
     messages = [{
         "role": "user",
         "content": contents,
@@ -66,10 +73,10 @@ def prompt_image_eval(
     
     return messages
         
-
+@retry_if_fail
 def call_gpt4v(
     text_inputs = ["Red", "Green", "Yellow"],
-    mode: Literal['url', 'path'] = 'path',
+    image_mode: Literal['url', 'path'] = 'path',
     image_inputs = [
         "https://media.istockphoto.com/id/1189903200/photo/red-generic-sedan-car-isolated-on-white-background-3d-illustration.jpg?s=612x612&w=0&k=20&c=uRu3o_h5FVljLQHS9z0oyz-XjXzzXN_YkyGXwhdMrjs=",
         "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
@@ -81,21 +88,27 @@ def call_gpt4v(
     image_output_size: Literal["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"] = "1024x1024",
     image_output_quality:  Literal['hd', 'standard'] = 'standard',
     seed = 123,
+    instruction = [
+        "I will provide you with a few examples with text and images. Complete the example with the description of the next image. The description should be clear with main object, and include details such as color, texture, background, style, and action, if applicable. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+        '',
+    ],
+    call_mode = 'micl', # micl or text only
+    history = None,
+    save_history = False,
 ):
-    
-    if len(text_inputs) != (len(image_inputs)+1):
-        raise ValueError("The number of text inputs must be equal to the number of image urls plus one.")
-    if len(text_inputs) > 10:
-        raise ValueError("The number of demonstrations must be less than or equal to 10.")
-
-    output_dict = {}
 
     messages = prompt_image_eval(
         text_inputs, 
         image_inputs, 
-        mode,
+        image_mode,
         image_input_detail,
+        instruction,
+        call_mode,
     )
+    if history is not None: messages = history + messages
+    
+    output_dict = {}
+    if save_history: output_dict = {'history': messages}
     
     # Call GPT-4V to generate text description 
     
@@ -107,10 +120,10 @@ def call_gpt4v(
     }
     
     gpt4v_start = time()
-    if mode == 'url':
+    if image_mode == 'url':
         response = client.chat.completions.create(**payload)
         output_dict['description'] = response.choices[0].message.content
-    elif mode == 'path':
+    elif image_mode == 'path':
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {OPENAI_API_KEY}"
@@ -123,16 +136,23 @@ def call_gpt4v(
         )
         output_dict['description'] = response.json()['choices'][0]['message']['content']
     else:
-        raise ValueError("The mode must be either 'url' or 'path', not {mode}.")    
+        raise ValueError("The image_mode must be either 'url' or 'path', not {mode}.")    
     
     gpt4v_end = time()
     output_dict['gpt4v_time'] = gpt4v_end - gpt4v_start
+    
+    if save_history:
+        output_dict['history'] = messages + [{
+            'role': 'assistant', 
+            'content': output_dict['description'],
+        }]
+    
 
     # Call DALL-E to generate image
     if use_dalle:
         dalle_start = time()
         response = client.images.generate(
-            model=dalle_version,
+            image_model=dalle_version,
             prompt=output_dict['description'],
             size=image_output_size,
             quality=image_output_quality,
@@ -192,6 +212,7 @@ def call_gpt3_completion(
         image_description,
         ground_truth_description,
     )
+    print(request)
     
     success = False
     retry = 0

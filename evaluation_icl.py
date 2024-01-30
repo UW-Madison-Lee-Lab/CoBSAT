@@ -4,8 +4,8 @@ sys.path.append(root_dir)
 
 from load_models.call_llava import load_llava, eval_model as infer_llava
 import argparse, pandas as pd, wandb, torch, numpy as np
-from helper import set_seed, read_json
-from configs import task_dataframe, item_dict, item2word, supported_models
+from helper import set_seed, read_json, get_result_path, get_summary_path
+from configs import task_dataframe, item_dict, item2word, supported_models, prompt_type_options
 from load_dataset import load_dataset
 from tqdm import tqdm
 from transformers import CLIPProcessor, CLIPModel
@@ -69,7 +69,9 @@ def eval_clip(
             text=[detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
             images=image, 
             return_tensors="pt", 
-            padding=True
+            padding=True,
+            truncation=True, 
+            max_length=77,
         ).to(clip_model.device)
         outputs = clip_model(**inputs)
         clip_similarity = get_clip_similarity(
@@ -83,8 +85,11 @@ def eval_clip(
             text=[description[:200], detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
             return_tensors="pt", 
             padding=True,
+            truncation=True, 
+            max_length=77,
         ).to(clip_model.device)
         batch_outputs = clip_model.get_text_features(**batch_inputs)
+            
         batch_outputs = batch_outputs / batch_outputs.norm(dim=1, keepdim=True)
         description_embeds = batch_outputs[[0]]
         batch_true_embeds = batch_outputs[1:]
@@ -246,9 +251,12 @@ def check_single_output(
     file_path,
     ground_truth,
     llava_configs,
+    clip_configs,
     existing_csv,
     eval_mode,
 ):
+    clip_processor, clip_model = clip_configs['clip_processor'], clip_configs['clip_model']
+    
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
     item_list = {
@@ -339,15 +347,20 @@ def check_single_output(
 def eval(
     task_id,
     shot,
-    misleading,
+    prompt_type,
     model,
     llava_configs,
+    clip_configs,
     seed,
-    max_file_count = 1000,
     log_wandb = False,
     overwrite = False,
     eval_mode = 'text',
+    finetuned_model = False,
+    data_mode = 'default', # ['default', 'ft_test'],
 ):
+    if finetuned_model and data_mode != 'ft_test':
+        raise ValueError(f"finetuned models only supports loading ft_test data. You are considering {data_mode} data.")
+        
     task_type = task_dataframe[task_id]['task_type']
     category_space = {}
     category_space['detail'], category_space['obj'] = task_type.split('_')
@@ -363,8 +376,16 @@ def eval(
             'obj': 'theta', 'detail': 'x',
         }
     
-    misleading_flag = "_m" if misleading else ""
-    csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}{misleading_flag}/task_{task_id}_summary.csv"
+    csv_file_path = get_summary_path(
+        finetuned_model,
+        model,
+        eval_mode, 
+        shot,
+        prompt_type,
+        task_id,
+        data_mode,
+    )
+        
     existing_csv = None
     if os.path.exists(csv_file_path) and (not overwrite): existing_csv = pd.read_csv(csv_file_path)
     
@@ -372,7 +393,7 @@ def eval(
         wandb_config = {
             'task_id': task_id,
             'shot': shot,
-            'misleading': misleading,
+            'prompt_type': prompt_type,
             'model': model,
             'seed': seed,
             'stage': 'eval',
@@ -380,6 +401,8 @@ def eval(
             'task_type': task_type,
             'x_space': task_dataframe[task_id]['x_space'],
             'theta_space': task_dataframe[task_id]['theta_space'],
+            'finetuned': finetuned_model,
+            'data_mode': data_mode,
         }
         
         # first check whether there exists a run with the same configuration
@@ -412,12 +435,20 @@ def eval(
     
     data_loader = load_dataset(
         shot,
-        misleading,
+        prompt_type,
         task_id,
-        max_file_count,
+        data_mode = data_mode,
     )
     
-    base_path = f"{root_dir}/results/exps/{model}_{eval_mode}/shot_{shot}{misleading_flag}"
+    base_path = get_result_path(
+        finetuned_model, 
+        data_mode,
+        model,
+        eval_mode,
+        shot,
+        prompt_type,
+    )
+    
     folder_path = f"{base_path}/task_{task_id}"
     if not os.path.exists(folder_path):
         raise Exception(f"Folder {folder_path} does not exist.")
@@ -434,7 +465,7 @@ def eval(
         'clip_similarity_overall': 0,
     }
     
-    for count in tqdm(range(max_file_count), desc = f"Evaluating {model}_{eval_mode}/shot_{shot}{misleading_flag}/task_{task_id}"):
+    for count in tqdm(range(len(data_loader)), desc = f"Evaluating {folder_path}"):
             
         input_dict = data_loader[count]
         input_dict['x'] = input_dict['x_list'][-1]
@@ -456,6 +487,7 @@ def eval(
             file_path,
             ground_truth,
             llava_configs,
+            clip_configs,
             existing_csv,
             eval_mode,
         )
@@ -472,8 +504,16 @@ def eval(
         
         result_df.append(row)
         
-    checks['clip_similarity_overall'] /= checks['valid_count']
-    checks['clip_correct'] /= checks['valid_count']
+    for key in [
+        'clip_similarity_overall', 
+        'clip_correct', 
+        'detail', 
+        'obj', 
+        'textual', 
+        'visual', 
+        'overall'
+    ]:
+        checks[key] /= checks['valid_count']
         
     summary_row = {
         'file_path': 'SUMMARY',
@@ -531,13 +571,14 @@ if '__main__' == __name__:
     parser.add_argument('--model', type = str, default = 'qwen', choices = supported_models, help = 'model')
     parser.add_argument('--task_id', type = int, nargs = '+', default = list(task_dataframe.keys()), help = 'task id')
     parser.add_argument('--shot', type = int, nargs = '+', default = [2,4,6,8], help = 'shot')
-    parser.add_argument('--misleading', type = int, nargs = '+', default = [0,1], help = 'misleading', choices = [0,1])
+    parser.add_argument('--prompt_type', type = str, nargs = '+', default = ['default'], help = 'prompt_type', choices = prompt_type_options)
     parser.add_argument('--device', type = str, default = 'cuda', help = 'device')
     parser.add_argument('--seed', type = int, default = 123, help = 'seed')
     parser.add_argument('--wandb', type = int, default = 1, help = 'whether log the results using wandb', choices = [0,1])
     parser.add_argument('--overwrite', type = int, default = 0, help = 'whether overwrite the existing results', choices = [0,1])
     parser.add_argument('--eval_mode', type = str, default = 'text', help = 'evaluation mode', choices = ['text', 'image'])
-    parser.add_argument('--max_file_count', type = int, default = 1000, help = 'max file count')
+    parser.add_argument('--finetuned_model', type=int, default=0, choices=[0,1], help = "whether to use the results of the finetuned model")
+    parser.add_argument('--data_mode', type=str, default="default", choices=['default', 'ft_test'], help = "what dataset to use")
     
     args = parser.parse_args()
     
@@ -550,7 +591,7 @@ if '__main__' == __name__:
         print(f"| {key}: {value}")
     
     # load llava
-    tokenizer, llava_model, image_processor, context_len, llava_args = None, None, None, None, None # load_llava(device = args.device)
+    tokenizer, llava_model, image_processor, context_len, llava_args = load_llava(device = args.device)
     llava_configs = {
         'tokenizer': tokenizer,
         'llava_model': llava_model,
@@ -563,19 +604,26 @@ if '__main__' == __name__:
     # load clip to device
     clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
     clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(args.device)
+    clip_configs = {
+        'clip_processor': clip_processor,
+        'clip_model': clip_model,
+    }
+    
     
     for task_id in args.task_id:
         for shot in args.shot:
-            for misleading in args.misleading:
+            for prompt_type in args.prompt_type:
                 eval(
                     task_id,
                     shot,
-                    misleading,
+                    prompt_type,
                     args.model,
                     llava_configs,
+                    clip_configs,
                     args.seed,
-                    max_file_count = args.max_file_count,
                     log_wandb = args.wandb,
                     overwrite = args.overwrite,
                     eval_mode = args.eval_mode,
+                    finetuned_model = args.finetuned_model,
+                    data_mode = args.data_mode,
                 )

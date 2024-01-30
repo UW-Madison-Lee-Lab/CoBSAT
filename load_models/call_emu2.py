@@ -80,19 +80,29 @@ def call_emu2(
     ],
     seed = 123,
     gen_mode = 'text',
-    instruction = "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+    instruction = [
+        '',
+        "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+    ],
+    call_mode = 'micl', # 'micl' or 'text'
+    history = None,
+    save_history = False,
 ):
     set_seed(seed)
     
     if gen_mode == 'text':
-        prompt = ''
+        prompt = instruction[0]
+        if history: prompt += ' ' + history['prompt'] + ' '
+            
         for i in range(len(text_inputs)):
             prompt = prompt + text_inputs[i]
-            if i < len(text_inputs) - 1:
-                prompt = prompt + "[<IMG_PLH>]"
-        prompt = prompt + instruction        
+            if call_mode == 'micl':
+                if i < len(text_inputs) - 1:
+                    prompt = prompt + "[<IMG_PLH>]"
+        prompt = prompt + instruction[1]
         
         images = [Image.open(image_inputs[i]).convert('RGB') for i in range(len(image_inputs))]
+        if history: images.insert(0, history['image'])
         
         inputs = model.build_input_ids(
             text=[prompt],
@@ -101,6 +111,8 @@ def call_emu2(
         )
         
         output_dict = {}
+        if save_history: output_dict = {'history': {'prompt': prompt, 'image': images}}
+        
         emu2_start = time()
         with torch.no_grad():
             outputs = model.generate(
@@ -113,22 +125,28 @@ def call_emu2(
             )
         emu2_end = time()
         output_dict['description'] = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
+        if save_history: output_dict['history']['prompt'] += ' ' + output_dict['description']
+        
         output_dict['time'] = emu2_end - emu2_start
     elif gen_mode == 'image':
-        prompt = []
+        prompt = [instruction[0]]
+        if history: prompt.extend(history)
+        
         for i in range(len(text_inputs)):
             prompt.append(text_inputs[i])
             if i < len(text_inputs) - 1:
                 prompt.append(Image.open(image_inputs[i]).convert('RGB'))
-        prompt.append(instruction)
+        prompt.append(instruction[1])
         
         output_dict = {}
+        if save_history: output_dict = {'history': prompt}
         
         emu2_start = time()
         outputs = model(prompt)  
         emu2_end = time()
     
         output_dict['image'] = outputs.image
+        if save_history: output_dict['history'] += f' {outputs.image}'
         # output_dict['description'] = outputs.text # not sure
         output_dict['time'] = emu2_end - emu2_start
         

@@ -107,20 +107,32 @@ def call_emu(
     seed = 123,
     gen_mode = 'text',
     device = 'cuda',
-    instruction = "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+    instruction = [
+        "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+        '',
+    ],
+    call_mode = 'micl', # 'micl' or 'text'
+    history = None,
+    save_history = False,
 ):
     set_seed(seed)
     
     if gen_mode == 'image':
 
-        prompt = []
+        prompt = [instruction[0]]
+        if history: prompt.extend(history)
+            
         for i in range(len(text_inputs)):
             prompt.append(text_inputs[i])
-            if i < len(text_inputs) - 1:
-                image = Image.open(image_inputs[i]).convert('RGB')
-                prompt.append(image)
+            if call_mode == 'micl':
+                if i < len(text_inputs) - 1:
+                    image = Image.open(image_inputs[i]).convert('RGB')
+                    prompt.append(image)
+        prompt.append(instruction[1])
 
         output_dict = {}
+        if save_history: output_dict['history'] = prompt
+        
         emu_start = time()
 
         image = emu_model(
@@ -131,7 +143,8 @@ def call_emu(
         )
         output_dict['description'] = "null"
         output_dict['image'] = image
-
+        if save_history: output_dict['history'] += f' {image}'
+        
         emu_end = time()
         output_dict['time'] = emu_end - emu_start
 
@@ -139,15 +152,20 @@ def call_emu(
 
     elif gen_mode == 'text':
 
-        prompt = []
+        prompt = [instruction[0]]
+        if history: prompt.extend(history['prompt'])
+        
         for i in range(len(text_inputs)):
             prompt.append(text_inputs[i])
-            if i < len(text_inputs) - 1:
-                image = process_img(img_path=image_inputs[i],device=device)
-                prompt.append(image)
+            if call_mode == 'micl':
+                if i < len(text_inputs) - 1:
+                    image = process_img(img_path=image_inputs[i],device=device)
+                    prompt.append(image)
+        prompt.append(instruction[1])
                 
         interleaved_sequence = ''
         image_list = []
+        if history: image_list.extend(history['image'])
         for item in prompt:
             if isinstance(item, str):  # text
                 interleaved_sequence += item
@@ -156,15 +174,19 @@ def call_emu(
                 interleaved_sequence += image_placeholder
 
         output_dict = {}
+        if save_history: 
+            output_dict = {'history': {'prompt': interleaved_sequence, 'image': image_list}}
+        
         emu_start = time()
 
         output_dict['description'] = Emu_inference(
             emu_model, 
             image_list, 
             interleaved_sequence, 
-            system=instruction,
+            system=instruction[0],
             instruct=True, 
         )
+        if save_history: output_dict['history']['prompt'] += f' {output_dict["description"]}'
         emu_end = time()
         output_dict['time'] = emu_end - emu_start
 
