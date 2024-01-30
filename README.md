@@ -22,7 +22,7 @@
 
 - [Step 1: Set Up Environment](# Step 1: Set Up Environment)
 - [Step 2: Download Dataset](#Step 2: Download Dataset)
-- [Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability](# Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability)
+- [Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability](# Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability)
 
 # Step 1: Set Up Environment
 
@@ -51,6 +51,8 @@ To set up the environment for benchmarking MLLMs, please follow the following st
 
 3. [Optional] If you want to conduct experiemnts on the models we featured, config the environment and download necessary files. 
 
+4. 
+
    
 
 # Step 2: Download Dataset
@@ -62,6 +64,29 @@ To use our dataset, please follow the following steps.
 Please download the images and their corresponding descriptions of our dataset from this [link](https://drive.google.com/file/d/1Yk8mo_xD95GEcee3EsA1qtJTsx1p1DNJ/view?usp=sharing).
 
 <img width="903" alt="image" src="dataset_overview.jpg">
+
+# Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability
+
+```
+.
+├── ...
+├── load_datasets
+├── load_models
+│   ├── ...                
+│   ├── call_OwnModel.py    # create python file to load your own model
+│   └── ... 
+├── models                  
+│   ├── SEED                # git clone https://github.com/AILab-CVC/SEED
+│   ├── gill                # git clone https://github.com/kohjingyu/gill
+│   ├── Emu                 # git clone https://github.com/baaivision/Emu
+│   │   └── Emu1 
+│   ├── LLaVA               # git clone https://github.com/haotian-liu/LLaVA
+│   ├── Qwen-VL             # git clone https://github.com/QwenLM/Qwen-VL
+│   ├── OwnModel            # input your own model folder
+│   └── ...
+├── load_model.py           # add your own model                
+└── ...
+```
 
 
 
