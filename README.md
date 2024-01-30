@@ -1,11 +1,72 @@
-# Visual-ICL'
 
-```
-pip install -r requirements.txt
 
-```
+<h1 align="center"> <p>Can MLLMs Perform Multimodal In-Context Learning for Text-to-Image Generation?</p></h1>
+<h4 align="center">
+    <p>
+      <a href="https://yzeng58.github.io/zyc_cv/" target="_blank">Yuchen Zeng</a><sup>*1</sup>, <a href="https://scholar.google.com/citations?user=Q-ARWkwAAAAJ&hl=eh" target="_blank">Wonjun Kang*</a><sup>*2</sup>, <a href="https://bryce-chen.github.io/" target="_blank">Yicong Chen</a><sup>1</sup>, <a href="http://cvml.ajou.ac.kr/wiki/index.php/Professor" target="_blank">Hyung Il Koo</a><sup>2</sup>, <a href="https://kangwooklee.com/aboutme/" target="_blank">Kangwook Lee</a><sup>1</sup>
+  </p>
+  <p>
+    <sup>1</sup>UW-Madison, <sup>2</sup> FuriosaAI
+   </p>
+    </h4>
+
+**Paper Link**: TBA
+
+**Abstract**:TBA
+
+# News  🚀
+
+* []...
+
+# Contents
+
+- [Step 1: Set Up Environment](# Step 1: Set Up Environment)
+- [Step 2: Download Dataset](#Step 2: Download Dataset)
+- [Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability](# Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability)
+
+# Step 1: Set Up Environment
+
+To set up the environment for benchmarking MLLMs, please follow the following steps.
+
+1. Clone this repository and rename it as `micl`
+
+   ```bash
+   git clone https://github.com/UW-Madison-Lee-Lab/micl-imggen
+   mv micl-imggen micl
+   ```
+
+2. Install Packages
+
+   ```bash
+   cd conda_env
+   
+   # create the environment that works for most of the cases
+   conda env create -f general_env.yml
+   
+   # create the environment for llava (used for evaluating the accuracy of the images) to work 
+   conda env create -f llava_env.yml
+   ```
+
+   
+
+3. [Optional] If you want to conduct experiemnts on the models we featured, config the environment and download necessary files. 
+
+   
+
+# Step 2: Download Dataset
+
+To use our dataset, please follow the following steps. 
+
+
+
+Please download the images and their corresponding descriptions of our dataset from this [link](https://drive.google.com/file/d/1Yk8mo_xD95GEcee3EsA1qtJTsx1p1DNJ/view?usp=sharing).
+
+<img width="903" alt="image" src="dataset_overview.jpg">
+
+
 
 ## llava
+
 ```
 cd models
 git clone https://github.com/haotian-liu/LLaVA.git
