@@ -20,13 +20,13 @@
 
 # Contents
 
-- [Step 1: Set Up Environment](# Step 1: Set Up Environment)
+- [Step 1: Set Up Environment](#step-1:-set-up-environment)
 - [Step 2: Download Dataset](#Step 2: Download Dataset)
 - [Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability](# Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability)
 
 # Step 1: Set Up Environment
 
-To set up the environment for benchmarking MLLMs, please follow the following steps.
+To set up the environment for benchmarking MLLMs, please follow the following steps. This works for linux. 
 
 1. Clone this repository and rename it as `micl`
 
@@ -47,25 +47,26 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    conda env create -f llava_env.yml
    ```
 
+3. [Optional] If you want to conduct experiments on the models we featured, config the environment and download necessary files. 
+
+4. Create `environment.py` in the `micl` directory. Note that many variables need you to config except `root_dir` on your own
+
+   ```bash
+   # Configure the environment variables for the project
+   import os
+   root_dir = os.path.dirname(os.path.abspath(__file__))
    
+   OPENAI_API_KEY = f'{your_openai_key}'# NEED UPDATE
+   TRANSFORMER_CACHE = '/data/yzeng58/.cache/huggingface/hub' # NEED UPDATE
+   SEED_PROJECT_ROOT = f'{root_dir}/models/SEED'
+   EMU_IMAGE_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/pretrain' # NEED UPDATE
+   EMU_INSTRUCT_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/Emu-instruct.pt' # NEED UPDATE
+   EMU_TEXT_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/Emu-pretrain.pt' # NEED UPDATE
+   ```
 
-3. [Optional] If you want to conduct experiemnts on the models we featured, config the environment and download necessary files. 
+5. 
 
-4. 
-
-   
-
-# Step 2: Download Dataset
-
-To use our dataset, please follow the following steps. 
-
-
-
-Please download the images and their corresponding descriptions of our dataset from this [link](https://drive.google.com/file/d/1Yk8mo_xD95GEcee3EsA1qtJTsx1p1DNJ/view?usp=sharing).
-
-<img width="903" alt="image" src="dataset_overview.jpg">
-
-# Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability
+## Directory Structure
 
 ```
 .
@@ -87,6 +88,22 @@ Please download the images and their corresponding descriptions of our dataset f
 ├── load_model.py           # add your own model                
 └── ...
 ```
+
+
+
+# Step 2: Download Dataset
+
+To use our dataset, please follow the following steps. 
+
+
+
+Please download the images and their corresponding descriptions of our dataset from this [link](https://drive.google.com/file/d/1Yk8mo_xD95GEcee3EsA1qtJTsx1p1DNJ/view?usp=sharing).
+
+<img width="903" alt="image" src="dataset_overview.jpg">
+
+# Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability
+
+
 
 
 
