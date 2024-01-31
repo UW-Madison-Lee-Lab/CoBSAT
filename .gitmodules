@@ -1,3 +1,6 @@
 [submodule "models/QwenVL"]
 	path = models/QwenVL
 	url = https://github.com/yzeng58/Qwen-VL
+[submodule "models/Emu"]
+	path = models/Emu
+	url = https://github.com/yzeng58/Emu
