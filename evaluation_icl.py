@@ -10,6 +10,7 @@ from load_dataset import load_dataset
 from tqdm import tqdm
 from transformers import CLIPProcessor, CLIPModel
 from PIL import Image
+from environment import WANDB_ENTITY, WANDB_PROJECT
 
 def get_clip_similarity(clip_model, batch_true_embeds, pred_embeds):
     logit_scale = clip_model.logit_scale.exp()
@@ -407,7 +408,7 @@ def eval(
         
         # first check whether there exists a run with the same configuration
         api = wandb.Api(timeout=300)
-        runs = api.runs("lee-lab-uw-madison/micl")
+        runs = api.runs(f"{WANDB_ENTITY}/{WANDB_PROJECT}")
         find_existing_run = None
         for run in runs:
             run_config_list = {k: v for k,v in run.config.items() if not k.startswith('_')}
@@ -426,8 +427,8 @@ def eval(
         # initialize wandb
         if find_existing_run is None:
             wandb.init(
-                project = 'micl',
-                entity = 'lee-lab-uw-madison',
+                project = WANDB_PROJECT,
+                entity = WANDB_ENTITY,
                 config = wandb_config,
             )
         
