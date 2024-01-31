@@ -18,6 +18,8 @@
 
 * []...
 
+Stay tuned for the updates!
+
 # Contents
 
 - [Step 1: Set Up Environment](#set-up-environment)
@@ -35,17 +37,32 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    mv micl-imggen micl
    ```
 
-2. Install Packages
+2. Install Packages 
+
+   <details><summary> Linux </summary>
 
    ```bash
    cd conda_env
    
    # create the environment that works for most of the cases
-   conda env create -f general_env.yml
+   conda create -n micl python=3.8.18
+   pip install torch==2.1.2 torchvision==0.16.2 
+   pip install -r conda_env/default_requirements.txt
    
    # create the environment for llava (used for evaluating the accuracy of the images) to work 
-   conda env create -f llava_env.yml
+   conda create -n llava python=3.10.13
+   pip install conda_env/llava_requirements.txt
    ```
+
+   </details>
+
+   <details><summary> Mac </summary>
+
+   </details>
+
+   <details><summary> Windows </summary>
+
+   </details>
 
 3. [Optional] If you want to conduct experiments on the models we featured, config the environment and download necessary files. 
 
@@ -53,15 +70,16 @@ To set up the environment for benchmarking MLLMs, please follow the following st
 
    ```bash
    # Configure the environment variables for the project
+   
    import os
    root_dir = os.path.dirname(os.path.abspath(__file__))
    
    OPENAI_API_KEY = f'{your_openai_key}'# NEED UPDATE
    TRANSFORMER_CACHE = '/data/yzeng58/.cache/huggingface/hub' # NEED UPDATE
    SEED_PROJECT_ROOT = f'{root_dir}/models/SEED'
-   EMU_IMAGE_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/pretrain' # NEED UPDATE
-   EMU_INSTRUCT_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/Emu-instruct.pt' # NEED UPDATE
-   EMU_TEXT_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/Emu-pretrain.pt' # NEED UPDATE
+   EMU_IMAGE_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/pretrain' # [optional] NEED UPDATE
+   EMU_INSTRUCT_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/Emu-instruct.pt' # [optional] NEED UPDATE
+   EMU_TEXT_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/Emu-pretrain.pt' # [optional] NEED UPDATE
    ```
 
 5. 
@@ -70,22 +88,29 @@ To set up the environment for benchmarking MLLMs, please follow the following st
 
 ```
 .
-├── ...
-├── load_datasets
+├── ...          
+├── datasets                # will download the dataset in the next step
 ├── load_models
-│   ├── ...                
-│   ├── call_OwnModel.py    # create python file to load your own model
+│   ├── call_emu.py
+│		├── call_gill.py
+│		├── call_gpt.py
+│		├── call_llava.py
+│		├── call_qwen.py
+│		├── call_seed.py
+│   ├── call_your_model.py  # [optional] create python file to load the model you want to evaluate
 │   └── ... 
 ├── models                  
-│   ├── SEED                # git clone https://github.com/AILab-CVC/SEED
-│   ├── gill                # git clone https://github.com/kohjingyu/gill
-│   ├── Emu                 # git clone https://github.com/baaivision/Emu
+│   ├── SEED                # [optional] git clone https://github.com/AILab-CVC/SEED
+│   ├── gill                # [optional] git clone https://github.com/kohjingyu/gill
+│   ├── Emu                 # [optional] git clone https://github.com/baaivision/Emu
 │   │   └── Emu1 
-│   ├── LLaVA               # git clone https://github.com/haotian-liu/LLaVA
-│   ├── Qwen-VL             # git clone https://github.com/QwenLM/Qwen-VL
-│   ├── OwnModel            # input your own model folder
+│   ├── LLaVA               # [optional] git clone https://github.com/haotian-liu/LLaVA
+│   ├── Qwen-VL             # [optional] git clone https://github.com/QwenLM/Qwen-VL
+│   ├── OwnModel            # [optional] input your own model folder
 │   └── ...
-├── load_model.py           # add your own model                
+├── ...
+├── environment.py          # follow the instruction above to create this file
+├── load_model.py           # [optional] add your own model                
 └── ...
 ```
 
@@ -101,88 +126,107 @@ Please download the images and their corresponding descriptions of our dataset f
 
 <img width="903" alt="image" src="dataset_overview.jpg">
 
+# [Optional] Feature Your Own Model
+
+1. input your own model folder `OwnModel/` in `models/`.
+2. create python file `call_OwnModel.py` in `load_models/` to load your own model.
+3. add your own model in `load_model.py`
+
+<details><summary> <code>call_OwnModel.py</code> example </summary>
+
+
+```
+def load_OwnModel(
+    device = 'cuda',
+    seed = 123,
+):
+
+    return model, others
+```
+
+```
+def call_OwnModel(
+    model, 
+    others,
+    text_inputs = ["Red", "Green", "Yellow"],
+    image_inputs = [
+        "/data/yzeng58/micl/datasets/weather_pig/aurora_pig.jpg",
+        "/data/yzeng58/micl/datasets/weather_pig/hailstorm_pig.jpg"
+    ],
+    seed = 123,
+    gen_mode = 'text',
+):
+
+    output_dict = {}
+    OwnModel_start = time()
+
+    if gen_mode == 'image':
+
+    elif gen_mode == 'text':
+
+    OwnModel_end = time()
+    output_dict['time'] = OwnModel_end - OwnModel_start
+
+    return output_dict
+```
+
+</details>
+
+<details><summary> <code>load_model.py</code> example </summary>
+
+
+```
+    elif model == 'OwnModel':
+        from load_models.call_OwnModel import load_OwnModel, call_OwnModel
+
+        model, others = load_OwnModel(device=device)
+        call_OwnModel(
+            model, 
+            others,
+            text_inputs = ['Yellow', 'White', 'Black'],
+            image_inputs= [
+                f"{root_dir}/models/Emu/Emu2/examples/dog2.jpg",
+                f"{root_dir}/models/Emu/Emu2/examples/dog3.jpg"
+            ],
+            seed = 123,
+            gen_mode = gen_mode,
+        )
+        return lambda configs: call_OwnModel(
+            model, 
+            others, 
+            gen_mode = gen_mode, 
+            **configs
+        )
+```
+
+</details>
+
 # Benchmark MLLMs
 
+* Stage 1: Image (Description Generation)
+
+  ```
+  python inference_icl.py \
+  --model seed \              # [seed, gill, emu, gpt4v, llava, qwen]
+  --prompt_type default \     # [default, caption, instruct, misleading, cot, exact]
+  --gen_mode image \          # [image, text]
+  ```
+
+  
+
+* Stage 2: Evaluation
+
+  ```
+  python evaluation_icl.py
+  --model seed \              # [seed, gill, emu, gpt4v, llava, qwen]
+  --prompt_type default \     # [default, caption, instruct, misleading, cot, exact]
+  --eval_mode image \          # [image, text]
+  ```
+
+  
 
 
 
+## Citation
 
-## llava
-
-```
-cd models
-git clone https://github.com/haotian-liu/LLaVA.git
-mv LLaVA llava
-cd llava
-```
-
-# gill
-```
-mkdir models
-cd models
-mkdir gill
-cd gill 
-wget https://github.com/kohjingyu/gill/raw/main/checkpoints/gill_opt/decision_model.pth.tar
-wget https://github.com/kohjingyu/gill/raw/main/checkpoints/gill_opt/pretrained_ckpt.pth.tar
-wget https://huggingface.co/spaces/jykoh/gill/raw/main/gill/layers.py
-wget https://huggingface.co/spaces/jykoh/gill/raw/main/gill/models.py
-wget https://huggingface.co/spaces/jykoh/gill/raw/main/gill/utils.py
-```
-
-### google drive api
-```
-cd google_drive_helper
-pip install google_auth_oauthlib
-pip install --upgrade google-api-python-client
-# add credentials.json to project_root
-python google_download.py --user_email 'kangwj1995@furiosa.ai' --name gpt_evaluation_m
-python google_download.py --user_email 'kangwj1995@furiosa.ai' --name gpt_evaluation
-python google_download.py --user_email 'kangwj1995@furiosa.ai' --name llava_evaluation_m
-python google_download.py --user_email 'kangwj1995@furiosa.ai' --name llava_evaluation
-python google_download.py --user_email 'kangwj1995@furiosa.ai' --name clip_evaluation_m
-python google_download.py --user_email 'kangwj1995@furiosa.ai' --name clip_evaluation
-python google_download.py --user_email 'kangwj1995@furiosa.ai' --name exps
-python google_download.py --name datasets --download_folder '.'
-python google_download.py --name llava_evaluation_m/detail
-python google_download.py --name llava_evaluation/detail
-```
-
-### Llava evaluation
-
-```
-cd models 
-sudo apt-get update
-sudo apt-get install git-lfs
-git lfs install
-git clone https://huggingface.co/liuhaotian/llava-v1.5-13b
-```
-
-### GPT-4V
-
-```
-call_gpt(
-    text_inputs = ["Red", "Green", "Yellow"],
-    mode = 'path', # 'url' or 'path'
-    image_inputs = [
-        "/skunk-pod-storage-yzeng58-40wisc-2eedu-pvc/micl/datasets/color object/color car/red car.jpg",
-        "/skunk-pod-storage-yzeng58-40wisc-2eedu-pvc/micl/datasets/color object/color car/green car.jpg"
-    ],
-    max_tokens = 300,
-    image_size = "1024x1024",
-    quality = 'standard',
-)
-```
-
-```
-call_gpt(
-    text_inputs = ["Red", "Green", "Yellow"],
-    mode = 'url',
-    image_inputs = [
-        "https://media.istockphoto.com/id/1189903200/photo/red-generic-sedan-car-isolated-on-white-background-3d-illustration.jpg?s=612x612&w=0&k=20&c=uRu3o_h5FVljLQHS9z0oyz-XjXzzXN_YkyGXwhdMrjs=",
-        "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
-    ],
-    max_tokens = 300,
-    image_size = "1024x1024",
-    quality = 'standard',
-)
-```
+Please cite our work if you use this code.
