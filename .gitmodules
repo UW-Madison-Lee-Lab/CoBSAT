@@ -4,9 +4,9 @@
 [submodule "models/gill"]
 	path = models/gill
 	url = https://github.com/yzeng58/gill
-[submodule "Qwen"]
-	path = Qwen
-	url = https://github.com/yzeng58/Qwen
 [submodule "models/Qwen"]
 	path = models/Qwen
 	url = https://github.com/yzeng58/Qwen
+[submodule "models/Qwen-VL"]
+	path = models/Qwen-VL
+	url = https://github.com/yzeng58/Qwen-VL
