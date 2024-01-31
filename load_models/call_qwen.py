@@ -160,7 +160,7 @@ def ft_qwen(
     seed = 123,
 ):
     set_seed(seed)
-    from models.QwenVL.finetune import train, ModelArguments, DataArguments, TrainingArguments, LoraArguments
+    from models.Qwen-VL.finetune import train, ModelArguments, DataArguments, TrainingArguments, LoraArguments
     model_args = ModelArguments(
         model_name_or_path="Qwen/Qwen-VL-Chat"
     )
