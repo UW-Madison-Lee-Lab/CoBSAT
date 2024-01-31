@@ -123,7 +123,7 @@ instruction_dict = {
     },
     'cot': {
         'general': (
-            "We provide a few examples, each with a input, and an output of the image description. Based on the examples, the task is to predict the next image descripion.\n\n\n", 
+            "We provide a few examples, each of which is an input-output pair where the output is a description of the image associated with the input. Based on the examples, the task is to predict the next image description.\n\n\n", 
             "\n\n\nBefore predicting the next image, let's think step by step and analyze what the relationship between the text input and image output in each example is first. \n\n\n"
         ), 
         'image': ('', "\n\n\nBased on the analysis, please generate the next image given the request "), 
