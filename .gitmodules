@@ -10,3 +10,6 @@
 [submodule "models/Qwen"]
 	path = models/Qwen
 	url = https://github.com/yzeng58/Qwen
+[submodule "models/llava"]
+	path = models/llava
+	url = https://github.com/yzeng58/LLaVA
