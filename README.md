@@ -35,6 +35,7 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    ```bash
    git clone https://github.com/UW-Madison-Lee-Lab/micl-imggen
    mv micl-imggen micl
+   cd micl
    ```
 
 2. Install Packages 
@@ -215,6 +216,42 @@ def call_OwnModel(
 ```
 
 </details>
+
+# Load Models
+
+### Image Generation
+
+- [x] [SEED-LLaMA](https://arxiv.org/abs/2310.01218)
+- [x] [GILL](https://arxiv.org/abs/2305.17216)
+- [x] [Emu](https://arxiv.org/abs/2307.05222)
+
+### Image Description Generation
+
+- [x] [SEED-LLaMA](https://arxiv.org/abs/2310.01218)
+- [ ] [GILL](https://arxiv.org/abs/2305.17216)
+- [ ] [Emu](https://arxiv.org/abs/2307.05222)
+- [x] [GPT-4V]()
+- [x] [LLaVA](https://arxiv.org/abs/2304.08485)
+- [x] [Qwen-VL](https://arxiv.org/abs/2308.12966)
+
+finetune
+
+[Qwen-VL](https://arxiv.org/abs/2308.12966)
+
+<details> Emu 
+  
+</details>
+
+```
+cd models
+git 
+```
+
+
+
+</details>
+
+
 
 # Benchmark MLLMs
 
