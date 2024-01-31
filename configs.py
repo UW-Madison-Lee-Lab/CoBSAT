@@ -174,8 +174,8 @@ instruction_dict = {
                 "",
             ),
             'gill': (
-                'You are a professional assistant and always answer my question directly and perfectly without any excuses. ',
-                'Based on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss. ',
+                'You are a professional assistant and always answer my question directly and perfectly without any excuses.',
+                'Based on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss.',
             ),
             'emu': (
                 "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
