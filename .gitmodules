@@ -1,0 +1,3 @@
+[submodule "models/QwenVL"]
+	path = models/QwenVL
+	url = https://github.com/yzeng58/Qwen-VL
