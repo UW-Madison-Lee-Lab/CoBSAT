@@ -21,8 +21,8 @@
 # Contents
 
 - [Step 1: Set Up Environment](#set-up-environment)
-- [Step 2: Download Dataset](#Step 2: Download Dataset)
-- [Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability](# Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability)
+- [Step 2: Download Dataset](#download-dataset)
+- [Step 3: Benchmark MLLMs' M-ICL Text-to-Image Capability](#benchmark-mllms)
 
 # Set Up Environment
 
@@ -91,7 +91,7 @@ To set up the environment for benchmarking MLLMs, please follow the following st
 
 
 
-# Step 2: Download Dataset
+# Download Dataset
 
 To use our dataset, please follow the following steps. 
 
@@ -101,7 +101,7 @@ Please download the images and their corresponding descriptions of our dataset f
 
 <img width="903" alt="image" src="dataset_overview.jpg">
 
-# Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability
+# Benchmark MLLMs
 
 
 
