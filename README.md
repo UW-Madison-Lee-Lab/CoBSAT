@@ -74,12 +74,27 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    import os
    root_dir = os.path.dirname(os.path.abspath(__file__))
    
-   OPENAI_API_KEY = f'{your_openai_key}'# NEED UPDATE
-   TRANSFORMER_CACHE = '/data/yzeng58/.cache/huggingface/hub' # NEED UPDATE
    SEED_PROJECT_ROOT = f'{root_dir}/models/SEED'
-   EMU_IMAGE_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/pretrain' # [optional] NEED UPDATE
-   EMU_INSTRUCT_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/Emu-instruct.pt' # [optional] NEED UPDATE
-   EMU_TEXT_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/Emu-pretrain.pt' # [optional] NEED UPDATE
+   
+   ###############
+   # NEED UPDATE #
+   ###############
+   TRANSFORMER_CACHE = '/data/yzeng58/.cache/huggingface/hub' 
+   
+   #########################
+   # NEED UPDATE IF NEEDED #
+   #########################
+   # GPT-4V
+   OPENAI_API_KEY = f'{your_openai_key}'
+   # Emu for Image Generation
+   EMU_IMAGE_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/pretrain' 
+   # Emu-Instruct
+   EMU_INSTRUCT_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/Emu-instruct.pt' 
+   # Emu-Generation
+   EMU_TEXT_PATH = '/data/yzeng58/micl/models/Emu/Emu1/model_weights/Emu/Emu-pretrain.pt'
+   # WANDB Logging https://wandb.ai/site
+   WANDB_ENTITY = 'lee-lab-uw-madison'
+   WANDB_PROJECT = 'micl'
    ```
 
 5. 
