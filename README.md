@@ -20,11 +20,11 @@
 
 # Contents
 
-- [Step 1: Set Up Environment](#step-1:-set-up-environment)
+- [Step 1: Set Up Environment](#set-up-environment)
 - [Step 2: Download Dataset](#Step 2: Download Dataset)
 - [Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability](# Step 3: Evaluation: Benchmarking MLLMs' M-ICL Text-to-Image Capability)
 
-# Step 1: Set Up Environment
+# Set Up Environment
 
 To set up the environment for benchmarking MLLMs, please follow the following steps. This works for linux. 
 
