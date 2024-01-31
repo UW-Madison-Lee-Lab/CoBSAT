@@ -152,7 +152,7 @@ def call_emu(
 
     elif gen_mode == 'text':
 
-        prompt = [instruction[0]]
+        prompt = []
         if history: prompt.extend(history['prompt'])
         
         for i in range(len(text_inputs)):
