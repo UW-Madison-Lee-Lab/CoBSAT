@@ -1,0 +1,21 @@
+[submodule "models/QwenVL"]
+	path = models/QwenVL
+	url = https://github.com/yzeng58/Qwen-VL
+[submodule "models/Emu"]
+	path = models/Emu
+	url = https://github.com/yzeng58/Emu
+[submodule "models/gill"]
+	path = models/gill
+	url = https://github.com/yzeng58/gill
+[submodule "models/Qwen"]
+	path = models/Qwen
+	url = https://github.com/yzeng58/Qwen
+[submodule "models/llava"]
+	path = models/llava
+	url = https://github.com/yzeng58/LLaVA
+[submodule "SEED"]
+	path = SEED
+	url = https://github.com/yzeng58/SEED
+[submodule "models/SEED"]
+	path = models/SEED
+	url = https://github.com/yzeng58/SEED
