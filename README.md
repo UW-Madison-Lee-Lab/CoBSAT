@@ -47,11 +47,13 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    
    # create the environment that works for most of the cases
    conda create -n micl python=3.8.18
+   conda activate micl
    pip install torch==2.1.2 torchvision==0.16.2 
    pip install -r conda_env/default_requirements.txt
    
    # create the environment for llava (used for evaluating the accuracy of the images) to work 
    conda create -n llava python=3.10.13
+   conda activate llava
    pip install conda_env/llava_requirements.txt
    ```
 
