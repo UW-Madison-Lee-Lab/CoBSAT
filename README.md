@@ -16,7 +16,7 @@
 
 # News  🚀
 
-* []...
+* TODO: Our dataset will be available on huggingface! 
 
 Stay tuned for the updates!
 
