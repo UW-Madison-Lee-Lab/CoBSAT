@@ -36,6 +36,7 @@ figures/
 **/ft_models
 **/logs
 **/archive
+**/google_drive_helper
 
 
 **/submit_cpu.sh
