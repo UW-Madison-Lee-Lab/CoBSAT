@@ -51,11 +51,9 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    
    # create the environment for llava (used for evaluating the accuracy of the images) to work 
    conda create -n llava python=3.10.13
-   cd models/llava
    conda activate llava
    pip install --upgrade pip  # enable PEP 660 support
-   pip install -e .
-   conda ../..
+   pip install git+https://github.com/yzeng58/LLaVA/@a61aae093656922fe16ec2152b031dd1de72fe92
    pip install conda_env/llava_requirements.txt
    ```
 
