@@ -43,8 +43,6 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    <details><summary> Linux </summary>
 
    ```bash
-   cd conda_env
-   
    # create the environment that works for most of the cases
    conda create -n cobsat python=3.8.18
    conda activate cobsat
