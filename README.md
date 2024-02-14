@@ -9,7 +9,6 @@
     <sup>1</sup>UW-Madison, <sup>2</sup> FuriosaAI
    </p>
     </h4>
-
 **Paper Link**: https://arxiv.org/abs/2402.01293
 
 **Abstract**: The evolution from Large Language Models (LLMs) to Multimodal Large Language Models (MLLMs) has spurred research into extending In-Context Learning (ICL) to its multimodal counterpart. Existing such studies have primarily concentrated on image-to-text ICL. However, the Text-to-Image ICL (T2I-ICL), with its unique characteristics and potential applications, remains underexplored. To address this gap, we formally define the task of T2I-ICL and present CoBSAT, the first T2I-ICL benchmark dataset, encompassing ten tasks. Utilizing our dataset to benchmark six state-of-the-art MLLMs, we uncover considerable difficulties MLLMs encounter in solving T2I-ICL. We identify the primary challenges as the inherent complexity of multimodality and image generation. To overcome these challenges, we explore strategies like fine-tuning and Chain-of-Thought prompting, demonstrating notable improvements. Our code and dataset are available at <a href="https://github.com/UW-Madison-Lee-Lab/CoBSAT">this link</a>.
@@ -17,16 +16,17 @@
 # News  🚀
 
 * TODO: Our dataset will be available on huggingface! 
+* [02/02/24] Our paper is available on <a href="https://arxiv.org/abs/2402.01293">arxiv</a>! 
 
 Stay tuned for the updates!
 
 # Contents
 
-- [Step 1: Set Up Environment](#set-up-environment)
-- [Step 2: Download Dataset](#download-dataset)
-- [Step 3: Benchmark MLLMs' M-ICL Text-to-Image Capability](#benchmark-mllms)
+- [Step 1: Set Up Environment](#step-1-set-up-environment)
+- [Step 2: Download Dataset](#step-2-download-dataset)
+- [Step 3: Benchmark MLLMs' M-ICL Text-to-Image Capability](#step-3-benchmark-mllms)
 
-# Set Up Environment
+# Step 1: Set Up Environment
 
 To set up the environment for benchmarking MLLMs, please follow the following steps. This works for linux. 
 
@@ -97,7 +97,7 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    WANDB_PROJECT = 'cobsat'
    ```
 
-# Download Dataset
+# Step 2: Download Dataset
 
 <img width="903" alt="image" src="dataset_overview.jpg">
 
@@ -136,7 +136,7 @@ Up to now, the structure of your `cobsat` folder should look like this.
 └── ...
 ```
 
-# Benchmark MLLMs
+# Step 3: Benchmark MLLMs
 
 ### Already Supported Models
 
@@ -255,35 +255,35 @@ Up to now, the structure of your `cobsat` folder should look like this.
    If your model support image generation, then you need to edit `instruction_dict['default']['image']` .
 
    ```python
-   				'image': {
-               'gill': (
-                   'You are a professional assistant can generate a new image based on the seqeunce. ',
-                   '',
-               ),
-   						...
-             	# NEED UPDATE
-         			'OwnModel': (
-               		'Based on the sequence, generate the next image.',
-                 	'Make the prediction now.'
-               )
-           }
+   'image': {
+       'gill': (
+           'You are a professional assistant can generate a new image based on the seqeunce. ',
+           '',
+       ),
+       ...
+       # NEED UPDATE
+       'OwnModel': (
+           'Based on the sequence, generate the next image.',
+           'Make the prediction now.'
+       )
+   }
    ```
 
    If your model support text generation, then you need to edit `instruction_dict['default']['text']` .
 
    ```python
-   				'text': {
-               'seed': (
-                   "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
-                   '',
-               ),
-   						...
-             	# NEED UPDATE
-         			'OwnModel': (
-               		'Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ',
-                 	'Make the prediction now.'
-               )
-           }
+   'text': {
+       'seed': (
+           "I will provide you a few examples with text and image. Complete the example with the description of next image. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+           '',
+       ),
+       ...
+       # NEED UPDATE
+       'OwnModel': (
+           'Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ',
+           'Make the prediction now.'
+       )
+   }
    ```
 
 6. [Optional: If you want to finetune your model on our dataset] 
@@ -303,6 +303,22 @@ Up to now, the structure of your `cobsat` folder should look like this.
   --gen_mode text							# [image, text]
   ```
 
+  <details><summary> Parameter Descriptions </summary>
+  * **`model`**: Specifies the model for fine-tuning. Currently, only `qwen` (Qwen-VL) is supported.For integrating your own model, refer to the section [Feature Your Own Model](#optional-feature-your-own-model).
+  * **`shot`**: Defines the number of demonstration examples included in each training prompt.
+  * **`prompt_type`**: Selects the type of prompt to use. Available options include:
+    - `default`: The standard prompt design as described in our paper.
+    - `misleading`: Introduces misleading information in the textual input of each demonstration, as detailed in the appendix.
+    - `cot` (Chain of Thought): Incorporates multi-step inference prompts, prompting the model to generate reasoning steps ("let's think step by step") before the final output.
+    - `exact`: Directly provides the ground truth label as the textual input.
+    - `caption`: Replaces images in the prompt with their corresponding captions.
+    - `instruct`: Adds an additional sentence explicitly stating the relationship between textual input and visual output in each demonstration.
+  * **`gen_mode`**: Determines the output mode of the model, with two options:
+    - `image`: The model generates an image output.
+    - `text`: The model generates textual descriptions for the next image.
+
+  </details>
+
 * Stage 1: Output Generation
 
   ```bash
@@ -320,7 +336,7 @@ Up to now, the structure of your `cobsat` folder should look like this.
   python evaluation_icl.py
   --model seed \              # [seed, gill, emu, gpt4v, llava, qwen]
   --prompt_type default \     # [default, caption, instruct, misleading, cot, exact]
-  --eval_mode image \          # [image, text]
+  --eval_mode image \         # [image, text]
   ...
   ```
 
