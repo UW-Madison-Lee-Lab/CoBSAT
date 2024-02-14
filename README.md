@@ -297,49 +297,109 @@ Up to now, the structure of your `cobsat` folder should look like this.
   ```bash
   # Example
   python finetune_icl.py \
-  --model qwen \ 							# model you want to finetune
-  --shot 2 \ 		 							# number of demonstrations
-  --prompt_type default \			# prompt type
-  --gen_mode text							# [image, text]
+  --model qwen \
+  --shot 2 \ 							
+  --prompt_type default \
+  --gen_mode text			
   ```
 
   <details><summary> Parameter Descriptions </summary>
   * **`model`**: Specifies the model for fine-tuning. Currently, only `qwen` (Qwen-VL) is supported.For integrating your own model, refer to the section [Feature Your Own Model](#optional-feature-your-own-model).
   * **`shot`**: Defines the number of demonstration examples included in each training prompt.
   * **`prompt_type`**: Selects the type of prompt to use. Available options include:
-    - `default`: The standard prompt design as described in our paper.
-    - `misleading`: Introduces misleading information in the textual input of each demonstration, as detailed in the appendix.
-    - `cot` (Chain of Thought): Incorporates multi-step inference prompts, prompting the model to generate reasoning steps ("let's think step by step") before the final output.
-    - `exact`: Directly provides the ground truth label as the textual input.
-    - `caption`: Replaces images in the prompt with their corresponding captions.
-    - `instruct`: Adds an additional sentence explicitly stating the relationship between textual input and visual output in each demonstration.
+    * `default`: The standard prompt design as described in our paper.
+    * `misleading`: Introduces misleading information in the textual input of each demonstration, as detailed in the appendix.
+    * `cot` (Chain of Thought): Incorporates multi-step inference prompts, prompting the model to generate reasoning steps ("let's think step by step") before the final output.
+    * `exact`: Directly provides the ground truth label as the textual input.
+    * `caption`: Replaces images in the prompt with their corresponding captions.
+    * `instruct`: Adds an additional sentence explicitly stating the relationship between textual input and visual output in each demonstration.
+
   * **`gen_mode`**: Determines the output mode of the model, with two options:
-    - `image`: The model generates an image output.
-    - `text`: The model generates textual descriptions for the next image.
+    * `image`: The model generates an image output.
+    * `text`: The model generates textual descriptions for the next image.
+
 
   </details>
 
 * Stage 1: Output Generation
 
   ```bash
+  # Example
   python inference_icl.py \
-  --model seed \              # [seed, gill, emu, gpt4v, llava, qwen]
-  --prompt_type default \     # [default, caption, instruct, misleading, cot, exact]
-  --gen_mode image \          # [image, text]
-  --shot 2
-  ...
+  --model seed \
+  --prompt_type default \
+  --gen_mode image \
+  --shot 2 4 \
+  --seed 123 \
+  --device cuda \
+  --task_id 1 2 3 \
+  --overwrite 0 \
+  --finetuned_model 0 \
+  --data_mode default
   ```
+
+  <details><summary> Parameter Descriptions </summary>
+
+  * **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `gpt4v` (GPT-4V), `llava` (LLaVA), and `qwen` (Qwen-VL).  
+  * **`shot`**: Defines the number of demonstration examples included in each training prompt.
+  * **`prompt_type`**: Selects the type of prompt to use. Available options include:
+    * `default`: The standard prompt design as described in our paper.
+    * `misleading`: Introduces misleading information in the textual input of each demonstration, as detailed in the appendix.
+    * `cot` (Chain of Thought): Incorporates multi-step inference prompts, prompting the model to generate reasoning steps ("let's think step by step") before the final output.
+    * `exact`: Directly provides the ground truth label as the textual input.
+    * `caption`: Replaces images in the prompt with their corresponding captions.
+    * `instruct`: Adds an additional sentence explicitly stating the relationship between textual input and visual output in each demonstration.
+  * **`gen_mode`**: Determines the output mode of the model, with two options:
+    * `image`: The model generates an image output.
+    * `text`: The model generates textual descriptions for the next image.
+  * **`seed`**: An integer used to set the random seed for reproducibility.
+  * **`device`**: Specifies the computing device for the experiments. The default value is `cuda`, which utilizes a single GPU.
+  * **`task_id`**: Identifies the task being performed. By default, all ten tasks are executed. Detailed information about each task can be found in `configs.py` under the definition of `task_dataframe`, as well as in our paper.
+  * **`overwrite`**: Determines whether to reuse existing results or overwrite them. This is applicable when results have already been saved.
+  * **`finetuned_model`**: Indicates whether to use a finetuned model. If enabled, the finetuned model must be stored beforehand by executing `finetune_icl.py`.
+  * **`data_mode`**: Offers two options: `default` and `ft_test`. In `ft_test` mode, the dataset is divided into training and testing sets, with only the testing set being utilized.
+
+  </details>
 
 * Stage 2: Evaluation
 
   ```bash
-  python evaluation_icl.py
-  --model seed \              # [seed, gill, emu, gpt4v, llava, qwen]
-  --prompt_type default \     # [default, caption, instruct, misleading, cot, exact]
-  --eval_mode image \         # [image, text]
-  ...
+  # Example
+  python evaluation_icl.py \
+  --model seed \
+  --prompt_type default \
+  --eval_mode image \
+  --task_id 1 2 3 \
+  --shot 2 4 \
+  --device cuda \
+  --seed 123 \
+  --wandb 1 \
+  --overwrite 0 \
+  --finetuned_model 0 \
+  --data_mode default
   ```
 
+<details><summary> Parameter Descriptions </summary>
+* **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `gpt4v` (GPT-4V), `llava` (LLaVA), and `qwen` (Qwen-VL).  
+* **`shot`**: Defines the number of demonstration examples included in each training prompt.
+* **`prompt_type`**: Selects the type of prompt to use. Available options include:
+  * `default`: The standard prompt design as described in our paper.
+  * `misleading`: Introduces misleading information in the textual input of each demonstration, as detailed in the appendix.
+  * `cot` (Chain of Thought): Incorporates multi-step inference prompts, prompting the model to generate reasoning steps ("let's think step by step") before the final output.
+  * `exact`: Directly provides the ground truth label as the textual input.
+  * `caption`: Replaces images in the prompt with their corresponding captions.
+  * `instruct`: Adds an additional sentence explicitly stating the relationship between textual input and visual output in each demonstration.
+* **`eval_mode`**: determine which type of output of the model to evaluate, with two options:
+  * `image`: image output generated by model.
+  * `text`: textual descriptions for the next image generated by the model.
+* **`seed`**: An integer used to set the random seed for reproducibility.
+* **`device`**: Specifies the computing device for the experiments. The default value is `cuda`, which utilizes a single GPU.
+* **`task_id`**: Identifies the task being performed. By default, all ten tasks are executed. Detailed information about each task can be found in `configs.py` under the definition of `task_dataframe`, as well as in our paper.
+* **`overwrite`**: Determines whether to reuse existing results or overwrite them. This is applicable when results have already been saved.
+* **`finetuned_model`**: Indicates whether to use a finetuned model. If enabled, the finetuned model must be stored beforehand by executing `finetune_icl.py`.
+* **`data_mode`**: Offers two options: `default` and `ft_test`. In `ft_test` mode, the dataset is divided into training and testing sets, with only the testing set being utilized.
+
+</details>
 
 ### Description of Parameters
 
