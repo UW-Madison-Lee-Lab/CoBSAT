@@ -197,8 +197,6 @@ Up to now, the structure of your `cobsat` folder should look like this.
        return output_dict
    ```
 
-   </details>
-
    * Necessary parameters
 
      Below are the essential parameters required for configuring the model's operation.
@@ -225,6 +223,10 @@ Up to now, the structure of your `cobsat` folder should look like this.
      * **`history`**: If the `history` argument of the function is set to `True`, this key stores the interaction history, including both prompts and responses.
 
      Additional content may be stored in custom keys to suit specialized requirements or to enhance functionality.
+
+   Check [`call_seed.py`](https://github.com/UW-Madison-Lee-Lab/CoBSAT/blob/master/load_models/call_seed.py#L106C5-L106C14) for a concrete example. 
+
+   </details>
 
 3. Add your own model in `load_model.py`.
 
