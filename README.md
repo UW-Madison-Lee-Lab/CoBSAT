@@ -3,12 +3,13 @@
 <h1 align="center"> <p>Can MLLMs Perform Multimodal In-Context Learning for Text-to-Image Generation?</p></h1>
 <h4 align="center">
     <p>
-      <a href="https://yzeng58.github.io/zyc_cv/" target="_blank">Yuchen Zeng</a><sup>*1</sup>, <a href="https://scholar.google.com/citations?user=Q-ARWkwAAAAJ&hl=eh" target="_blank">Wonjun Kang*</a><sup>*2</sup>, <a href="https://bryce-chen.github.io/" target="_blank">Yicong Chen</a><sup>1</sup>, <a href="http://cvml.ajou.ac.kr/wiki/index.php/Professor" target="_blank">Hyung Il Koo</a><sup>2</sup>, <a href="https://kangwooklee.com/aboutme/" target="_blank">Kangwook Lee</a><sup>1</sup>
+      <a href="https://yzeng58.github.io/zyc_cv/" target="_blank">Yuchen Zeng</a><sup>*1</sup>, <a href="https://scholar.google.com/citations?user=Q-ARWkwAAAAJ&hl=eh" target="_blank">Wonjun Kang</a><sup>*2</sup>, <a href="https://bryce-chen.github.io/" target="_blank">Yicong Chen</a><sup>1</sup>, <a href="http://cvml.ajou.ac.kr/wiki/index.php/Professor" target="_blank">Hyung Il Koo</a><sup>2</sup>, <a href="https://kangwooklee.com/aboutme/" target="_blank">Kangwook Lee</a><sup>1</sup>
   </p>
   <p>
     <sup>1</sup>UW-Madison, <sup>2</sup> FuriosaAI
    </p>
     </h4>
+
 **Paper Link**: https://arxiv.org/abs/2402.01293
 
 **Abstract**: The evolution from Large Language Models (LLMs) to Multimodal Large Language Models (MLLMs) has spurred research into extending In-Context Learning (ICL) to its multimodal counterpart. Existing such studies have primarily concentrated on image-to-text ICL. However, the Text-to-Image ICL (T2I-ICL), with its unique characteristics and potential applications, remains underexplored. To address this gap, we formally define the task of T2I-ICL and present CoBSAT, the first T2I-ICL benchmark dataset, encompassing ten tasks. Utilizing our dataset to benchmark six state-of-the-art MLLMs, we uncover considerable difficulties MLLMs encounter in solving T2I-ICL. We identify the primary challenges as the inherent complexity of multimodality and image generation. To overcome these challenges, we explore strategies like fine-tuning and Chain-of-Thought prompting, demonstrating notable improvements. Our code and dataset are available at <a href="https://github.com/UW-Madison-Lee-Lab/CoBSAT">this link</a>.
@@ -333,9 +334,9 @@ Throughout this section, the placeholder "OwnModel" can be substituted with the 
    }
    ```
 
-6. [Optional: If you want to finetune your model on our dataset] 
+6. [Optional: If you want to finetune your model on our dataset] Update [`finetune_icl.py`](https://github.com/UW-Madison-Lee-Lab/CoBSAT/blob/master/finetune_icl.py)
 
-​	TBA
+​	Please refer to the current example of fine-tuning Qwen-VL in [here](https://github.com/UW-Madison-Lee-Lab/CoBSAT/blob/master/finetune_icl.py#L39).
 
 ### Evaluate MLLMs on Our Dataset
 
@@ -343,6 +344,9 @@ Throughout this section, the placeholder "OwnModel" can be substituted with the 
 
 ```bash
 # Example
+# activate the default environment
+conda activate micl
+
 python finetune_icl.py \
 --model qwen \
 --shot 2 \ 							
@@ -368,10 +372,17 @@ python finetune_icl.py \
 
 </details>
 
+The fine-tuned models will be stored in `ft_models/`.
+
 #### Stage 1: Output Generation
 
 ```bash
 # Example
+
+# activate the default environment
+# if the model is LLaVA, replace `micl` with `llava`
+conda activate micl
+
 python inference_icl.py \
 --model seed \
 --prompt_type default \
@@ -403,15 +414,20 @@ python inference_icl.py \
 * **`device`**: Specifies the computing device for the experiments. The default value is `cuda`, which utilizes a single GPU.
 * **`task_id`**: Identifies the task being performed. By default, all ten tasks are executed. Detailed information about each task can be found in `configs.py` under the definition of `task_dataframe`, as well as in our paper.
 * **`overwrite`**: Determines whether to reuse existing results or overwrite them. This is applicable when results have already been saved.
-* **`finetuned_model`**: Indicates whether to use a finetuned model. If enabled, the finetuned model must be stored beforehand by executing `finetune_icl.py`.
+* **`finetuned_model`**: Indicates whether to use a finetuned model. If enabled, the finetuned model must be stored beforehand by executing `finetune_icl.py`, and the `data_mode` should be set to `ft_test`. 
 * **`data_mode`**: Offers two options: `default` and `ft_test`. In `ft_test` mode, the dataset is divided into training and testing sets, with only the testing set being utilized.
 
 </details>
+
+The generated outputs will be stored in `results/exps/` by default or `results/ft` if `finetuned_model` is set to `True`.
 
 #### Stage 2: Output Evaluation
 
 ```bash
 # Example
+# activate the environment for using LLaVA (since LLaVA is our evaluation model)
+conda activate llava
+
 python evaluation_icl.py \
 --model seed \
 --prompt_type default \
@@ -447,6 +463,8 @@ python evaluation_icl.py \
 * **`data_mode`**: Offers two options: `default` and `ft_test`. In `ft_test` mode, the dataset is divided into training and testing sets, with only the testing set being utilized.
 
 </details>
+
+The evaluation results will be stored in `results/evals/` by default or `results/ft` if `finetuned_model` is set to `True`. If `wandb` is `True`, you can also view the evaluation results in your wandb board. 
 
 ## Citation
 
