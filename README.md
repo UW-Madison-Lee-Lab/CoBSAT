@@ -160,20 +160,29 @@ Up to now, the structure of your `cobsat` folder should look like this.
 
 ### [Optional] Feature Your Own Model
 
-1. Create your own model folder `OwnModel/` in `models/` if needed.
+Throughout this section, the placeholder "OwnModel" can be substituted with the name of your specific model, such as "gpt4v".
+
+1. Create your own model folder `OwnModel/` in `models/` if needed. Check [this](https://github.com/UW-Madison-Lee-Lab/CoBSAT/tree/master/models) for examples.
 
 2. Create python file `call_OwnModel.py` in `load_models/` to load your own model.
 
    <details><summary> <code>call_OwnModel.py</code> template </summary>
+   * Your `call_OwnModel.py` script should include at least the following essential functions:
+     - **`load_OwnModel`**: Utilized for loading the model to avoid repeated loading during inference or fine-tuning. In certain cases, this function may not be necessary. For example, OpenAI provides API access for GPT-4V, enabling inference without the need to explicitly load the model.
+     - **`call_OwnModel`**: Employs the model to perform inference tasks.
+
 
    ```python
+   # Template
    def load_OwnModel(
        device = 'cuda',
        seed = 123,
    ):
-   
+   		...
        return model, others
    ```
+
+   You have the flexibility to define the input parameters and the format of the return values according to your needs.
 
    ```python
    # Template
@@ -192,12 +201,13 @@ Up to now, the structure of your `cobsat` folder should look like this.
      	call_mode = 'micl',
      	history = None,
      	save_history = False,
+     	...
    ):
    		pass
        return output_dict
    ```
 
-   * Necessary parameters
+   * Necessary parameters for function `call_OwnModel`
 
      Below are the essential parameters required for configuring the model's operation.
 
@@ -214,7 +224,9 @@ Up to now, the structure of your `cobsat` folder should look like this.
      * **`history`**: Tracks the history of previous prompts and model responses, aiding in multi-step reasoning. This parameter is optional (`None` by default). If utilized, the history should be integrated into new prompts.
      * **`save_history`**: Indicates whether to save the interaction history. This feature supports analyzing the model's learning and response patterns over time.
 
-   * Return values
+     Additional parameters may be used for customized usage. 
+
+   * Return values for function `call_OwnModel`
 
      The function returns a dictionary comprising the following keys.
 
@@ -222,38 +234,48 @@ Up to now, the structure of your `cobsat` folder should look like this.
      * **`image`**: Holds the generated image output. This key is populated only when `gen_mode` is set to `image`.
      * **`history`**: If the `history` argument of the function is set to `True`, this key stores the interaction history, including both prompts and responses.
 
-     Additional content may be stored in custom keys to suit specialized requirements or to enhance functionality.
+     Additional content may be stored in custom keys to suit specialized requirements.
 
-   Check [`call_seed.py`](https://github.com/UW-Madison-Lee-Lab/CoBSAT/blob/master/load_models/call_seed.py#L106C5-L106C14) for a concrete example. 
+   Check [`call_seed.py`](https://github.com/UW-Madison-Lee-Lab/CoBSAT/blob/master/load_models/call_seed.py#L106C5-L106C14) or other files in [`load_models/`](https://github.com/UW-Madison-Lee-Lab/CoBSAT/tree/master/load_models) for concrete examples. 
 
    </details>
 
-3. Add your own model in `load_model.py`.
+3. Add your own model in [`load_model.py`](https://github.com/UW-Madison-Lee-Lab/CoBSAT/blob/master/load_model.py).
 
    <details><summary> <code>load_model.py</code> template </summary>
 
    ```python
        elif model == 'OwnModel':
            from load_models.call_OwnModel import load_OwnModel, call_OwnModel
-   
-           model, others = load_OwnModel(device=device)
-           call_OwnModel(
-               model, 
-               others,
-               text_inputs = ['Yellow', 'White', 'Black'],
-               image_inputs= [
-                   f"{root_dir}/models/Emu/Emu2/examples/dog2.jpg",
-                   f"{root_dir}/models/Emu/Emu2/examples/dog3.jpg"
-               ],
-               seed = 123,
-               gen_mode = gen_mode,
-           )
+   				... 
            return lambda configs: call_OwnModel(
                model, 
                others, 
                gen_mode = gen_mode, 
                **configs
            )
+   ```
+
+   You can check our implementation for other models for example. For your own model, typically you need to load the model first, and then use `call_OwnModel` to make the infernece. You may want to fix some parameters which are not related to the prompts such as `model` or `tokenizer` in [this example](https://github.com/UW-Madison-Lee-Lab/CoBSAT/blob/master/load_model.py#L87). Here is one example usage:
+
+   ```python
+   >>> from load_model import load_model
+   >>> call_model = load_model('qwen')
+   
+   The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+   Loading checkpoint shards: 100%|██████████| 10/10 [00:12<00:00,  1.21s/it]
+   
+   >>> call_model({
+       'text_inputs': ["Red", "Green", 'Yellow'],
+       'image_inputs': [
+           "/data/yzeng58/micl/datasets/color_bag/red_bag.jpg",
+           "/data/yzeng58/micl/datasets/color_bag/green_bag.jpg",
+       ],
+       'seed': 123,
+   })
+      
+   {'description': 'The next image should be a yellow school bus on a white background, with the words "The Ultimate School Bus" in black font and "For all your school needs" in yellow font on the front. The bus should be a 3D model and the background should be a white field.',
+    'time': 2.4913034439086914}
    ```
 
    </details>
@@ -273,7 +295,7 @@ Up to now, the structure of your `cobsat` folder should look like this.
    ]
    ```
 
-5. Config the default instruction of your model by updating `instruction_dict` in `configs.py`.
+5. Config the default instruction of your model by updating `instruction_dict` in [`configs.py`](https://github.com/UW-Madison-Lee-Lab/CoBSAT/blob/master/configs.py).
 
    Especially, you need to edit the `instruction_dict['default']`.
 
