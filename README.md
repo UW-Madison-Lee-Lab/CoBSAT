@@ -14,6 +14,8 @@
 
 **Abstract**: The evolution from Large Language Models (LLMs) to Multimodal Large Language Models (MLLMs) has spurred research into extending In-Context Learning (ICL) to its multimodal counterpart. Existing such studies have primarily concentrated on image-to-text ICL. However, the Text-to-Image ICL (T2I-ICL), with its unique characteristics and potential applications, remains underexplored. To address this gap, we formally define the task of T2I-ICL and present CoBSAT, the first T2I-ICL benchmark dataset, encompassing ten tasks. Utilizing our dataset to benchmark six state-of-the-art MLLMs, we uncover considerable difficulties MLLMs encounter in solving T2I-ICL. We identify the primary challenges as the inherent complexity of multimodality and image generation. To overcome these challenges, we explore strategies like fine-tuning and Chain-of-Thought prompting, demonstrating notable improvements. Our code and dataset are available at <a href="https://github.com/UW-Madison-Lee-Lab/CoBSAT">this link</a>.
 
+<img width="903" alt="image" src="imgs/t2i_icl.jpg">
+
 # News  🚀
 
 * TODO: Our dataset will be available on huggingface! 
@@ -25,15 +27,15 @@ Stay tuned for the updates!
 
 - [Step 1: Set Up Environment](#step-1-set-up-environment)
 - [Step 2: Download Dataset](#step-2-download-dataset)
-- [Step 3: Benchmark MLLMs' M-ICL Text-to-Image Capability](#step-3-benchmark-mllms)
+- [Step 3: Select MLLMs](#step-3-select-mllms)
   - [Supported Models](#supported-models)
-  - [[Optional] Feature Your Own Model](#optional-feature-your-own-model)
-  - [Evaluate MLLMs on Our Dataset](#evaluate-mllms-on-our-dataset)
-    - [[Optional] Fine-Tuning](#optional-fine-tuning)
-    - [Stage 1: Output Generation](#stage-1-output-generation)
-    - [Stage 2: Output Evaluation](#stage-2-output-evaluation)
+  - [Feature Your Own Model](#feature-your-own-model)
 
-- [Step 4: Cite Us](#step-4-cite-us)
+- [Step 4: Benchmark MLLMs](#step-4-benchmark-mllms)
+  - [[Optional] Fine-Tuning Stage](#optional-fine-tuning-stage)
+  - [Inference Stage](#inference-stage)
+  - [Evaluation Stage](#evaluation-stage)
+- [Step 5: Cite Us](#step-5-cite-us)
 
 # Step 1: Set Up Environment
 
@@ -109,7 +111,7 @@ To set up the environment for benchmarking MLLMs, please follow the following st
 
 # Step 2: Download Dataset
 
-<img width="903" alt="image" src="dataset_overview.jpg">
+<img width="903" alt="image" src="imgs/dataset_overview.jpg">
 
 To use our dataset, please follow the following steps. 
 
@@ -146,7 +148,9 @@ Up to now, the structure of your `cobsat` folder should look like this.
 └── ...
 ```
 
-# Step 3: Benchmark MLLMs
+# Step 3: Select MLLMs
+
+We have implemented several state-of-the-art models for your convenience. Additionally, we offer guidelines for integrating your own MLLMs. 
 
 ## Supported Models
 
@@ -168,7 +172,7 @@ Up to now, the structure of your `cobsat` folder should look like this.
   * Text Generation
   * Fine-Tuning
 
-## [Optional] Feature Your Own Model
+## Feature Your Own Model
 
 Throughout this section, the placeholder "OwnModel" can be substituted with the name of your specific model, such as "gpt4v".
 
@@ -348,9 +352,11 @@ Throughout this section, the placeholder "OwnModel" can be substituted with the 
 
    Please refer to the current example of fine-tuning Qwen-VL in [here](https://github.com/UW-Madison-Lee-Lab/CoBSAT/blob/master/finetune_icl.py#L39).
 
-## Evaluate MLLMs on Our Dataset
+# Step 4: Benchmark MLLMs
 
-### [Optional] Fine-Tuning
+<img width="700" alt="image" src="imgs/benchmark_pipeline.jpg">
+
+## [Optional] Fine-Tuning Stage
 
 ```bash
 # Example
@@ -384,7 +390,7 @@ python finetune_icl.py \
 
 The fine-tuned models will be stored in `ft_models/`.
 
-### Stage 1: Output Generation
+## Inference Stage
 
 ```bash
 # Example
@@ -431,7 +437,7 @@ python inference_icl.py \
 
 The generated outputs will be stored in `results/exps/` by default or `results/ft` if `finetuned_model` is set to `True`.
 
-### Stage 2: Output Evaluation
+## Evaluation Stage
 
 ```bash
 # Example
@@ -477,7 +483,7 @@ python evaluation_icl.py \
 
 The evaluation results will be stored in `results/evals/` by default or `results/ft` if `finetuned_model` is set to `True`. If `wandb` is `True`, you can also view the evaluation results in your wandb board. 
 
-# Step 4: Cite Us
+# Step 5: Cite Us
 
 ```tex
 @article{zeng2024can,
