@@ -359,19 +359,18 @@ python finetune_icl.py \
 
 <details><summary> Parameter Descriptions </summary>
 
-- **`model`**: Specifies the model for fine-tuning. Currently, only `qwen` (Qwen-VL) is supported.For integrating your own model, refer to the section [Feature Your Own Model](#optional-feature-your-own-model).
-- **`shot`**: Defines the number of demonstration examples included in each training prompt.
-- **`prompt_type`**: Selects the type of prompt to use. Available options include:
-  - `default`: The standard prompt design as described in our paper.
-  - `misleading`: Introduces misleading information in the textual input of each demonstration, as detailed in the appendix.
-  - `cot` (Chain of Thought): Incorporates multi-step inference prompts, prompting the model to generate reasoning steps ("let's think step by step") before the final output.
-  - `exact`: Directly provides the ground truth label as the textual input.
-  - `caption`: Replaces images in the prompt with their corresponding captions.
-  - `instruct`: Adds an additional sentence explicitly stating the relationship between textual input and visual output in each demonstration.
-
-- **`gen_mode`**: Determines the output mode of the model, with two options:
-  - `image`: The model generates an image output.
-  - `text`: The model generates textual descriptions for the next image.
+  - **`model`**: Specifies the model for fine-tuning. Currently, only `qwen` (Qwen-VL) is supported.For integrating your own model, refer to the section [Feature Your Own Model](#optional-feature-your-own-model).
+  - **`shot`**: Defines the number of demonstration examples included in each training prompt.
+  - **`prompt_type`**: Selects the type of prompt to use. Available options include:
+    - `default`: The standard prompt design as described in our paper.
+    - `misleading`: Introduces misleading information in the textual input of each demonstration, as detailed in the appendix.
+    - `cot` (Chain of Thought): Incorporates multi-step inference prompts, prompting the model to generate reasoning steps ("let's think step by step") before the final output.
+    - `exact`: Directly provides the ground truth label as the textual input.
+    - `caption`: Replaces images in the prompt with their corresponding captions.
+    - `instruct`: Adds an additional sentence explicitly stating the relationship between textual input and visual output in each demonstration.
+  - **`gen_mode`**: Determines the output mode of the model, with two options:
+    - `image`: The model generates an image output.
+    - `text`: The model generates textual descriptions for the next image.
 
 
 </details>
