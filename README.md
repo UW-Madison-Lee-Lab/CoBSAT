@@ -446,6 +446,7 @@ python evaluation_icl.py \
 ```
 
 <details><summary> Parameter Descriptions </summary>
+
 - **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `gpt4v` (GPT-4V), `llava` (LLaVA), and `qwen` (Qwen-VL).  
 - **`shot`**: Defines the number of demonstration examples included in each training prompt.
 - **`prompt_type`**: Selects the type of prompt to use. Available options include:
