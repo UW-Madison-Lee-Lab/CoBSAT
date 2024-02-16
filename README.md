@@ -170,8 +170,8 @@ Throughout this section, the placeholder "OwnModel" can be substituted with the 
 2. Create python file `call_OwnModel.py` in `load_models/` to load your own model.
 
    <details><summary> <code>call_OwnModel.py</code> template </summary>
-   - Your `call_OwnModel.py` script should include at least the following essential functions:
-   
+    Your `call_OwnModel.py` script should include at least the following essential functions:
+
      - **`load_OwnModel`**: Utilized for loading the model to avoid repeated loading during inference or fine-tuning. In certain cases, this function may not be necessary. For example, OpenAI provides API access for GPT-4V, enabling inference without the need to explicitly load the model.
      - **`call_OwnModel`**: Employs the model to perform inference tasks.
 
@@ -358,6 +358,7 @@ python finetune_icl.py \
 ```
 
 <details><summary> Parameter Descriptions </summary>
+
 - **`model`**: Specifies the model for fine-tuning. Currently, only `qwen` (Qwen-VL) is supported.For integrating your own model, refer to the section [Feature Your Own Model](#optional-feature-your-own-model).
 - **`shot`**: Defines the number of demonstration examples included in each training prompt.
 - **`prompt_type`**: Selects the type of prompt to use. Available options include:
