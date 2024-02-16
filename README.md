@@ -26,6 +26,14 @@ Stay tuned for the updates!
 - [Step 1: Set Up Environment](#step-1-set-up-environment)
 - [Step 2: Download Dataset](#step-2-download-dataset)
 - [Step 3: Benchmark MLLMs' M-ICL Text-to-Image Capability](#step-3-benchmark-mllms)
+  - [Supported Models](#supported-models)
+  - [[Optional] Feature Your Own Model](#optional-feature-your-own-model)
+  - [Evaluate MLLMs on Our Dataset](#evaluate-mllms-on-our-dataset)
+    - [[Optional] Fine-Tuning](#optional-fine-tuning)
+    - [Stage 1: Output Generation](#stage-1-output-generation)
+    - [Stage 2: Output Evaluation](#stage-2-output-evaluation)
+
+- [Step 4: Cite Us](#step-4-cite-us)
 
 # Step 1: Set Up Environment
 
@@ -140,8 +148,7 @@ Up to now, the structure of your `cobsat` folder should look like this.
 
 # Step 3: Benchmark MLLMs
 
-
-### Supported Models
+## Supported Models
 
 - [x] [SEED-LLaMA](https://arxiv.org/abs/2310.01218)
   * Image Generation
@@ -161,7 +168,7 @@ Up to now, the structure of your `cobsat` folder should look like this.
   * Text Generation
   * Fine-Tuning
 
-### [Optional] Feature Your Own Model
+## [Optional] Feature Your Own Model
 
 Throughout this section, the placeholder "OwnModel" can be substituted with the name of your specific model, such as "gpt4v".
 
@@ -341,9 +348,9 @@ Throughout this section, the placeholder "OwnModel" can be substituted with the 
 
    Please refer to the current example of fine-tuning Qwen-VL in [here](https://github.com/UW-Madison-Lee-Lab/CoBSAT/blob/master/finetune_icl.py#L39).
 
-### Evaluate MLLMs on Our Dataset
+## Evaluate MLLMs on Our Dataset
 
-#### [Optional] Fine-tuning
+### [Optional] Fine-Tuning
 
 ```bash
 # Example
@@ -377,7 +384,7 @@ python finetune_icl.py \
 
 The fine-tuned models will be stored in `ft_models/`.
 
-#### Stage 1: Output Generation
+### Stage 1: Output Generation
 
 ```bash
 # Example
@@ -424,7 +431,7 @@ python inference_icl.py \
 
 The generated outputs will be stored in `results/exps/` by default or `results/ft` if `finetuned_model` is set to `True`.
 
-#### Stage 2: Output Evaluation
+### Stage 2: Output Evaluation
 
 ```bash
 # Example
@@ -470,7 +477,7 @@ python evaluation_icl.py \
 
 The evaluation results will be stored in `results/evals/` by default or `results/ft` if `finetuned_model` is set to `True`. If `wandb` is `True`, you can also view the evaluation results in your wandb board. 
 
-## Citation
+# Step 4: Cite Us
 
 ```tex
 @article{zeng2024can,
