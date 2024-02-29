@@ -18,10 +18,8 @@
 
 # News  🚀
 
-* TODO: Our dataset will be available on huggingface! 
+* [02/29/24] Our dataset is available on [huggingface](https://huggingface.co/datasets/yzeng58/CoBSAT)!
 * [02/02/24] Our paper is available on <a href="https://arxiv.org/abs/2402.01293">arxiv</a>! 
-
-Stay tuned for the updates!
 
 # Contents
 
@@ -115,8 +113,12 @@ To set up the environment for benchmarking MLLMs, please follow the following st
 
 To use our dataset, please follow the following steps. 
 
-1. Download the images and their corresponding descriptions of our dataset from this [link](https://drive.google.com/file/d/1Yk8mo_xD95GEcee3EsA1qtJTsx1p1DNJ/view?usp=sharing).
-2. Untar the `.tar.gz` file via `tar -xvf datasets.tar.gz` and extract the `datasets` folder into your `cobsat` folder. 
+1. Download the images and their corresponding descriptions of our dataset.
+
+   ```bash
+   wget "https://huggingface.co/datasets/yzeng58/CoBSAT/resolve/main/datasets.zip"
+   ```
+2. Untar the `datasets.zip` file via `unzip datasets.zip` and move the `datasets` folder into your `cobsat` folder. 
 
 Up to now, the structure of your `cobsat` folder should look like this.
 
@@ -134,12 +136,12 @@ Up to now, the structure of your `cobsat` folder should look like this.
 │   ├── call_your_model.py  # [optional] create python file to load the model you want to evaluate
 │   └── ... 
 ├── models                  
-│   ├── SEED                # [optional] git clone https://github.com/AILab-CVC/SEED
-│   ├── gill                # [optional] git clone https://github.com/kohjingyu/gill
-│   ├── Emu                 # [optional] git clone https://github.com/baaivision/Emu
+│   ├── SEED                
+│   ├── gill                
+│   ├── Emu                 
 │   │   └── Emu1 
-│   ├── LLaVA               # [optional] git clone https://github.com/haotian-liu/LLaVA
-│   ├── Qwen-VL             # [optional] git clone https://github.com/QwenLM/Qwen-VL
+│   ├── LLaVA               
+│   ├── Qwen-VL             
 │   ├── OwnModel            # [optional] input your own model folder
 │   └── ...
 ├── ...
