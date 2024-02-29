@@ -18,7 +18,7 @@
 
 # News  🚀
 
-* [02/29/24] Our dataset is available on [huggingface](https://huggingface.co/datasets/yzeng58/CoBSAT)!
+* [02/29/24] Our dataset is available on 🤗[huggingface](https://huggingface.co/datasets/yzeng58/CoBSAT)!
 * [02/02/24] Our paper is available on <a href="https://arxiv.org/abs/2402.01293">arxiv</a>! 
 
 # Contents
