@@ -9,6 +9,17 @@
     <sup>1</sup>UW-Madison, <sup>2</sup> FuriosaAI
    </p>
     </h4>
+<p align="center">
+    <a href="https://github.com/UW-Madison-Lee-Lab/CoBSAT/releases">
+        <img alt="GitHub release" src="https://img.shields.io/github/release/UW-Madison-Lee-Lab/CoBSAT.svg">
+    </a>
+    <a href="https://arxiv.org/abs/2402.01293">
+        <img alt="GitHub release" src="https://img.shields.io/badge/arXiv-2402.01293-b31b1b.svg">
+    </a>
+    <a href="https://huggingface.co/datasets/yzeng58/CoBSAT">
+        <img alt="Hugging Face" src="https://img.shields.io/badge/dataset-CoBSAT-orange">
+    </a>
+</p>
 
 **Paper Link**: https://arxiv.org/abs/2402.01293
 
