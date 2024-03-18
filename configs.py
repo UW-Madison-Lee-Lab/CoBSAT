@@ -108,6 +108,7 @@ task_dataframe = {
 supported_models = [
     'qwen', 
     'llava', 
+    'llava16',
     'gpt4v', 
     'emu2', 
     'emu', 
@@ -167,6 +168,10 @@ instruction_dict = {
                 "\nBased on the sequence, describe what the next image should be clearly, including details such as the main object, color, texture, background, action, style, if applicable. Your response should only contain a description of the image, and all other information can cause huge loss. ",
             ),
             'llava': (
+                '',
+                "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+            ),
+            'llava16': (
                 '',
                 "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
             ),
