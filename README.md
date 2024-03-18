@@ -179,13 +179,9 @@ We have implemented several state-of-the-art models for your convenience. Additi
 - [x] [Emu](https://arxiv.org/abs/2307.05222)
   * Image Generation
   * Text Generation
-
 - [x] [Emu2](https://arxiv.org/abs/2312.13286)
-
   * Image Generation
-
   * Text Generation
-
 * [x] [GPT-4V]()
   * Text Generation
 * [x] [LLaVA-1.5](https://arxiv.org/abs/2304.08485)
