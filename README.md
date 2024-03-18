@@ -139,7 +139,7 @@ Up to now, the structure of your `cobsat` folder should look like this.
 ├── datasets                # download the dataset in this step
 ├── load_models
 │   ├── call_emu.py
-│├── call_emu2.py
+│   ├── call_emu2.py
 │	├── call_gill.py
 │	├── call_gpt.py
 │	├── call_llava.py		# LLaVA-1.5
