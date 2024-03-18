@@ -224,7 +224,10 @@ def eval_llava(
         
         response_number = ''.join(filter(str.isdigit, response[mode]))
         if response_number:
-            options[mode] = int(response_number)
+            if int(response_number) in list(range(1, len(item_list[mode])+1)):
+                options[mode] = int(response_number)
+            else:
+                options[mode] = -1
         else:
             options[mode] = -1
         
