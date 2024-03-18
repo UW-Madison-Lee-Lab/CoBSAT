@@ -140,13 +140,13 @@ Up to now, the structure of your `cobsat` folder should look like this.
 ├── load_models
 │   ├── call_emu.py
 │   ├── call_emu2.py
-│	├── call_gill.py
-│	├── call_gpt.py
-│	├── call_llava.py		# LLaVA-1.5
-│	├── call_llava16.py     # LLaVA-NeXT 
-│	├── call_qwen.py
-│	├── call_seed.py
-│	├── call_gemini.py
+│   ├── call_gill.py
+│   ├── call_gpt.py
+│   ├── call_llava.py       # LLaVA-1.5
+│   ├── call_llava16.py     # LLaVA-NeXT 
+│   ├── call_qwen.py
+│   ├── call_seed.py
+│   ├── call_gemini.py
 │   ├── call_your_model.py  # [optional] create python file to load the model you want to evaluate
 │   └── ... 
 ├── models                  
