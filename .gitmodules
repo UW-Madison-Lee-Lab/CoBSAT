@@ -19,3 +19,6 @@
 [submodule "models/SEED"]
 	path = models/SEED
 	url = https://github.com/yzeng58/SEED
+[submodule "models/llava16"]
+	path = models/llava16
+	url = https://github.com/wjkang-furiosa/LLaVA

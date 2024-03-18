@@ -136,7 +136,37 @@ def load_model(
             device = device,
             **configs,
         )
-
+    elif model == 'llava16':
+        if gen_mode != 'text':
+            raise ValueError(f"gen_mode {gen_mode} not supported for llava.")
+        
+        from load_models.call_llava16 import load_llava16, call_llava16
+        tokenizer, llava_model, image_processor, context_len, llava_args = load_llava16(device=device)
+        
+        call_llava16(
+            tokenizer,
+            llava_model,
+            image_processor,
+            context_len,
+            llava_args,
+            text_inputs = ["Red", "Green", "Yellow"],
+            image_inputs = [
+                "https://media.istockphoto.com/id/1189903200/photo/red-generic-sedan-car-isolated-on-white-background-3d-illustration.jpg?s=612x612&w=0&k=20&c=uRu3o_h5FVljLQHS9z0oyz-XjXzzXN_YkyGXwhdMrjs=",
+                "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
+            ],
+            seed = 123,
+            device = device,
+        )
+        return lambda configs: call_llava16(
+            tokenizer,
+            llava_model,
+            image_processor,
+            context_len,
+            llava_args,
+            device = device,
+            **configs,
+        )
+        
     elif model == 'emu2':
         from load_models.call_emu2 import load_emu2, call_emu2
 
@@ -224,6 +254,21 @@ def load_model(
             transform,
             gen_mode = gen_mode,
             device = device, 
+            **configs
+        )
+    elif model == 'gemini':
+        from load_models.call_gemini import load_gemini, call_gemini
+        model = load_gemini()
+        call_gemini(
+            model,
+            text_inputs = ["Red", "Green", "Yellow"],
+            image_inputs = [
+                f'{root_dir}/datasets/color_box/red_box.jpg',
+                f'{root_dir}/datasets/color_box/green_box.jpg',
+            ],
+        )
+        return lambda configs: call_gemini(
+            model,
             **configs
         )
     else:

@@ -108,11 +108,13 @@ task_dataframe = {
 supported_models = [
     'qwen', 
     'llava', 
+    'llava16',
     'gpt4v', 
     'emu2', 
     'emu', 
     'seed',
     'gill',
+    'gemini',
 ]
 
 # need to be updated, and also update the instruction for text generatopm for normal tasks too.
@@ -169,6 +171,10 @@ instruction_dict = {
                 '',
                 "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
             ),
+            'llava16': (
+                '',
+                "\nBased on the sequence, describe the next image to be generated clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+            ),
             'gpt4v': (
                 "I will provide you with a few examples with text and images. Complete the example with the description of the next image. The description should be clear with main object, and include details such as color, texture, background, style, and action, if applicable. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
                 "",
@@ -182,6 +188,10 @@ instruction_dict = {
                 '',
             ),
             'emu2': (
+                '',
+                "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+            ),
+            'gemini': (
                 '',
                 "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
             ),

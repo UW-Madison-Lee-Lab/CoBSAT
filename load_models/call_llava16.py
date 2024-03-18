@@ -1,21 +1,19 @@
-# seed: set
-# LLaVA-1.5
+# llava-v1.6-vicuna-13b
 
 import os, sys
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
 from helper import set_seed
-from models.llava.llava.model.builder import load_pretrained_model
-from models.llava.llava.eval.run_llava import eval_model
-from models.llava.llava.mm_utils import get_model_name_from_path
-from models.llava.llava.utils import disable_torch_init
+from models.llava16.llava.model.builder import load_pretrained_model
+from models.llava16.llava.eval.run_llava import eval_model
+from models.llava16.llava.mm_utils import get_model_name_from_path
+from models.llava16.llava.utils import disable_torch_init
 from time import time
 
 
-def load_llava(device = 'cuda'):
+def load_llava16(device = 'cuda'):
     # Configure LlaVA
-    # model_path = f"{root_dir}/models/llava-v1.5-13b/"
-    model_path = "liuhaotian/llava-v1.5-13b"
+    model_path = "liuhaotian/llava-v1.6-vicuna-13b"
 
     tokenizer, llava_model, image_processor, context_len = load_pretrained_model(
         model_path=model_path,
@@ -38,7 +36,7 @@ def load_llava(device = 'cuda'):
 
     return tokenizer, llava_model, image_processor, context_len, llava_args 
 
-def call_llava(
+def call_llava16(
     tokenizer,
     llava_model,
     image_processor,
