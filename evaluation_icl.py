@@ -5,7 +5,7 @@ sys.path.append(root_dir)
 from load_models.call_llava import load_llava, eval_model as infer_llava
 import argparse, pandas as pd, wandb, torch, numpy as np
 from helper import set_seed, read_json, get_result_path, get_summary_path
-from configs import task_dataframe, item_dict, item2word, supported_models, prompt_type_options
+from configs import task_dataframe, item_dict, item2word, word2item, supported_models, prompt_type_options
 from load_dataset import load_dataset
 from tqdm import tqdm
 from transformers import CLIPProcessor, CLIPModel
@@ -292,7 +292,8 @@ def check_single_output(
         if eval_mode == 'text': row['caption'] = None
     else:
         for mode in ['detail', 'obj']:
-            true_labels[mode] = item_list[mode].index(ground_truth[mode])+1
+            ground_truth_item = word2item.get(ground_truth[mode], ground_truth[mode])
+            true_labels[mode] = item_list[mode].index(ground_truth_item)+1
         
         # use llava to evaluate the quality of the generated images
 
