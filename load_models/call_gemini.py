@@ -41,7 +41,7 @@ def call_gemini(
     
     output_dict = {}
     gemini_start = time()
-    if (history is not None) or (save_history is not None):
+    if (history is not None) or save_history:
         if history is None: history = []
         chat = model.start_chat(history = history)
         response = chat.send_message(
@@ -49,6 +49,8 @@ def call_gemini(
             stream = False,
             generation_config=genai.types.GenerationConfig(temperature = 0),
         )
+        # cannot be written into JSON file
+        # TO BE FIXED
         output_dict['history'] = chat.history
     else:
         response = model.generate_content(
@@ -59,6 +61,5 @@ def call_gemini(
     if call_mode == 'micl': response.resolve()
     gemini_end = time()
     output_dict['time'] = gemini_end - gemini_start
-    output_dict['description'] = response
-    
+    output_dict['description'] = response.text
     return output_dict
