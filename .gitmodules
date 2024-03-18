@@ -22,3 +22,4 @@
 [submodule "models/llava16"]
 	path = models/llava16
 	url = https://github.com/wjkang-furiosa/LLaVA
+	branch = main
