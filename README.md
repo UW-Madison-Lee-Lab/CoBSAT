@@ -175,13 +175,23 @@ We have implemented several state-of-the-art models for your convenience. Additi
   * Image Generation
   * Text Generation
 
-- [x] [GPT-4V]()
+- [x] [Emu2](https://arxiv.org/abs/2312.13286)
+
+  * Image Generation
+
   * Text Generation
-- [x] [LLaVA](https://arxiv.org/abs/2304.08485)
+
+* [x] [GPT-4V]()
   * Text Generation
-- [x] [Qwen-VL](https://arxiv.org/abs/2308.12966)
+* [x] [LLaVA-1.5](https://arxiv.org/abs/2304.08485)
+  * Text Generation
+* [x] [LLaVA-1.6/LLaVA-NeXT](https://llava-vl.github.io/blog/2024-01-30-llava-next/)
+  * Text Generation
+* [x] [Qwen-VL](https://arxiv.org/abs/2308.12966)
   * Text Generation
   * Fine-Tuning
+* [x] [Gemini](https://arxiv.org/abs/2312.11805)
+  * Text Generation
 
 ## Feature Your Own Model
 
