@@ -113,6 +113,7 @@ supported_models = [
     'emu', 
     'seed',
     'gill',
+    'gemini',
 ]
 
 # need to be updated, and also update the instruction for text generatopm for normal tasks too.
@@ -182,6 +183,10 @@ instruction_dict = {
                 '',
             ),
             'emu2': (
+                '',
+                "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
+            ),
+            'gemini': (
                 '',
                 "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
             ),

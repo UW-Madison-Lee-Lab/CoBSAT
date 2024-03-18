@@ -226,6 +226,21 @@ def load_model(
             device = device, 
             **configs
         )
+    elif model == 'gemini':
+        from load_models.call_gemini import load_gemini, call_gemini
+        model = load_gemini()
+        call_gemini(
+            model,
+            text_inputs = ["Red", "Green", "Yellow"],
+            image_inputs = [
+                f'{root_dir}/datasets/color_box/red_box.jpg',
+                f'{root_dir}/datasets/color_box/green_box.jpg',
+            ],
+        )
+        return lambda configs: call_gemini(
+            model,
+            **configs
+        )
     else:
         raise ValueError(f"Model {model} not found.")
 
