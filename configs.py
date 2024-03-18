@@ -11,6 +11,9 @@ item2word = {
     'park': 'amusement park',
 }
 
+# reverse item2word
+word2item = {v: k for k, v in item2word.items()}
+
 item_dict = {
     'color': ['yellow', 'white', 'red', 'purple', 'pink', 'orange', 'green', 'brown', 'blue', 'black'],
     'object': ['leaf', 'hat', 'cup', 'chair', 'car', 'box', 'book', 'ball', 'bag', 'apple'],
