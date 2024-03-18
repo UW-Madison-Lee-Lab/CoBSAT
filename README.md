@@ -129,7 +129,7 @@ To use our dataset, please follow the following steps.
    ```bash
    wget "https://huggingface.co/datasets/yzeng58/CoBSAT/resolve/main/datasets.zip"
    ```
-2. Untar the `datasets.zip` file via `unzip datasets.zip` and move the `datasets` folder into your `cobsat` folder. 
+2. Uncompress the `datasets.zip` file via `unzip datasets.zip` and move the `datasets` folder into your `cobsat` folder. 
 
 Up to now, the structure of your `cobsat` folder should look like this.
 
@@ -143,7 +143,7 @@ Up to now, the structure of your `cobsat` folder should look like this.
 │		├── call_gill.py
 │		├── call_gpt.py
 │		├── call_llava.py				# LLaVA-1.5
-│		├── call_llava16.py     # LLaVA-NeXT 
+│		├── call_llava16.py             # LLaVA-NeXT 
 │		├── call_qwen.py
 │		├── call_seed.py
 │		├── call_gemini.py
