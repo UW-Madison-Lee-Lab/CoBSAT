@@ -105,6 +105,8 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    #########################
    # GPT-4V
    OPENAI_API_KEY = f'{your_openai_key}'
+   # GEMINI
+   GEMINI_API_KEY = f'{your_openai_key}'
    # Emu for Image Generation
    EMU_IMAGE_PATH = '/data/yzeng58/cobsat/models/Emu/Emu1/model_weights/Emu/pretrain' 
    # Emu-Instruct
@@ -137,11 +139,14 @@ Up to now, the structure of your `cobsat` folder should look like this.
 ├── datasets                # download the dataset in this step
 ├── load_models
 │   ├── call_emu.py
+│		├── call_emu2.py
 │		├── call_gill.py
 │		├── call_gpt.py
-│		├── call_llava.py
+│		├── call_llava.py				# LLaVA-1.5
+│		├── call_llava16.py     # LLaVA-NeXT 
 │		├── call_qwen.py
 │		├── call_seed.py
+│		├── call_gemini.py
 │   ├── call_your_model.py  # [optional] create python file to load the model you want to evaluate
 │   └── ... 
 ├── models                  
@@ -322,11 +327,13 @@ Throughout this section, the placeholder "OwnModel" can be substituted with the 
    supported_models = [
        'qwen', 
        'llava', 
+       'llava16',
        'gpt4v', 
        'emu2', 
        'emu', 
        'seed',
        'gill',
+       'gemini',
        'OwnModel', # your own model
    ]
    ```
@@ -435,7 +442,7 @@ python inference_icl.py \
 
 <details><summary> Parameter Descriptions </summary>
 
-- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `gpt4v` (GPT-4V), `llava` (LLaVA), and `qwen` (Qwen-VL).  
+- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `emu2` (Emu2), `gpt4v` (GPT-4V), `llava` (LLaVA-1.5), `llava16` (LLaVA-1.6/LLaVA-NeXT), `gemini` (Gemini) and `qwen` (Qwen-VL).  
 - **`shot`**: Defines the number of demonstration examples included in each training prompt.
 - **`prompt_type`**: Selects the type of prompt to use. Available options include:
   * `default`: The standard prompt design as described in our paper.
@@ -481,7 +488,7 @@ python evaluation_icl.py \
 
 <details><summary> Parameter Descriptions </summary>
 
-- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `gpt4v` (GPT-4V), `llava` (LLaVA), and `qwen` (Qwen-VL).  
+- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `emu2` (Emu2), `gpt4v` (GPT-4V), `llava` (LLaVA-1.5), `llava16` (LLaVA-1.6/LLaVA-NeXT), `gemini` (Gemini) and `qwen` (Qwen-VL).  
 - **`shot`**: Defines the number of demonstration examples included in each training prompt.
 - **`prompt_type`**: Selects the type of prompt to use. Available options include:
   - `default`: The standard prompt design as described in our paper.
