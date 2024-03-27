@@ -7,13 +7,15 @@ sys.path.append(os.path.join(root_dir, 'models/SEED'))
 from environment import SEED_PROJECT_ROOT
 
 import torch
-from helper import set_seed
+from helper import set_seed, get_ft_path
 from PIL import Image
 from time import time
 from configs import instruction_dict
 from torch.utils.data import Dataset
 
 from omegaconf import OmegaConf
+
+from peft import PeftModel
 
 image_placeholder = "[IMG]" + "<image>" * 32 + "[/IMG]"
 
@@ -86,6 +88,10 @@ def decode_image_text(generate_ids, tokenizer, gen_mode):
 def load_seed(
     device = 'cuda',
     seed = 123,
+    finetuned = False,
+    shot = 2,
+    gen_mode = 'image',
+    prompt_type = 'default',
 ):
     set_seed(seed)
     os.environ["PROJECT_ROOT"] = SEED_PROJECT_ROOT
@@ -102,6 +108,15 @@ def load_seed(
     model_cfg = OmegaConf.load(f'{root_dir}/models/SEED/configs/llm/seed_llama_14b.yaml')
     model = hydra.utils.instantiate(model_cfg, torch_dtype=torch.float16)
     model = model.eval().to(device)
+    
+    if finetuned:
+        ft_path = get_ft_path(
+            'seed',
+            gen_mode,
+            shot,
+            prompt_type,
+        )['model']
+        model = PeftModel.from_pretrained(model, ft_path)
 
     return model, tokenizer, transform
 
@@ -129,7 +144,6 @@ def preprocess(
         raise ValueError(f'output_mode {output_mode} not supported')
     
     for i in range(len(text_inputs)):
-        
         input_tokens = input_tokens + text_inputs[i]
         if call_mode == 'micl':
             if i < num_images:
@@ -161,6 +175,8 @@ def preprocess(
             add_special_tokens=False, 
             return_tensors='pt',
         ).input_ids.squeeze()
+        
+        output_ids[:len(input_ids)] = [IGNORE_TOKEN_ID] * len(input_ids)
         
         input_ids += [tokenizer.pad_token_id] * (max_len - len(input_ids))
         output_ids += [IGNORE_TOKEN_ID] * (max_len - len(output_ids))
