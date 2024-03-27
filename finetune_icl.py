@@ -69,7 +69,7 @@ def ft_model(
             output_dir,
         )
     elif model == 'seed':
-        if gen_mode != 'text': raise ValueError(f"Incompatible gen_mode with {model}: {gen_mode}!")
+        if gen_mode != 'image': raise ValueError(f"Incompatible gen_mode with {model}: {gen_mode}!")
         from load_models.call_seed import ft_seed
         
         data_ft = []
