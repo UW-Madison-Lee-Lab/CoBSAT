@@ -13,6 +13,7 @@ def load_inputs(
     theta_idxs,
     x_list,
     theta_list,
+    include_output = False,
 ):
     text_inputs, image_inputs = [], []
     theta = theta_list[theta_idxs[shot+1]]
@@ -33,7 +34,9 @@ def load_inputs(
         else:
             text_inputs.append(f"{x_idx}: ")
             
-        if demo_idx < shot:
+        num_images = shot + include_output
+            
+        if demo_idx < num_images:
             image_inputs.append(find_image(
                 root_dir, 
                 task_id, 
@@ -56,6 +59,7 @@ def load_dataset(
     task_id, 
     seed = 123,
     data_mode = 'default', # 'default' or 'ft_train' or 'ft_test'
+    include_output = False, # whether include expected output in the prompt or not
 ):
     print("========"*3)
     print(f'Loading the dataset for task {task_id}...')
@@ -104,6 +108,7 @@ def load_dataset(
                     [None for _ in range(shot+1)] + [theta_list[0]],
                     task_dataframe[task_id]["x_list"],
                     task_dataframe[task_id]["theta_list"],
+                    include_output = include_output,
                 )
                 data_loader.append(input_dict)
     else:
