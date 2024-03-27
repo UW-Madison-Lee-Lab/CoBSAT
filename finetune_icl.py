@@ -28,12 +28,21 @@ def ft_model(
     output_dir, data_path = path_dict['model'], path_dict['data']
     
     data_loader = {}
+    
+    if model == 'qwen':
+        include_output = False  
+    elif model == 'seed':
+        include_output = True
+    else:
+        raise ValueError(f"Unknown model: {model}")
+    
     for task_id in task_dataframe:
         data_loader[task_id] = load_dataset(
             shot,
             prompt_type = 'default',
             task_id = task_id,
             data_mode = 'ft_train',
+            include_output = include_output,
         )
         
     if model == 'qwen':
@@ -58,6 +67,18 @@ def ft_model(
         ft_qwen(
             data_path,
             output_dir,
+        )
+    elif model == 'seed':
+        if gen_mode != 'image': raise ValueError(f"Incompatible gen_mode with {model}: {gen_mode}!")
+        from load_models.call_seed import ft_seed
+        
+        data_ft = []
+        for task_id in task_dataframe:
+            data_ft.extend(data_loader[task_id])
+
+        ft_seed(
+            data_ft,
+            output_dir,          
         )
     else:
         raise ValueError(f"Unknown model: {model}")
