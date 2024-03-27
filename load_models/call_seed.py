@@ -129,7 +129,6 @@ def preprocess(
         raise ValueError(f'output_mode {output_mode} not supported')
     
     for i in range(len(text_inputs)):
-        
         input_tokens = input_tokens + text_inputs[i]
         if call_mode == 'micl':
             if i < num_images:
@@ -161,6 +160,8 @@ def preprocess(
             add_special_tokens=False, 
             return_tensors='pt',
         ).input_ids.squeeze()
+        
+        output_ids[:len(input_ids)] = [IGNORE_TOKEN_ID] * len(input_ids)
         
         input_ids += [tokenizer.pad_token_id] * (max_len - len(input_ids))
         output_ids += [IGNORE_TOKEN_ID] * (max_len - len(output_ids))
@@ -306,7 +307,7 @@ def ft_seed(
     history = None,
     call_mode = 'micl',
     use_lora = True,
-    lora_r = 64,
+    lora_r = 16,
     lora_alpha = 16,
     lora_dropout = 0.05,
     seed = 123,
