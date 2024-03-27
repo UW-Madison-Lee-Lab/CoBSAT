@@ -65,7 +65,11 @@ def call_gemini(
     if call_mode == 'micl': response.resolve()
     gemini_end = time()
     output_dict['time'] = gemini_end - gemini_start
-    output_dict['description'] = response.text
-    if save_history: output_dict['history'] = prompt + [response.text]
+    try:
+        output_dict['description'] = response.text
+    except ValueError:
+        output_dict['description'] = ''
+    
+    if save_history: output_dict['history'] = prompt + [output_dict['description']]
     
     return output_dict

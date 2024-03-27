@@ -85,7 +85,7 @@ def retry_if_fail(func):
     @functools.wraps(func)
     def wrapper_retry(*args, **kwargs):
         retry = 0
-        while retry <= 10:
+        while retry <= 6:
             try:
                 out = func(*args, **kwargs)
                 break
@@ -93,7 +93,7 @@ def retry_if_fail(func):
                 raise KeyboardInterrupt
             except Exception as e:
                 retry += 1
-                time.sleep(2)
+                time.sleep(10)
                 print(f"Exception occurred: {type(e).__name__}, {e.args}")
                 print(f"Retry {retry} times...")
 
