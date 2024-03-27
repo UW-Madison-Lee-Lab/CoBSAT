@@ -147,6 +147,7 @@ if '__main__' == __name__:
     parser.add_argument('--gen_mode', type=str, default="image", choices=['text', 'image'])
     parser.add_argument('--finetuned_model', type=int, default=0, choices=[0,1], help = "whether to use finetuned model")
     parser.add_argument('--data_mode', type=str, default="default", choices=['default', 'ft_test'], help = "what dataset to use")
+    parser.add_argument('--api_key', type=str, default="yz", help = "which key to use")
 
     args = parser.parse_args()
     
@@ -179,7 +180,8 @@ if '__main__' == __name__:
         gen_mode=args.gen_mode,
         finetuned = args.finetuned_model,
         shot = args.shot[0],
-        prompt_type=args.prompt_type[0],
+        prompt_type = args.prompt_type[0],
+        api_key = args.api_key,
     )
 
     for shot in args.shot:

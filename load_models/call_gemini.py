@@ -8,8 +8,8 @@ import PIL.Image
 from time import time
 from helper import retry_if_fail
 
-def load_gemini(prompt_type):
-    genai.configure(api_key = GEMINI_API_KEY)
+def load_gemini(prompt_type, api_key):
+    genai.configure(api_key = GEMINI_API_KEY[api_key])
     if prompt_type == 'caption':
         model = genai.GenerativeModel('gemini-pro')
     else:

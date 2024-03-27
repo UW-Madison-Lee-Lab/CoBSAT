@@ -1,5 +1,6 @@
 import os 
 root_dir = os.path.dirname(os.path.abspath(__file__))
+from environment import OPENAI_API_KEY
     
 def load_model(
     model, 
@@ -8,6 +9,7 @@ def load_model(
     finetuned = False,
     shot = 2, 
     prompt_type = 'default',
+    api_key = 'yz',
 ):
     """
     Load models. 
@@ -77,10 +79,12 @@ def load_model(
         if gen_mode != 'text':
             raise ValueError(f"gen_mode {gen_mode} not supported for gpt4v.")
         
+        os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY[api_key]
         from load_models.call_gpt import call_gpt4v
         return lambda configs: call_gpt4v(
             image_mode = 'path', 
             use_dalle = False, 
+            api_key = api_key,
             **configs,
         )
         
@@ -258,7 +262,7 @@ def load_model(
         )
     elif model == 'gemini':
         from load_models.call_gemini import load_gemini, call_gemini
-        model = load_gemini(prompt_type)
+        model = load_gemini(prompt_type, api_key)
         return lambda configs: call_gemini(
             model,
             **configs

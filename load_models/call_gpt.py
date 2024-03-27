@@ -6,7 +6,6 @@ import os, base64, requests, sys
 from typing import Literal
 from time import time
 
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 client = OpenAI()
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
@@ -95,6 +94,7 @@ def call_gpt4v(
     call_mode = 'micl', # micl or text only
     history = None,
     save_history = False,
+    api_key = 'yz1',
 ):
 
     messages = prompt_image_eval(
@@ -126,7 +126,7 @@ def call_gpt4v(
     elif image_mode == 'path':
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {OPENAI_API_KEY}"
+            "Authorization": f"Bearer {OPENAI_API_KEY[api_key]}"
         }
         
         response = requests.post(
