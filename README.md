@@ -104,9 +104,15 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    # NEED UPDATE IF NEEDED #
    #########################
    # GPT-4V
-   OPENAI_API_KEY = f'{your_openai_key}'
+   OPENAI_API_KEY = { 
+     'key1': f'{your_openai_key_1}',
+     'key2': f'{your_openai_key_2}',
+   }
    # GEMINI
-   GEMINI_API_KEY = f'{your_openai_key}'
+   GEMINI_API_KEY = {
+     'key1': f'{your_gemini_key_1}',
+     'key2': f'{your_gemini_key_2}',
+   }
    # Emu for Image Generation
    EMU_IMAGE_PATH = '/data/yzeng58/cobsat/models/Emu/Emu1/model_weights/Emu/pretrain' 
    # Emu-Instruct
@@ -173,6 +179,7 @@ We have implemented several state-of-the-art models for your convenience. Additi
 - [x] [SEED-LLaMA](https://arxiv.org/abs/2310.01218)
   * Image Generation
   * Text Generation
+  * Fine-Tuning
 - [x] [GILL](https://arxiv.org/abs/2305.17216)
   * Image Generation
   * Text Generation
