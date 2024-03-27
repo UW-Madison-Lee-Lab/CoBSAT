@@ -70,8 +70,8 @@ def load_model(
         
     """
     if finetuned: 
-        if model != 'qwen':
-            raise ValueError(f"finetuned is only supported for {model}. Only qwen is supported.")
+        if not model in ['qwen', 'seed']:
+            raise ValueError(f"finetuned is only supported for {model}. Only qwen and seed is supported.")
         
     if model == 'gpt4v':
         if gen_mode != 'text':
