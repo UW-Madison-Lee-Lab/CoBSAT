@@ -44,25 +44,28 @@ def call_gemini(
     
     output_dict = {}
     gemini_start = time()
-    if (history is not None) or save_history:
-        if history is None: history = []
-        chat = model.start_chat(history = history)
-        response = chat.send_message(
-            prompt, 
-            stream = False,
-            generation_config=genai.types.GenerationConfig(temperature = 0),
-        )
-        # cannot be written into JSON file
-        # TO BE FIXED
-        output_dict['history'] = chat.history
-    else:
-        response = model.generate_content(
-            prompt, 
-            stream = False,
-            generation_config=genai.types.GenerationConfig(temperature = 0),
-        )
+    # if (history is not None) or save_history:
+    #     Multiturn chat is not enabled for models/gemini-pro-vision'
+    #     if history is None: history = []
+    #     chat = model.start_chat(history = history)
+    #     response = chat.send_message(
+    #         prompt, 
+    #         stream = False,
+    #         generation_config=genai.types.GenerationConfig(temperature = 0),
+    #     )
+    #     output_dict['history'] = chat.history
+        
+    if history is None: history = []
+    response = model.generate_content(
+        history + prompt, 
+        stream = False,
+        generation_config=genai.types.GenerationConfig(temperature = 0),
+    )
+
     if call_mode == 'micl': response.resolve()
     gemini_end = time()
     output_dict['time'] = gemini_end - gemini_start
     output_dict['description'] = response.text
+    if save_history: output_dict['history'] = prompt + [response.text]
+    
     return output_dict
