@@ -238,7 +238,13 @@ def load_model(
         )
     elif model == 'seed':
         from load_models.call_seed import load_seed, call_seed
-        model, tokenizer, transform = load_seed(device=device)
+        model, tokenizer, transform = load_seed(
+            device = device,
+            finetuned = finetuned,
+            shot = shot,
+            gen_mode = gen_mode,
+            prompt_type = prompt_type,
+        )
         call_seed(
             model,
             tokenizer,
