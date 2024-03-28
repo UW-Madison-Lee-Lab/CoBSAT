@@ -353,7 +353,7 @@ def ft_seed(
         output_dir = output_dir,
         bf16 = True,
         fix_vit = True,
-        num_train_epochs = 1, # 5,
+        num_train_epochs = 5,
         per_device_train_batch_size = 1,
         per_device_eval_batch_size = 1,
         gradient_accumulation_steps = 8,
