@@ -120,6 +120,20 @@ def load_seed(
 
     return model, tokenizer, transform
 
+def process_image(
+    image_input,
+    transform,
+    device,
+    tokenizer,
+):
+    image = Image.open(image_input).convert('RGB')
+    image_tensor = transform(image).to(device)
+    img_ids = tokenizer.encode_image(image_torch=image_tensor)
+    img_ids = img_ids.view(-1).cpu().numpy()
+    img_tokens = BOI_TOKEN + ''.join([IMG_TOKEN.format(item)
+                                    for item in img_ids]) + EOI_TOKEN
+    return img_tokens
+
 def preprocess(
     query,
     tokenizer,
@@ -133,45 +147,46 @@ def preprocess(
 ):
     text_inputs, image_inputs = query['text_inputs'], query['image_inputs']
     
-    input_tokens = tokenizer.bos_token  + s_token + instruction[0]
+    input_tokens = tokenizer.bos_token + s_token + instruction[0]
     if history is not None: input_tokens += history.replace(e_token, sep)
-    
-    if output_mode == 'eval_sample':
-        num_images = len(text_inputs) - 1 
-    elif output_mode == 'train_sample':
-        num_images = len(text_inputs)
-    else:
-        raise ValueError(f'output_mode {output_mode} not supported')
     
     for i in range(len(text_inputs)):
         input_tokens = input_tokens + text_inputs[i]
         if call_mode == 'micl':
-            if i < num_images:
-                image = Image.open(image_inputs[i]).convert('RGB')
-                image_tensor = transform(image).to(device)
-                img_ids = tokenizer.encode_image(image_torch=image_tensor)
-                img_ids = img_ids.view(-1).cpu().numpy()
-                img_tokens = BOI_TOKEN + ''.join([IMG_TOKEN.format(item)
-                                                for item in img_ids]) + EOI_TOKEN
+            if i < len(text_inputs) - 1:
+                img_tokens = process_image(
+                    image_inputs[i],
+                    transform,
+                    device,
+                    tokenizer,
+                )
                 input_tokens = input_tokens + img_tokens
 
-    input_tokens += instruction[1]
-    
+            if i == len(text_inputs) - 1:
+                input_tokens = input_tokens + instruction[1] + e_token + sep
+                
+                if output_mode == 'train_sample':
+                    img_tokens = process_image(
+                        image_inputs[i],
+                        transform,
+                        device,
+                        tokenizer,
+                    )
+                    output_tokens = input_tokens + 'I have created an image.' + img_tokens + e_token + sep
+                
     if output_mode == 'eval_sample':
-        return input_tokens + e_token + sep
+        return input_tokens
     elif output_mode == 'train_sample': 
         input_ids, output_ids = [], []
-        output_ids += tokenizer(
-            input_tokens + e_token + sep, 
+        
+        input_ids += tokenizer(
+            input_tokens, 
             add_special_tokens=False, 
             return_tensors='pt',
         ).input_ids.squeeze()
         
-        seps = input_tokens.split(BOI_TOKEN)
-        input_tokens = BOI_TOKEN.join(seps[:-1]) + e_token + sep
-        
-        input_ids += tokenizer(
-            input_tokens, 
+        output_ids += tokenizer(
+            output_tokens,
             add_special_tokens=False, 
             return_tensors='pt',
         ).input_ids.squeeze()
@@ -338,7 +353,7 @@ def ft_seed(
         output_dir = output_dir,
         bf16 = True,
         fix_vit = True,
-        num_train_epochs = 5,
+        num_train_epochs = 1, # 5,
         per_device_train_batch_size = 1,
         per_device_eval_batch_size = 1,
         gradient_accumulation_steps = 8,
