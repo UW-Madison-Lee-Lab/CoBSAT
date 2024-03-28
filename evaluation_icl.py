@@ -82,23 +82,28 @@ def eval_clip(
         )
     elif eval_mode == 'text':
         description = read_json(file_path)['description']
-        batch_inputs = clip_processor(
-            text=[description[:200], detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
-            return_tensors="pt", 
-            padding=True,
-            truncation=True, 
-            max_length=77,
-        ).to(clip_model.device)
-        batch_outputs = clip_model.get_text_features(**batch_inputs)
+        if description:
+            batch_inputs = clip_processor(
+                text=[description[:200], detail, obj, f"{detail} {obj}"] + obj_list + detail_list, 
+                return_tensors="pt", 
+                padding=True,
+                truncation=True, 
+                max_length=77,
+            ).to(clip_model.device)
             
-        batch_outputs = batch_outputs / batch_outputs.norm(dim=1, keepdim=True)
-        description_embeds = batch_outputs[[0]]
-        batch_true_embeds = batch_outputs[1:]
-        clip_similarity = get_clip_similarity(
-             clip_model,
-             batch_true_embeds,
-             description_embeds,
-        )
+            batch_outputs = clip_model.get_text_features(**batch_inputs)
+                
+            batch_outputs = batch_outputs / batch_outputs.norm(dim=1, keepdim=True)
+            description_embeds = batch_outputs[[0]]
+            batch_true_embeds = batch_outputs[1:]
+            clip_similarity = get_clip_similarity(
+                clip_model,
+                batch_true_embeds,
+                description_embeds,
+            )
+        else:
+            clip_similarity = np.zeros(3+len(obj_list)+len(detail_list))
+            
 
     # similarity between the generated image and the ground truth
     output_dict = {
@@ -199,7 +204,7 @@ def eval_llava(
     for mode in prompts:
         if eval_mode == 'image':
             response[mode] = infer_llava(
-                prompts[mode],
+                prompts[mode][:2047],
                 [file_path],
                 llava_configs['tokenizer'],
                 llava_configs['llava_model'],
@@ -210,7 +215,7 @@ def eval_llava(
             )
         elif eval_mode == 'text':
             response[mode] = infer_llava(
-                prompts[mode],
+                prompts[mode][:2047],
                 [],
                 llava_configs['tokenizer'],
                 llava_configs['llava_model'],
