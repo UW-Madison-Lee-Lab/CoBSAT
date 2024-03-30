@@ -67,17 +67,22 @@ def decode_image_text(generate_ids, tokenizer, gen_mode):
         images = None
 
     else:
-        boi_index = boi_list[0]
-        eoi_index = eoi_list[0]
+        try:
+            boi_index = boi_list[0]
+            eoi_index = eoi_list[0]
+        except IndexError:
+            images = None
+        else:
+            image_ids = (generate_ids[boi_index+1:eoi_index] -
+                        image_id_shift).reshape(1, -1)
+            images = tokenizer.decode_image(image_ids)
+            images = images[0]   
+            
         text_ids = generate_ids[:boi_index]
         if len(text_ids) != 0:
             texts = tokenizer.decode(text_ids, skip_special_tokens=True)
         else:
-            texts = "null"
-        image_ids = (generate_ids[boi_index+1:eoi_index] -
-                    image_id_shift).reshape(1, -1)
-        images = tokenizer.decode_image(image_ids)
-        images = images[0]          
+            texts = "null"      
 
     if gen_mode == "text":
         return texts
