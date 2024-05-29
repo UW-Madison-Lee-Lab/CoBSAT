@@ -132,9 +132,15 @@ def get_result_path(
     gen_mode,
     shot,
     prompt_type,
+    ft_mode,
+    eval_task_theme,
 ):
     if data_mode == 'ft_test':
-        base_path = f"{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/exps/finetuned_{finetuned_model}"
+        if finetuned_model:
+            base_tail = f"/ft_mode_{ft_mode}_{eval_task_theme}" if ft_mode == 'leave_one_out' else f"/ft_mode_{ft_mode}"
+        else:
+            base_tail = ''
+        base_path = f"{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/exps/finetuned_{finetuned_model}{base_tail}"
     else:
         base_path = f"{root_dir}/results/exps/{model}_{gen_mode}/shot_{shot}/{prompt_type}"
         
@@ -164,9 +170,12 @@ def get_ft_path(
     gen_mode,
     shot,
     prompt_type,
+    ft_mode,
+    eval_task_theme,
 ):
     # output_dir = f'{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/model'
-    output_dir = f"ft_models/{model}_{gen_mode}_shot_{shot}_{prompt_type}"
+    ft_mode_str = f'ft_mode_{ft_mode}' if ft_mode == 'all' else f'ft_mode_{ft_mode}_{eval_task_theme}'
+    output_dir = f"ft_models/{model}_{gen_mode}_shot_{shot}_{prompt_type}_{ft_mode_str}"
     data_path = f'{root_dir}/results/ft/{model}_{gen_mode}/shot_{shot}/{prompt_type}/dataset_ft.json'
     return {
         'model': output_dir,

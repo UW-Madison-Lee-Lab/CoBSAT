@@ -28,6 +28,8 @@ def ft_model(
         gen_mode,
         shot,
         prompt_type,
+        ft_mode,
+        eval_task_theme,
     )
     
     output_dir, data_path = path_dict['model'], path_dict['data']

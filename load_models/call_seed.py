@@ -97,6 +97,8 @@ def load_seed(
     shot = 2,
     gen_mode = 'image',
     prompt_type = 'default',
+    ft_mode = 'all',
+    eval_task_theme = '',
 ):
     set_seed(seed)
     os.environ["PROJECT_ROOT"] = SEED_PROJECT_ROOT
@@ -120,6 +122,8 @@ def load_seed(
             gen_mode,
             shot,
             prompt_type,
+            ft_mode,
+            eval_task_theme,
         )['model']
         model = PeftModel.from_pretrained(model, ft_path)
 

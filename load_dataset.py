@@ -88,6 +88,7 @@ def load_dataset(
             else:
                 theta_input = [item_inputs["theta_list"][i%len(item_inputs["theta_list"])] for i in range(shot+2)]
             
+            include_output = True if data_mode == 'ft_train' else False
             input_dict = load_inputs(
                 shot,
                 prompt_type,
@@ -96,6 +97,7 @@ def load_dataset(
                 theta_input,
                 task_dataframe[task_id]["x_list"],
                 task_dataframe[task_id]["theta_list"],
+                include_output = include_output,
             )
             input_dict['save_path'] = f"{i}_{input_dict['theta']}_{'_'.join(input_dict['x_list'])}"
             data_loader.append(input_dict)

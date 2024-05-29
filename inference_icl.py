@@ -65,9 +65,18 @@ def inference(
     gen_mode,
     finetuned_model = False,
     data_mode = 'default', # ['default', 'ft_test']
+    ft_mode = 'all',
+    eval_task_theme = '',
 ):
     if finetuned_model and data_mode != 'ft_test':
         raise ValueError(f"finetuned models only supports loading ft_test data. You are considering {data_mode} data.")
+        
+    if (ft_mode == 'leave_one_out' and (not eval_task_theme)) or (ft_mode == 'all' and eval_task_theme):
+        raise ValueError(f"ft_mode and eval_task_theme are incompatible!")
+    
+    if (ft_mode == 'leave_one_out'):
+        if task_dataframe[task_id]['task_name'].split('-')[0].lower() != eval_task_theme:
+            return None
         
     base_path = get_result_path(
         finetuned_model,
@@ -76,6 +85,8 @@ def inference(
         gen_mode,
         shot,
         prompt_type,
+        ft_mode,
+        eval_task_theme,
     )
     
     folder_path = f"{base_path}/task_{task_id}"
@@ -87,6 +98,7 @@ def inference(
         prompt_type,
         task_id,
         data_mode = data_mode,
+        ft_mode = ft_mode,
     )
     
     for count in range(len(data_loader)):
@@ -148,6 +160,8 @@ if '__main__' == __name__:
     parser.add_argument('--finetuned_model', type=int, default=0, choices=[0,1], help = "whether to use finetuned model")
     parser.add_argument('--data_mode', type=str, default="default", choices=['default', 'ft_test'], help = "what dataset to use")
     parser.add_argument('--api_key', type=str, default="yz", help = "which key to use")
+    parser.add_argument('--ft_mode', type=str, default='all', choices = ['all', 'leave_one_out'], help='finetune mode')
+    parser.add_argument('--eval_task_theme', type = str, default = '', choices = ['', 'color', 'background', 'style', 'action', 'texture'], help = 'task theme for evaluation')
 
     args = parser.parse_args()
     
@@ -197,4 +211,6 @@ if '__main__' == __name__:
                     args.gen_mode,
                     args.finetuned_model,
                     args.data_mode,
+                    args.ft_mode,
+                    args.eval_task_theme,
                 )

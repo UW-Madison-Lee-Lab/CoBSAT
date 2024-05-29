@@ -17,6 +17,8 @@ def load_qwen(
     shot = 2, 
     gen_mode = 'text',
     prompt_type = 'default',
+    ft_mode = 'all',
+    eval_task_theme = '',
 ):  
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
     
@@ -26,6 +28,8 @@ def load_qwen(
             gen_mode,
             shot,
             prompt_type,
+            ft_mode,
+            eval_task_theme,
         )['model']
         model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-VL-Chat", device_map=device, trust_remote_code=True).eval()
         model = PeftModel.from_pretrained(model, ft_path)
