@@ -1,4 +1,4 @@
-import os, sys, json
+import os, sys
 root_dir = os.path.dirname(os.getcwd())
 sys.path.append(root_dir)
 from environment import GEMINI_API_KEY
@@ -30,7 +30,7 @@ def call_gemini(
     ],
     call_mode = 'micl',
     history = None,
-    save_history = False
+    save_history = False,
 ):
     prompt = [instruction[0]]
     

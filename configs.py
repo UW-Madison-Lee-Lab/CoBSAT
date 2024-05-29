@@ -118,6 +118,7 @@ supported_models = [
     'seed',
     'gill',
     'gemini',
+    'claude',
 ]
 
 # need to be updated, and also update the instruction for text generatopm for normal tasks too.
@@ -198,6 +199,10 @@ instruction_dict = {
                 '',
                 "Based on the sequence, describe the next image clearly, including details such as the main object, color, texture, background, action, style, if applicable. ",
             ),
+            'claude': (
+                "I will provide you a few examples with text and image. Complete the example with the description of next image. Never say other explanations. ",
+                'Give me the description of the your predicted next image.',
+            )
         },
         'image': {
             'gill': (

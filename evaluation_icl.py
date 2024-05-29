@@ -218,7 +218,8 @@ def eval_model(
                     [Image.open(file_path), prompts[mode][:2047]],
                     stream = False, 
                     generation_config=genai.types.GenerationConfig(temperature = 0),
-                ).resolve()
+                )
+                response[mode].resolve()
                 try: 
                     response[mode] = response[mode].text
                 except ValueError:
@@ -497,6 +498,8 @@ def eval(
         eval_mode,
         shot,
         prompt_type,
+        ft_mode,
+        eval_task_theme,
     )
     
     folder_path = f"{base_path}/task_{task_id}"
@@ -662,7 +665,7 @@ if '__main__' == __name__:
         from load_models.call_gemini import load_gemini
         import google.generativeai as genai
         call_model = load_gemini(
-            'caption',
+            'caption' if args.eval_mode == 'text' else 'default',
             args.api_key,
         )
     else:

@@ -87,6 +87,17 @@ def load_model(
             api_key = api_key,
             **configs,
         )
+    
+    elif model == 'claude':
+        if gen_mode != 'text':
+            raise ValueError(f"gen_mode {gen_mode} not supported for claude.")
+        
+        from load_models.call_claude import load_claude, call_claude
+        client = load_claude(api_key)
+        return lambda configs: call_claude(
+            client = client,
+            **configs,
+        )
         
     elif model == 'qwen':
         if gen_mode != 'text':
