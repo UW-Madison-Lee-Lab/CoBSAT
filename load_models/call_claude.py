@@ -4,11 +4,29 @@ sys.path.append(root_dir)
 from environment import CLAUDE_API_KEY  
 
 import anthropic, base64
-from helper import retry_if_fail
 from time import time
+from PIL import Image
+    
+def ensure_jpeg(image_path):
+    try:
+        with Image.open(image_path) as img:
+            if img.format != 'JPEG':
+                img = img.convert('RGB')  # Convert to RGB if not
+                
+                new_image_path = image_path.replace('.jpg', '.jpeg').replace('datasets', 'archive/datasets_jpeg')
+                new_image_dir = os.path.dirname(new_image_path)
+                os.makedirs(new_image_dir, exist_ok = True)
+                
+                img.save(new_image_path, 'JPEG')  # Save as JPEG
+                image_path = new_image_path
+    except IOError:
+        print("Unable to open the image. Ensure the file is a valid image.")
+        
+    return image_path
 
 # Function to encode the image
 def encode_image(image_path):
+    image_path = ensure_jpeg(image_path)
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
     
@@ -67,7 +85,6 @@ def load_claude(api_key):
     )
     return client
 
-@retry_if_fail
 def call_claude(
     client,
     text_inputs = ["Red", "Green", "Yellow"],
