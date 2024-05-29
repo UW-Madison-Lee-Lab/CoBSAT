@@ -12,11 +12,16 @@ def ft_model(
     shot,
     prompt_type,
     gen_mode,
+    ft_mode = 'all', # 'all' or 'leave_one_out' 
+    eval_task_theme = '', # color, background, style, action, texture 
 ):
     set_seed(123)
     
     if prompt_type in ['misleading', 'cot', 'caption']: 
         raise ValueError(f"Finetuning mode does not support prompt type {prompt_type}!")
+    
+    if (ft_mode == 'leave_one_out' and (not eval_task_theme)) or (ft_mode == 'all' and eval_task_theme):
+        raise ValueError(f"ft_mode and eval_task_theme are incompatible!")
     
     path_dict = get_ft_path(
         model,
@@ -37,12 +42,17 @@ def ft_model(
         raise ValueError(f"Unknown model: {model}")
     
     for task_id in task_dataframe:
+        if ft_mode == 'leave_one_out':
+            if task_dataframe[task_id]['task_name'].split('-')[0].lower() == eval_task_theme:
+                continue 
+        
         data_loader[task_id] = load_dataset(
             shot,
             prompt_type = 'default',
             task_id = task_id,
             data_mode = 'ft_train',
             include_output = include_output,
+            ft_mode = ft_mode,
         )
         
     if model == 'qwen':
@@ -50,7 +60,7 @@ def ft_model(
         from load_models.call_qwen import ft_qwen, load_ft_qwen_prompt
         
         data_ft = []
-        for task_id in task_dataframe:
+        for task_id in data_loader:
             for idx, item in enumerate(data_loader[task_id]):
                 data_ft.append(load_ft_qwen_prompt(
                     task_id,
@@ -73,7 +83,7 @@ def ft_model(
         from load_models.call_seed import ft_seed
         
         data_ft = []
-        for task_id in task_dataframe:
+        for task_id in data_loader:
             data_ft.extend(data_loader[task_id])
 
         ft_seed(
@@ -94,6 +104,8 @@ if '__main__' == __name__:
     parser.add_argument('--shot', type=int, default=2, help='number of demonstrations')
     parser.add_argument('--prompt_type', type=str, default='default', help='prompt type')
     parser.add_argument('--gen_mode', type=str, default='text', help='generation mode')
+    parser.add_argument('--ft_mode', type=str, default='all', choices = ['all', 'leave_one_out'], help='finetune mode')
+    parser.add_argument('--eval_task_theme', type = str, default = '', choices = ['', 'color', 'background', 'style', 'action', 'texture'], help = 'task theme for evaluation')
     args = parser.parse_args()
     
     # print experiment configuration
@@ -109,5 +121,7 @@ if '__main__' == __name__:
         args.shot,
         args.prompt_type,
         args.gen_mode,
+        args.ft_mode,
+        args.eval_task_theme,
     )
     

@@ -148,11 +148,15 @@ def get_summary_path(
     prompt_type,
     task_id,
     data_mode,
+    eval_mllm,
+    ft_mode,
+    eval_task_theme,
 ):
     if data_mode == 'ft_test':
-        csv_file_path = f"{root_dir}/results/ft/{model}_{eval_mode}/shot_{shot}/{prompt_type}/evals/finetuned_{finetuned_model}/task_{task_id}_summary.csv"
+        ft_mode_folder = f"ft_mode_{ft_mode}_{eval_task_theme}" if eval_task_theme else f"ft_mode_{ft_mode}"
+        csv_file_path = f"{root_dir}/results/ft/{model}_{eval_mode}/shot_{shot}/{prompt_type}/evals/{eval_mllm}_eval/finetuned_{finetuned_model}/{ft_mode_folder}/task_{task_id}_summary.csv"
     else:
-        csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/shot_{shot}/{prompt_type}/task_{task_id}_summary.csv"
+        csv_file_path = f"{root_dir}/results/evals/{model}_{eval_mode}/{eval_mllm}_eval/shot_{shot}/{prompt_type}/task_{task_id}_summary.csv"
     return csv_file_path
 
 def get_ft_path(

@@ -2,7 +2,6 @@ import os, sys
 root_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(root_dir)
 
-from load_models.call_llava import load_llava, eval_model as infer_llava
 import argparse, pandas as pd, wandb, torch, numpy as np
 from helper import set_seed, read_json, get_result_path, get_summary_path
 from configs import task_dataframe, item_dict, item2word, word2item, supported_models, prompt_type_options
@@ -151,8 +150,7 @@ def get_eval_prompt(
         
     return prompts
     
-
-def eval_llava(
+def eval_model(
     category_space,
     item_list,
     file_path,
@@ -160,6 +158,7 @@ def eval_llava(
     llava_configs,
     existing_csv,
     eval_mode,
+    model = 'llava',
 ):
     if not (existing_csv is None):
         row = existing_csv[existing_csv['file_path'] == file_path]
@@ -203,27 +202,51 @@ def eval_llava(
     checks, options, response = {}, {}, {}
     for mode in prompts:
         if eval_mode == 'image':
-            response[mode] = infer_llava(
-                prompts[mode][:2047],
-                [file_path],
-                llava_configs['tokenizer'],
-                llava_configs['llava_model'],
-                llava_configs['image_processor'],
-                llava_configs['context_len'],
-                llava_configs['llava_args'],
-                device=llava_configs['device'],
-            )
+            if model == 'llava':
+                response[mode] = infer_llava(
+                    prompts[mode][:2047],
+                    [file_path],
+                    llava_configs['tokenizer'],
+                    llava_configs['llava_model'],
+                    llava_configs['image_processor'],
+                    llava_configs['context_len'],
+                    llava_configs['llava_args'],
+                    device=llava_configs['device'],
+                )
+            elif model == 'gemini':
+                response[mode] = call_model.generate_content(
+                    [Image.open(file_path), prompts[mode][:2047]],
+                    stream = False, 
+                    generation_config=genai.types.GenerationConfig(temperature = 0),
+                ).resolve()
+                try: 
+                    response[mode] = response[mode].text
+                except ValueError:
+                    response[mode] = '1'
+            
         elif eval_mode == 'text':
-            response[mode] = infer_llava(
-                prompts[mode][:2047],
-                [],
-                llava_configs['tokenizer'],
-                llava_configs['llava_model'],
-                llava_configs['image_processor'],
-                llava_configs['context_len'],
-                llava_configs['llava_args'],
-                device=llava_configs['device'],
-            )
+            if model == 'llava':
+                response[mode] = infer_llava(
+                    prompts[mode][:2047],
+                    [],
+                    llava_configs['tokenizer'],
+                    llava_configs['llava_model'],
+                    llava_configs['image_processor'],
+                    llava_configs['context_len'],
+                    llava_configs['llava_args'],
+                    device=llava_configs['device'],
+                )
+            elif model == 'gemini':
+                response[mode] = call_model.generate_content(
+                    [prompts[mode][:2047]],
+                    stream = False, 
+                    generation_config=genai.types.GenerationConfig(temperature = 0),
+                )
+                try: 
+                    response[mode] = response[mode].text
+                except ValueError:
+                    response[mode] = '1'
+            
         else:
             raise NotImplementedError(f"Unknown eval_mode: {eval_mode}!")
         
@@ -263,6 +286,7 @@ def check_single_output(
     clip_configs,
     existing_csv,
     eval_mode,
+    eval_mllm,
 ):
     clip_processor, clip_model = clip_configs['clip_processor'], clip_configs['clip_model']
     
@@ -303,9 +327,8 @@ def check_single_output(
             ground_truth_item = word2item.get(ground_truth[mode], ground_truth[mode])
             true_labels[mode] = item_list[mode].index(ground_truth_item)+1
         
-        # use llava to evaluate the quality of the generated images
-
-        llava_output = eval_llava(
+        # use mllm to evaluate the quality of the generated images
+        mllm_output = eval_model(
             category_space,
             item_list,
             file_path,
@@ -313,6 +336,7 @@ def check_single_output(
             llava_configs,
             existing_csv, 
             eval_mode,
+            model = eval_mllm,
         )
          
         # use clip to evaluate the quality of the generated images
@@ -329,19 +353,19 @@ def check_single_output(
                 
         row = {
             'file_path': file_path,
-            'prompt_detail': llava_output['prompt_detail'],
-            'prompt_obj': llava_output['prompt_obj'],
+            'prompt_detail': mllm_output['prompt_detail'],
+            'prompt_obj': mllm_output['prompt_obj'],
             'ground_truth_detail': ground_truth['detail'],
             'ground_truth_obj': ground_truth['obj'],
-            'response_detail': llava_output['response_detail'],
-            'response_obj': llava_output['response_obj'],
+            'response_detail': mllm_output['response_detail'],
+            'response_obj': mllm_output['response_obj'],
             'true_label_detail': true_labels['detail'],
             'true_label_obj': true_labels['obj'],
-            'answer_detail': llava_output['answer_detail'],
-            'answer_obj': llava_output['answer_obj'],
-            'check_detail': llava_output['check_detail'],
-            'check_obj': llava_output['check_obj'],
-            'correct': llava_output['correct'],
+            'answer_detail': mllm_output['answer_detail'],
+            'answer_obj': mllm_output['answer_obj'],
+            'check_detail': mllm_output['check_detail'],
+            'check_obj': mllm_output['check_obj'],
+            'correct': mllm_output['correct'],
             'clip_similarity_detail': clip_output['clip_similarity_detail'],
             'clip_similarity_obj': clip_output['clip_similarity_obj'],
             'clip_similarity_overall': clip_output['clip_similarity_overall'],
@@ -367,9 +391,19 @@ def eval(
     eval_mode = 'text',
     finetuned_model = False,
     data_mode = 'default', # ['default', 'ft_test'],
+    eval_mllm = 'llava', # ['llava', 'gemini']
+    ft_mode = 'all', # ['all', 'leave_one_out']
+    eval_task_theme = '', # color, background, style, action, texture 
 ):
     if finetuned_model and data_mode != 'ft_test':
         raise ValueError(f"finetuned models only supports loading ft_test data. You are considering {data_mode} data.")
+    
+    if (ft_mode == 'leave_one_out' and (not eval_task_theme)) or (ft_mode == 'all' and eval_task_theme):
+        raise ValueError(f"ft_mode and eval_task_theme are incompatible!")
+    
+    if (ft_mode == 'leave_one_out'):
+        if task_dataframe[task_id]['task_name'].split('-')[0].lower() != eval_task_theme:
+            return None
         
     task_type = task_dataframe[task_id]['task_type']
     category_space = {}
@@ -394,6 +428,9 @@ def eval(
         prompt_type,
         task_id,
         data_mode,
+        eval_mllm,
+        ft_mode,
+        eval_task_theme,
     )
         
     existing_csv = None
@@ -413,6 +450,9 @@ def eval(
             'theta_space': task_dataframe[task_id]['theta_space'],
             'finetuned': finetuned_model,
             'data_mode': data_mode,
+            'eval_mllm': eval_mllm,
+            'ft_mode': ft_mode,
+            'eval_task_theme': eval_task_theme,
         }
         
         # first check whether there exists a run with the same configuration
@@ -500,6 +540,7 @@ def eval(
             clip_configs,
             existing_csv,
             eval_mode,
+            eval_mllm,
         )
         
         row['check_textual'] = row[f"check_{type_dict['x']}"]
@@ -589,6 +630,10 @@ if '__main__' == __name__:
     parser.add_argument('--eval_mode', type = str, default = 'text', help = 'evaluation mode', choices = ['text', 'image'])
     parser.add_argument('--finetuned_model', type=int, default=0, choices=[0,1], help = "whether to use the results of the finetuned model")
     parser.add_argument('--data_mode', type=str, default="default", choices=['default', 'ft_test'], help = "what dataset to use")
+    parser.add_argument('--eval_mllm', type = str, default = 'llava', choices = ['llava', 'gemini'], help = 'model for evaluation')
+    parser.add_argument('--api_key', type = str, default = 'yz', help = 'api key for gemini')
+    parser.add_argument('--ft_mode', type = str, default = 'all', choices = ['all', 'leave_one_out'], help = 'finetune mode')
+    parser.add_argument('--eval_task_theme', type = str, default = '', help = 'task theme for evaluation')
     
     args = parser.parse_args()
     
@@ -600,16 +645,28 @@ if '__main__' == __name__:
     for key, value in args_dict.items():
         print(f"| {key}: {value}")
     
-    # load llava
-    tokenizer, llava_model, image_processor, context_len, llava_args = load_llava(device = args.device)
-    llava_configs = {
-        'tokenizer': tokenizer,
-        'llava_model': llava_model,
-        'image_processor': image_processor,
-        'context_len': context_len,
-        'llava_args': llava_args,
-        'device': args.device,
-    }
+    llava_configs = None
+    if args.eval_mllm == 'llava':
+        from load_models.call_llava import load_llava, eval_mllm as infer_llava
+        # load llava
+        tokenizer, llava_model, image_processor, context_len, llava_args = load_llava(device = args.device)
+        llava_configs = {
+            'tokenizer': tokenizer,
+            'llava_model': llava_model,
+            'image_processor': image_processor,
+            'context_len': context_len,
+            'llava_args': llava_args,
+            'device': args.device,
+        }
+    elif args.eval_mllm == 'gemini':
+        from load_models.call_gemini import load_gemini
+        import google.generativeai as genai
+        call_model = load_gemini(
+            'caption',
+            args.api_key,
+        )
+    else:
+        raise NotImplementedError(f"Unknown eval_mllm: {args['eval_mllm']}!")
     
     # load clip to device
     clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
@@ -618,7 +675,6 @@ if '__main__' == __name__:
         'clip_processor': clip_processor,
         'clip_model': clip_model,
     }
-    
     
     for task_id in args.task_id:
         for shot in args.shot:
@@ -636,4 +692,7 @@ if '__main__' == __name__:
                     eval_mode = args.eval_mode,
                     finetuned_model = args.finetuned_model,
                     data_mode = args.data_mode,
+                    eval_mllm = args.eval_mllm,
+                    ft_mode = args.ft_mode,
+                    eval_task_theme = args.eval_task_theme,
                 )

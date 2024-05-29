@@ -238,5 +238,5 @@ data_modes = [
 num_prompt_dict = {
     'default': 1000,
     'ft_test': 250,
-    'ft_train': None,
+    'ft_train': 1000,
 }

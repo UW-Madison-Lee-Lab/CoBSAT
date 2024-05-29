@@ -60,6 +60,7 @@ def load_dataset(
     seed = 123,
     data_mode = 'default', # 'default' or 'ft_train' or 'ft_test'
     include_output = False, # whether include expected output in the prompt or not
+    ft_mode = 'all', # 'all' or 'leave_one_out'
 ):
     print("========"*3)
     print(f'Loading the dataset for task {task_id}...')
@@ -71,13 +72,18 @@ def load_dataset(
     
     set_seed(seed)
     
-    prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list_{data_mode}.json")
+    if data_mode == 'ft_train':
+        prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list_{data_mode}_{ft_mode}.json")
+    else:
+        prompts_list = read_json(f"{root_dir}/load_datasets/prompts_list_{data_mode}.json")
     
-    if data_mode in ['default', 'ft_test']:
+    if data_mode in ['default', 'ft_test'] or (data_mode == 'ft_train' and ft_mode == 'leave_one_out'):    
+        # leave one out: ignore one task and use that as the evaluation set
+        # in this case, give a task_id, we need to consider all data samples in this task
         data_loader = []
         for i in range(num_prompt_dict[data_mode]):
             item_inputs = prompts_list[i]
-            if data_mode == 'default':
+            if data_mode in ['default', 'ft_train']:
                 theta_input = item_inputs["theta_list"]
             else:
                 theta_input = [item_inputs["theta_list"][i%len(item_inputs["theta_list"])] for i in range(shot+2)]
