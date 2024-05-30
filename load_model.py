@@ -259,6 +259,8 @@ def load_model(
             shot = shot,
             gen_mode = gen_mode,
             prompt_type = prompt_type,
+            ft_mode = ft_mode,
+            eval_task_theme = eval_task_theme,
         )
         call_seed(
             model,
