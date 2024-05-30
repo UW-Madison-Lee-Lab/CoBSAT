@@ -196,6 +196,8 @@ if '__main__' == __name__:
         shot = args.shot[0],
         prompt_type = args.prompt_type[0],
         api_key = args.api_key,
+        ft_mode = args.ft_mode,
+        eval_task_theme = args.eval_task_theme,
     )
 
     for shot in args.shot:

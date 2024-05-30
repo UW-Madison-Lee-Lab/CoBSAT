@@ -155,7 +155,7 @@ def eval_model(
     item_list,
     file_path,
     true_labels,
-    llava_configs,
+    mllm_configs,
     existing_csv,
     eval_mode,
     model = 'llava',
@@ -206,12 +206,12 @@ def eval_model(
                 response[mode] = infer_llava(
                     prompts[mode][:2047],
                     [file_path],
-                    llava_configs['tokenizer'],
-                    llava_configs['llava_model'],
-                    llava_configs['image_processor'],
-                    llava_configs['context_len'],
-                    llava_configs['llava_args'],
-                    device=llava_configs['device'],
+                    mllm_configs['tokenizer'],
+                    mllm_configs['llava_model'],
+                    mllm_configs['image_processor'],
+                    mllm_configs['context_len'],
+                    mllm_configs['llava_args'],
+                    device=mllm_configs['device'],
                 )
             elif model == 'gemini':
                 response[mode] = call_model.generate_content(
@@ -224,18 +224,26 @@ def eval_model(
                     response[mode] = response[mode].text
                 except ValueError:
                     response[mode] = '1'
-            
+            elif model == 'qwen':
+                messages = [{'image': file_path}, {'text': prompts[mode][:2047]}]
+                query = mllm_configs['tokenizer'].from_list_format(messages)
+                response[mode], _ = mllm_configs['qwen_model'].chat(
+                    mllm_configs['tokenizer'],
+                    query = query,
+                    history = None,
+                    system = "You are a professional assistant and always answer my question directly and perfectly without any excuses. If I ask you to predict, you should always give me the prediction with the highest probability or even random guess.",
+                )
         elif eval_mode == 'text':
             if model == 'llava':
                 response[mode] = infer_llava(
                     prompts[mode][:2047],
                     [],
-                    llava_configs['tokenizer'],
-                    llava_configs['llava_model'],
-                    llava_configs['image_processor'],
-                    llava_configs['context_len'],
-                    llava_configs['llava_args'],
-                    device=llava_configs['device'],
+                    mllm_configs['tokenizer'],
+                    mllm_configs['llava_model'],
+                    mllm_configs['image_processor'],
+                    mllm_configs['context_len'],
+                    mllm_configs['llava_args'],
+                    device=mllm_configs['device'],
                 )
             elif model == 'gemini':
                 response[mode] = call_model.generate_content(
@@ -247,7 +255,15 @@ def eval_model(
                     response[mode] = response[mode].text
                 except ValueError:
                     response[mode] = '1'
-            
+            elif model == 'qwen':
+                messages = [{'text': prompts[mode][:2047]}]
+                query = mllm_configs['tokenizer'].from_list_format(messages)
+                response[mode], _ = mllm_configs['qwen_model'].chat(
+                    mllm_configs['tokenizer'],
+                    query = query,
+                    history = None,
+                    system = "You are a professional assistant and always answer my question directly and perfectly without any excuses. If I ask you to predict, you should always give me the prediction with the highest probability or even random guess.",
+                )
         else:
             raise NotImplementedError(f"Unknown eval_mode: {eval_mode}!")
         
@@ -283,7 +299,7 @@ def check_single_output(
     task_type,
     file_path,
     ground_truth,
-    llava_configs,
+    mllm_configs,
     clip_configs,
     existing_csv,
     eval_mode,
@@ -334,7 +350,7 @@ def check_single_output(
             item_list,
             file_path,
             true_labels,
-            llava_configs,
+            mllm_configs,
             existing_csv, 
             eval_mode,
             model = eval_mllm,
@@ -384,7 +400,7 @@ def eval(
     shot,
     prompt_type,
     model,
-    llava_configs,
+    mllm_configs,
     clip_configs,
     seed,
     log_wandb = False,
@@ -539,7 +555,7 @@ def eval(
             task_type,
             file_path,
             ground_truth,
-            llava_configs,
+            mllm_configs,
             clip_configs,
             existing_csv,
             eval_mode,
@@ -633,7 +649,7 @@ if '__main__' == __name__:
     parser.add_argument('--eval_mode', type = str, default = 'text', help = 'evaluation mode', choices = ['text', 'image'])
     parser.add_argument('--finetuned_model', type=int, default=0, choices=[0,1], help = "whether to use the results of the finetuned model")
     parser.add_argument('--data_mode', type=str, default="default", choices=['default', 'ft_test'], help = "what dataset to use")
-    parser.add_argument('--eval_mllm', type = str, default = 'llava', choices = ['llava', 'gemini'], help = 'model for evaluation')
+    parser.add_argument('--eval_mllm', type = str, default = 'llava', choices = ['llava', 'gemini', 'qwen'], help = 'model for evaluation')
     parser.add_argument('--api_key', type = str, default = 'yz', help = 'api key for gemini')
     parser.add_argument('--ft_mode', type = str, default = 'all', choices = ['all', 'leave_one_out'], help = 'finetune mode')
     parser.add_argument('--eval_task_theme', type = str, default = '', help = 'task theme for evaluation')
@@ -648,12 +664,12 @@ if '__main__' == __name__:
     for key, value in args_dict.items():
         print(f"| {key}: {value}")
     
-    llava_configs = None
+    mllm_configs = None
     if args.eval_mllm == 'llava':
-        from load_models.call_llava import load_llava, eval_mllm as infer_llava
+        from load_models.call_llava import load_llava, eval_model as infer_llava
         # load llava
         tokenizer, llava_model, image_processor, context_len, llava_args = load_llava(device = args.device)
-        llava_configs = {
+        mllm_configs = {
             'tokenizer': tokenizer,
             'llava_model': llava_model,
             'image_processor': image_processor,
@@ -668,6 +684,13 @@ if '__main__' == __name__:
             'caption' if args.eval_mode == 'text' else 'default',
             args.api_key,
         )
+    elif args.eval_mllm == 'qwen':
+        from load_models.call_qwen import load_qwen
+        qwen_model, tokenizer = load_qwen(device = args.device)
+        mllm_configs = {
+            'qwen_model': qwen_model,
+            'tokenizer': tokenizer,
+        }
     else:
         raise NotImplementedError(f"Unknown eval_mllm: {args['eval_mllm']}!")
     
@@ -687,7 +710,7 @@ if '__main__' == __name__:
                     shot,
                     prompt_type,
                     args.model,
-                    llava_configs,
+                    mllm_configs,
                     clip_configs,
                     args.seed,
                     log_wandb = args.wandb,

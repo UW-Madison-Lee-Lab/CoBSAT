@@ -10,6 +10,8 @@ def load_model(
     shot = 2, 
     prompt_type = 'default',
     api_key = 'yz',
+    ft_mode = 'all',
+    eval_task_theme = '',
 ):
     """
     Load models. 
@@ -112,6 +114,8 @@ def load_model(
             shot = shot, 
             gen_mode = gen_mode, 
             prompt_type = prompt_type,
+            ft_mode = ft_mode,
+            eval_task_theme = eval_task_theme,
         )
         call_qwen(model, tokenizer)
         return lambda configs: call_qwen(
