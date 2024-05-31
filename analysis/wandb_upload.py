@@ -11,6 +11,11 @@ def update_wandb(
     prompt_type, 
     task_id,
     eval_mode, 
+    finetuned,
+    data_mode, 
+    eval_mllm,
+    ft_mode,
+    eval_task_theme,
     seed = 123,
 ):
     task_type = task_dataframe[task_id]['task_type']
@@ -33,6 +38,11 @@ def update_wandb(
             'task_type': task_type,
             'x_space': task_dataframe[task_id]['x_space'],
             'theta_space': task_dataframe[task_id]['theta_space'],
+            'finetuned': finetuned,
+            'data_mode': data_mode,
+            'eval_mllm': eval_mllm,
+            'ft_mode': ft_mode,
+            'eval_task_theme': eval_task_theme,
         },
     )
     
