@@ -27,6 +27,7 @@
 
 # News  🚀
 
+* [07/10/24] Our paper is accepted by [COLM 2024](https://openreview.net/pdf?id=jt0R50d5nk)!
 * [02/29/24] Our dataset is available on 🤗[huggingface](https://huggingface.co/datasets/yzeng58/CoBSAT)!
 * [02/02/24] Our paper is available on <a href="https://arxiv.org/abs/2402.01293">arxiv</a>! 
 
@@ -108,10 +109,15 @@ To set up the environment for benchmarking MLLMs, please follow the following st
      'key1': f'{your_openai_key_1}',
      'key2': f'{your_openai_key_2}',
    }
-   # GEMINI
+   # Gemini
    GEMINI_API_KEY = {
      'key1': f'{your_gemini_key_1}',
      'key2': f'{your_gemini_key_2}',
+   }
+   # Claude
+   CLAUDE_API_KEY = {
+     'key1': f'{your_claude_key_1}',
+     'key2': f'{your_claude_key_2}',
    }
    # Emu for Image Generation
    EMU_IMAGE_PATH = '/data/yzeng58/cobsat/models/Emu/Emu1/model_weights/Emu/pretrain' 
@@ -153,6 +159,7 @@ Up to now, the structure of your `cobsat` folder should look like this.
 │   ├── call_qwen.py
 │   ├── call_seed.py
 │   ├── call_gemini.py
+│   ├── call_claude.py
 │   ├── call_your_model.py  # [optional] create python file to load the model you want to evaluate
 │   └── ... 
 ├── models                  
@@ -161,7 +168,9 @@ Up to now, the structure of your `cobsat` folder should look like this.
 │   ├── Emu                 
 │   │   └── Emu1 
 │   ├── LLaVA               
-│   ├── Qwen-VL             
+│   ├── Qwen-VL    
+│   ├── Gemini
+│   ├── Claude   
 │   ├── OwnModel            # [optional] input your own model folder
 │   └── ...
 ├── ...
@@ -199,6 +208,8 @@ We have implemented several state-of-the-art models for your convenience. Additi
   * Text Generation
   * Fine-Tuning
 * [x] [Gemini](https://arxiv.org/abs/2312.11805)
+  * Text Generation
+* [x] [Claude](https://www.anthropic.com/claude)
   * Text Generation
 
 ## Feature Your Own Model
@@ -337,6 +348,7 @@ Throughout this section, the placeholder "OwnModel" can be substituted with the 
        'seed',
        'gill',
        'gemini',
+       'claude',
        'OwnModel', # your own model
    ]
    ```
@@ -445,7 +457,7 @@ python inference_icl.py \
 
 <details><summary> Parameter Descriptions </summary>
 
-- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `emu2` (Emu2), `gpt4v` (GPT-4V), `llava` (LLaVA-1.5), `llava16` (LLaVA-1.6/LLaVA-NeXT), `gemini` (Gemini) and `qwen` (Qwen-VL).  
+- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `emu2` (Emu2), `gpt4v` (GPT-4V), `llava` (LLaVA-1.5), `llava16` (LLaVA-1.6/LLaVA-NeXT), `gemini` (Gemini), `claude` (Claude) and `qwen` (Qwen-VL).  
 - **`shot`**: Defines the number of demonstration examples included in each training prompt.
 - **`prompt_type`**: Selects the type of prompt to use. Available options include:
   * `default`: The standard prompt design as described in our paper.
@@ -491,7 +503,7 @@ python evaluation_icl.py \
 
 <details><summary> Parameter Descriptions </summary>
 
-- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `emu2` (Emu2), `gpt4v` (GPT-4V), `llava` (LLaVA-1.5), `llava16` (LLaVA-1.6/LLaVA-NeXT), `gemini` (Gemini) and `qwen` (Qwen-VL).  
+- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `emu2` (Emu2), `gpt4v` (GPT-4V), `llava` (LLaVA-1.5), `llava16` (LLaVA-1.6/LLaVA-NeXT), `gemini` (Gemini), `claude` (Claude) and `qwen` (Qwen-VL).  
 - **`shot`**: Defines the number of demonstration examples included in each training prompt.
 - **`prompt_type`**: Selects the type of prompt to use. Available options include:
   - `default`: The standard prompt design as described in our paper.
