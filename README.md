@@ -68,12 +68,18 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    pip install torch==2.1.2 torchvision==0.16.2 
    pip install -r conda_env/default_requirements.txt
    
-   # create the environment for llava (used for evaluating the accuracy of the images) to work 
+   # create the environment for llava to work 
    conda create -n llava python=3.10.13
    conda activate llava
    pip install --upgrade pip  # enable PEP 660 support
    pip install git+https://github.com/yzeng58/LLaVA/@a61aae093656922fe16ec2152b031dd1de72fe92
    pip install -r conda_env/llava_requirements.txt
+
+   # create the environment for gemini to work 
+   conda env create -f conda_env/gemini.yml
+
+   # create the environment for llava16 (LLaVA-NeXT) to work 
+   conda env create -f conda_env/llava16.yml
    ```
 
    </details>
