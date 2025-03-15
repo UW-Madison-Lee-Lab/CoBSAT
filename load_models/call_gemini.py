@@ -4,19 +4,24 @@ sys.path.append(root_dir)
 from environment import GEMINI_API_KEY
 
 import google.generativeai as genai
+from google import genai as google_genai
 import PIL.Image
 from time import time
+from io import BytesIO
 from helper import retry_if_fail
 
-def load_gemini(prompt_type, api_key):
+def load_gemini(prompt_type, api_key, gen_mode):
     genai.configure(api_key = GEMINI_API_KEY[api_key])
-    if prompt_type == 'caption':
-        model = genai.GenerativeModel('gemini-pro')
+    if gen_mode == 'image': 
+        client = google_genai.Client(api_key = GEMINI_API_KEY[api_key])
+        model = lambda **kwargs: client.models.generate_content(model = 'gemini-2.0-flash-exp', **kwargs)
     else:
-        model = genai.GenerativeModel('gemini-pro-vision')
+        if prompt_type == 'caption':
+            model = genai.GenerativeModel('gemini-pro')
+        else:
+            model = genai.GenerativeModel('gemini-pro-vision')
     return model
     
-@retry_if_fail
 def call_gemini(
     model,
     text_inputs = ["Red", "Green", "Yellow"],
@@ -56,13 +61,25 @@ def call_gemini(
     #     output_dict['history'] = chat.history
         
     if history is None: history = []
-    response = model.generate_content(
-        history + prompt, 
-        stream = False,
-        generation_config=genai.types.GenerationConfig(temperature = 0),
-    )
+    if isinstance(model, genai.GenerativeModel):
+        response = model.generate_content(
+            history + prompt, 
+            stream = False,
+            generation_config=genai.types.GenerationConfig(temperature = 0),
+        )
+        if call_mode == 'micl': response.resolve()
+    else:
+        response = model(
+            contents = history + prompt, 
+            config=google_genai.types.GenerateContentConfig(response_modalities=['Text', 'Image']),
+        )
+        for part in response.candidates[0].content.parts:
+            if part.text is not None:
+                output_dict['description'] += part.text
+            else:
+                output_dict['image'] = PIL.Image.open(BytesIO(part.inline_data.data))
+                
 
-    if call_mode == 'micl': response.resolve()
     gemini_end = time()
     output_dict['time'] = gemini_end - gemini_start
     try:

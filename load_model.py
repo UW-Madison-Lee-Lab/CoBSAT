@@ -285,7 +285,7 @@ def load_model(
         )
     elif model == 'gemini':
         from load_models.call_gemini import load_gemini, call_gemini
-        model = load_gemini(prompt_type, api_key)
+        model = load_gemini(prompt_type, api_key, gen_mode)
         return lambda configs: call_gemini(
             model,
             **configs

@@ -209,6 +209,10 @@ instruction_dict = {
                 'You are a professional assistant can generate a new image based on the seqeunce. ',
                 '',
             ),
+            'gemini': (
+                'You are a professional assistant can generate a new image based on the seqeunce. ',
+                '',
+            ),
             'emu': (
                 '',
                 '',
