@@ -200,6 +200,7 @@ We have implemented several state-of-the-art models for your convenience. Additi
   * Fine-Tuning
 * [x] [Gemini](https://arxiv.org/abs/2312.11805)
   * Text Generation
+  * Image Generation
 
 ## Feature Your Own Model
 

@@ -22,6 +22,7 @@ def load_gemini(prompt_type, api_key, gen_mode):
             model = genai.GenerativeModel('gemini-pro-vision')
     return model
     
+@retry_if_fail
 def call_gemini(
     model,
     text_inputs = ["Red", "Green", "Yellow"],
