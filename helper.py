@@ -97,7 +97,7 @@ def retry_if_fail(func):
                 print(f"Exception occurred: {type(e).__name__}, {e.args}")
                 print(f"Retry {retry} times...")
 
-        if retry > 10:
+        if retry > 6:
             out = {'description': 'ERROR', 'image': None, 'time': 0}
             print('ERROR')
         

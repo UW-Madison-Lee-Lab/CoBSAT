@@ -139,9 +139,12 @@ def inference(
         if gen_mode == 'text':
             save_json(out, save_path+'.json')
         elif gen_mode == 'image':
-            img = out['image']
-            if img != None: img.save(save_path+'.jpg')
-            out.pop('image')
+            if 'image' in out and out['image'] != None:
+                img = out['image']
+                if img != None: img.save(save_path+'.jpg')
+                out.pop('image')
+            else:
+                import pdb; pdb.set_trace()
             save_json(out, save_path+'.json')
             
         print('-------------------')

@@ -74,12 +74,16 @@ def call_gemini(
             contents = history + prompt, 
             config=google_genai.types.GenerateContentConfig(response_modalities=['Text', 'Image']),
         )
-        for part in response.candidates[0].content.parts:
-            if part.text is not None:
-                output_dict['description'] += part.text
-            else:
-                output_dict['image'] = PIL.Image.open(BytesIO(part.inline_data.data))
-                
+        output_dict['description'] = ''
+        if response.candidates[0].content is not None:
+            for part in response.candidates[0].content.parts:
+                if part.text is not None:
+                    output_dict['description'] += part.text
+                else:
+                    output_dict['image'] = PIL.Image.open(BytesIO(part.inline_data.data))
+        else:
+            output_dict["image"] = None
+            output_dict["description"] = ''
 
     gemini_end = time()
     output_dict['time'] = gemini_end - gemini_start
