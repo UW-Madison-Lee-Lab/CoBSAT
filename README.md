@@ -27,6 +27,7 @@
 
 # News  🚀
 
+* [07/10/24] Our paper is accepted by [COLM 2024](https://openreview.net/pdf?id=jt0R50d5nk)!
 * [02/29/24] Our dataset is available on 🤗[huggingface](https://huggingface.co/datasets/yzeng58/CoBSAT)!
 * [02/02/24] Our paper is available on <a href="https://arxiv.org/abs/2402.01293">arxiv</a>! 
 
@@ -67,12 +68,18 @@ To set up the environment for benchmarking MLLMs, please follow the following st
    pip install torch==2.1.2 torchvision==0.16.2 
    pip install -r conda_env/default_requirements.txt
    
-   # create the environment for llava (used for evaluating the accuracy of the images) to work 
+   # create the environment for llava to work 
    conda create -n llava python=3.10.13
    conda activate llava
    pip install --upgrade pip  # enable PEP 660 support
    pip install git+https://github.com/yzeng58/LLaVA/@a61aae093656922fe16ec2152b031dd1de72fe92
-   pip install conda_env/llava_requirements.txt
+   pip install -r conda_env/llava_requirements.txt
+
+   # create the environment for gemini to work 
+   conda env create -f conda_env/gemini.yml
+
+   # create the environment for llava16 (LLaVA-NeXT) to work 
+   conda env create -f conda_env/llava16.yml
    ```
 
    </details>
@@ -108,10 +115,15 @@ To set up the environment for benchmarking MLLMs, please follow the following st
      'key1': f'{your_openai_key_1}',
      'key2': f'{your_openai_key_2}',
    }
-   # GEMINI
+   # Gemini
    GEMINI_API_KEY = {
      'key1': f'{your_gemini_key_1}',
      'key2': f'{your_gemini_key_2}',
+   }
+   # Claude
+   CLAUDE_API_KEY = {
+     'key1': f'{your_claude_key_1}',
+     'key2': f'{your_claude_key_2}',
    }
    # Emu for Image Generation
    EMU_IMAGE_PATH = '/data/yzeng58/cobsat/models/Emu/Emu1/model_weights/Emu/pretrain' 
@@ -153,6 +165,7 @@ Up to now, the structure of your `cobsat` folder should look like this.
 │   ├── call_qwen.py
 │   ├── call_seed.py
 │   ├── call_gemini.py
+│   ├── call_claude.py
 │   ├── call_your_model.py  # [optional] create python file to load the model you want to evaluate
 │   └── ... 
 ├── models                  
@@ -161,7 +174,9 @@ Up to now, the structure of your `cobsat` folder should look like this.
 │   ├── Emu                 
 │   │   └── Emu1 
 │   ├── LLaVA               
-│   ├── Qwen-VL             
+│   ├── Qwen-VL    
+│   ├── Gemini
+│   ├── Claude   
 │   ├── OwnModel            # [optional] input your own model folder
 │   └── ...
 ├── ...
@@ -200,7 +215,12 @@ We have implemented several state-of-the-art models for your convenience. Additi
   * Fine-Tuning
 * [x] [Gemini](https://arxiv.org/abs/2312.11805)
   * Text Generation
+<<<<<<< HEAD
   * Image Generation
+=======
+* [x] [Claude](https://www.anthropic.com/claude)
+  * Text Generation
+>>>>>>> a787be51b52af1d63a6dbeb78f22b07a10761be0
 
 ## Feature Your Own Model
 
@@ -338,6 +358,7 @@ Throughout this section, the placeholder "OwnModel" can be substituted with the 
        'seed',
        'gill',
        'gemini',
+       'claude',
        'OwnModel', # your own model
    ]
    ```
@@ -399,7 +420,9 @@ python finetune_icl.py \
 --model qwen \
 --shot 2 \ 							
 --prompt_type default \
---gen_mode text			
+--gen_mode text \
+--ft_mode leave_one_out \
+--eval_task_theme texture
 ```
 
 <details><summary> Parameter Descriptions </summary>
@@ -416,6 +439,10 @@ python finetune_icl.py \
   - **`gen_mode`**: Determines the output mode of the model, with two options:
     - `image`: The model generates an image output.
     - `text`: The model generates textual descriptions for the next image.
+  - **`ft_mode`**: The fine-tuning mode used in the experiment, with two options:
+    - `all`: fine-tune on subsets of all tasks
+    - `leave_one_out`: fine-tune on entire set of other four themed-tasks
+  - **`eval_task_theme`**: The theme will be evaluated on (the theme that is excludede in fine-tuning). Default is empty string `''`. Only use it when `ft_mode` set to be `leave_one_out`.
 
 
 </details>
@@ -441,12 +468,15 @@ python inference_icl.py \
 --task_id 1 2 3 \
 --overwrite 0 \
 --finetuned_model 0 \
---data_mode default
+--data_mode default \
+--eval_mllm llava \
+--ft_mode all \
+--eval_task_theme ''
 ```
 
 <details><summary> Parameter Descriptions </summary>
 
-- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `emu2` (Emu2), `gpt4v` (GPT-4V), `llava` (LLaVA-1.5), `llava16` (LLaVA-1.6/LLaVA-NeXT), `gemini` (Gemini) and `qwen` (Qwen-VL).  
+- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `emu2` (Emu2), `gpt4v` (GPT-4V), `llava` (LLaVA-1.5), `llava16` (LLaVA-1.6/LLaVA-NeXT), `gemini` (Gemini), `claude` (Claude) and `qwen` (Qwen-VL).  
 - **`shot`**: Defines the number of demonstration examples included in each training prompt.
 - **`prompt_type`**: Selects the type of prompt to use. Available options include:
   * `default`: The standard prompt design as described in our paper.
@@ -464,6 +494,11 @@ python inference_icl.py \
 - **`overwrite`**: Determines whether to reuse existing results or overwrite them. This is applicable when results have already been saved.
 - **`finetuned_model`**: Indicates whether to use a finetuned model. If enabled, the finetuned model must be stored beforehand by executing `finetune_icl.py`, and the `data_mode` should be set to `ft_test`. 
 - **`data_mode`**: Offers two options: `default` and `ft_test`. In `ft_test` mode, the dataset is divided into training and testing sets, with only the testing set being utilized.
+- **`api_key`**: Indicate which key to use. In `environment.py`, you should have already chose the name for your api_key for the model you are going to use.
+- **`ft_mode`**: The fine-tuning mode used in the experiment, with two options:
+  * `all`: fine-tune on subsets of all tasks
+  * `leave_one_out`: fine-tune on entire set of other four themed-tasks
+- **`eval_task_theme`**: The theme will be evaluated on (the theme that is excludede in fine-tuning). Default is empty string `''`. Only use it when `ft_mode` set to be `leave_one_out`.
 
 </details>
 
@@ -492,7 +527,7 @@ python evaluation_icl.py \
 
 <details><summary> Parameter Descriptions </summary>
 
-- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `emu2` (Emu2), `gpt4v` (GPT-4V), `llava` (LLaVA-1.5), `llava16` (LLaVA-1.6/LLaVA-NeXT), `gemini` (Gemini) and `qwen` (Qwen-VL).  
+- **`model`**: Specifies the model for making the inference. The supported models include `seed` (SEED-LLaMA), `gill` (GILL), `emu`  (Emu), `emu2` (Emu2), `gpt4v` (GPT-4V), `llava` (LLaVA-1.5), `llava16` (LLaVA-1.6/LLaVA-NeXT), `gemini` (Gemini), `claude` (Claude) and `qwen` (Qwen-VL).  
 - **`shot`**: Defines the number of demonstration examples included in each training prompt.
 - **`prompt_type`**: Selects the type of prompt to use. Available options include:
   - `default`: The standard prompt design as described in our paper.
@@ -510,6 +545,12 @@ python evaluation_icl.py \
 - **`overwrite`**: Determines whether to reuse existing results or overwrite them. This is applicable when results have already been saved.
 - **`finetuned_model`**: Indicates whether to use a finetuned model. If enabled, the finetuned model must be stored beforehand by executing `finetune_icl.py`.
 - **`data_mode`**: Offers two options: `default` and `ft_test`. In `ft_test` mode, the dataset is divided into training and testing sets, with only the testing set being utilized.
+- **`eval_mllm`**: The multimodal large language model used for evaluating the generated images (descriptions). The supported mllms include `llava`, `gemini`, and `qwen`.
+- **`api_key`**: Indicate which key to use. In `environment.py`, you should have already chose the name for your api_key for the model you are going to use.
+- **`ft_mode`**: The fine-tuning mode used in the experiment, with two options:
+  * `all`: fine-tune on subsets of all tasks
+  * `leave_one_out`: fine-tune on entire set of other four themed-tasks
+- **`eval_task_theme`**: The theme will be evaluated on (the theme that is excludede in fine-tuning). Default is empty string `''`. Only use it when `ft_mode` set to be `leave_one_out`.
 
 </details>
 
