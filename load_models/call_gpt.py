@@ -5,8 +5,9 @@ from openai import OpenAI
 import os, base64, requests, sys
 from typing import Literal
 from time import time
+import PIL
+from io import BytesIO
 
-client = OpenAI()
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
 from helper import retry_if_fail
@@ -71,7 +72,71 @@ def prompt_image_eval(
     }]
     
     return messages
+
+def load_gpt(api_key):
+    client = OpenAI(api_key=OPENAI_API_KEY[api_key])
+    return client
         
+@retry_if_fail
+def call_gpt_image(
+    client,
+    text_inputs = ["Red", "Green", "Yellow"],
+    image_inputs = [
+        "https://media.istockphoto.com/id/1189903200/photo/red-generic-sedan-car-isolated-on-white-background-3d-illustration.jpg?s=612x612&w=0&k=20&c=uRu3o_h5FVljLQHS9z0oyz-XjXzzXN_YkyGXwhdMrjs=",
+        "https://media.istockphoto.com/id/186872128/photo/a-bright-green-hatchback-family-car.jpg?s=2048x2048&w=is&k=20&c=vy3UZdiZFG_lV0Mp_Nka2DC4CglOqEuujpC-ra5TWJ0="
+    ],
+    instruction = [
+        "I will provide you with a few examples with text and images. Complete the example with the description of the next image. The description should be clear with main object, and include details such as color, texture, background, style, and action, if applicable. Tell me only the text prompt and I'll use your entire answer as a direct input to A Dalle-3. Never say other explanations. ",
+        '',
+    ],
+    call_mode = 'micl', # micl or text only
+    history = None,
+    save_history = False,
+    **configs,
+):
+    if save_history: raise ValueError("save_history is not supported for GPT-image-1")
+    prompt = [instruction[0]]
+    images = []
+    
+    for i in range(len(text_inputs)):
+        prompt.append(text_inputs[i])
+        if call_mode == 'micl':
+            if i < len(text_inputs) - 1:
+                images.append(open(image_inputs[i], 'rb'))
+    prompt.append(instruction[1])
+    
+    output_dict = {}
+    gpt_start = time()
+    
+    if history is not None: raise ValueError("History is not supported for GPT-image-1")
+    
+    if call_mode == 'micl':
+        result = client.images.edit(
+            model="gpt-image-1",
+            image=images,
+            prompt="\n".join(prompt),
+            quality="low",
+            n=1,
+            size="1024x1024",
+        )
+    else:
+        result = client.images.generate(
+            model="gpt-image-1",
+            prompt="\n".join(prompt),
+            quality="low",
+            n=1,
+            size="1024x1024",
+        )
+    
+    image_base64 = result.data[0].b64_json
+    image_bytes = base64.b64decode(image_base64)
+    gpt_end = time()
+    output_dict['time'] = gpt_end - gpt_start
+    output_dict['image'] = PIL.Image.open(BytesIO(image_bytes))
+    output_dict['description'] = ''
+    
+    return output_dict
+
 @retry_if_fail
 def call_gpt4v(
     text_inputs = ["Red", "Green", "Yellow"],

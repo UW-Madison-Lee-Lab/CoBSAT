@@ -119,6 +119,7 @@ supported_models = [
     'gill',
     'gemini',
     'claude',
+    'gpt-image-1',
 ]
 
 # need to be updated, and also update the instruction for text generatopm for normal tasks too.
@@ -223,6 +224,10 @@ instruction_dict = {
             ],
             'emu2': (
                 '',
+                '',
+            ),
+            "gpt-image-1": (
+                'You are a professional assistant can generate a new image based on the seqeunce. ',
                 '',
             )
         }

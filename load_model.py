@@ -89,7 +89,16 @@ def load_model(
             api_key = api_key,
             **configs,
         )
-    
+    elif model == 'gpt-image-1':
+        if gen_mode != 'image':
+            raise ValueError(f"gen_mode {gen_mode} not supported for gpt-image-1.")
+        
+        from load_models.call_gpt import call_gpt_image, load_gpt
+        client = load_gpt(api_key)
+        return lambda configs: call_gpt_image(
+            client = client,
+            **configs,
+        )
     elif model == 'claude':
         if gen_mode != 'text':
             raise ValueError(f"gen_mode {gen_mode} not supported for claude.")
